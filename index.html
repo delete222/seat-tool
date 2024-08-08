@@ -111,7 +111,7 @@
         <button onclick="downloadSeatingChart()">下载座位图</button>
     </div>
     <div id="seating-chart"></div>
-    <div class="version">版本: 2.1.0</div>
+    <div class="version">版本: 1.0.0</div>
 
     <script>
         let savedLayout = null;
@@ -127,13 +127,13 @@
 
             let circle, radius, center;
 
-            if (numSeats <= 16) {
+            if (numSeats < 14) {
                 circle = document.createElement('div');
                 circle.className = 'circle-small';
                 circle.contentEditable = true;
                 circle.innerText = '输入包厢名称';
                 radius = 200;
-                center = 325;
+                center = 400;
             } else {
                 circle = document.createElement('div');
                 circle.className = 'circle-large';
