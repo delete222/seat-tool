@@ -111,7 +111,7 @@
         <button onclick="downloadSeatingChart()">下载座位图</button>
     </div>
     <div id="seating-chart"></div>
-    <div class="version">版本: 2.0.0</div>
+    <div class="version">版本: 1.0.0</div>
 
     <script>
         let savedLayout = null;
@@ -132,8 +132,8 @@
                 circle.className = 'circle-small';
                 circle.contentEditable = true;
                 circle.innerText = '输入包厢名称';
-                radius = 360;
-                center = 250;
+                radius = 200;
+                center = 400;
             } else {
                 circle = document.createElement('div');
                 circle.className = 'circle-large';
