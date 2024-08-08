@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>座位图生成器</title>
     <style>
-        #seating-chart {
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+        }
+
+        #seating-chart {
             position: relative;
-            width: 600px; /* 宽度调整为合适大小 */
+            width: 400px; /* 宽度调整为合适大小 */
             height: 400px; /* 高度调整为合适大小 */
         }
-        .seat {
-            position: absolute;
-            border: 1px solid black;
-            padding: 5px;
-            background-color: white;
-            cursor: pointer;
-            text-align: center;
-            box-sizing: border-box; /* 使padding生效，保持统一尺寸 */
-            width: 60px; /* 固定宽度 */
-            height: 30px; /* 固定高度 */
-            line-height: 20px; /* 行高设置为与字体大小一致 */
-        }
+
         .circle {
             border-radius: 50%;
             background-color: blue;
@@ -35,20 +35,30 @@
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
         }
-        input {
-            margin: 5px 0;
-        }
-        .remove-button {
-            background: none;
-            border: none;
-            color: red;
-            font-size: 16px;
+
+        .seat {
+            position: absolute;
+            border: 1px solid black;
+            padding: 5px;
+            background-color: white;
+            text-align: center;
             cursor: pointer;
+            width: 60px;
+            height: 30px;
+            line-height: 20px;
+            box-sizing: border-box;
         }
+
     </style>
 </head>
+
 <body>
     <div id="controls">
         <label for="num-seats">座位数量:</label>
@@ -64,18 +74,18 @@
             const numSeats = document.getElementById('num-seats').value;
             const seatingChart = document.getElementById('seating-chart');
             const circle = seatingChart.querySelector('.circle');
-            
-            // Remove existing seats
+
+            // 移除现有的座位
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
-            
+
             const angleStep = 360 / numSeats;
-            const radius = 150 - 25; // Circle radius less half seat width (for positioning)
-            
+            const radius = 150; // 圆的半径
+
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
                 const radian = angle * Math.PI / 180;
-                const x = 300 / 2 + radius * Math.cos(radian) - 30; // Center of circle plus radius minus half seat width
-                const y = 300 / 2 + radius * Math.sin(radian) - 15; // Center of circle plus radius minus half seat height
+                const x = 200 + radius * Math.cos(radian) - 30; // 200 是容器中心，30 是座位宽度的一半
+                const y = 200 + radius * Math.sin(radian) - 15; // 200 是容器中心，15 是座位高度的一半
 
                 const seat = document.createElement('div');
                 seat.className = 'seat';
@@ -93,4 +103,5 @@
         }
     </script>
 </body>
+
 </html>
