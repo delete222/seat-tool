@@ -113,11 +113,12 @@
             let clientIndex = 0;
             let companyIndex = 0;
 
+            // 按提问规则安排座位
             for (let i = 0; i < numSeats; i++) {
-                if (i % 2 === 0) {
-                    seatingOrder.push(companyNames[companyIndex++] || `我司${companyIndex}`);
-                } else {
+                if (i % 4 === 1 || i % 4 === 2) { // 公司在奇数位，客户在偶数位
                     seatingOrder.push(clientNames[clientIndex++] || `客户${clientIndex}`);
+                } else {
+                    seatingOrder.push(companyNames[companyIndex++] || `我司${companyIndex}`);
                 }
             }
 
