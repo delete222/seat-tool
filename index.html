@@ -98,41 +98,40 @@
             const clientNames = document.getElementById('client-names').value.trim().split('\n').filter(name => name.trim() !== '');
             const companyNames = document.getElementById('company-names').value.trim().split('\n').filter(name => name.trim() !== '');
             
-            // Validate the number of provided names
             if (clientNames.length + companyNames.length < numSeats) {
                 alert("提供的姓名总数少于座位数量。请补全姓名后再试。");
                 return;
             }
 
-            // Remove existing seats
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
 
             const angleStep = 360 / numSeats;
-            const radius = 250; // Adjust radius to place seats outside the circle
+            const radius = 250;
 
-            // Combine names in the desired order
             const seatingOrder = [];
-            let i = 0, j = 0;
-            for (let k = 0; k < numSeats; k++) {
-                if (k % 2 === 0) { // Alternating between company and client names
-                    seatingOrder.push(companyNames[i++]);
+
+            let clientIndex = 0;
+            let companyIndex = 0;
+
+            for (let i = 0; i < numSeats; i++) {
+                if (i % 2 === 0) {
+                    seatingOrder.push(companyNames[companyIndex++] || `我司${companyIndex}`);
                 } else {
-                    seatingOrder.push(clientNames[j++]);
+                    seatingOrder.push(clientNames[clientIndex++] || `客户${clientIndex}`);
                 }
             }
 
-            // Place seats around the circle
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
                 const radian = angle * Math.PI / 180;
-                const x = 300 + radius * Math.cos(radian); // Center is at 300
-                const y = 300 + radius * Math.sin(radian); // Center is at 300
+                const x = 300 + radius * Math.cos(radian);
+                const y = 300 + radius * Math.sin(radian);
 
                 const seat = document.createElement('div');
                 seat.className = 'seat';
                 seat.style.left = x + 'px';
                 seat.style.top = y + 'px';
-                seat.innerText = seatingOrder[i] ? seatingOrder[i] : `座位${i + 1}`;
+                seat.innerText = seatingOrder[i];
 
                 seat.onclick = function () {
                     if (confirm("确定要删除这个座位吗？")) {
