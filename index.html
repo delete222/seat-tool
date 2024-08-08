@@ -13,6 +13,7 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            background-color: #f0f0f0;
         }
 
         #controls {
@@ -21,8 +22,8 @@
 
         #seating-chart {
             position: relative;
-            width: 400px; /* 宽度调整为合适大小 */
-            height: 400px; /* 高度调整为合适大小 */
+            width: 500px;
+            height: 500px;
         }
 
         .circle {
@@ -36,11 +37,9 @@
             align-items: center;
             font-weight: bold;
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            margin: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .seat {
@@ -54,6 +53,7 @@
             height: 30px;
             line-height: 20px;
             box-sizing: border-box;
+            will-change: transform;
         }
 
     </style>
@@ -79,18 +79,17 @@
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
 
             const angleStep = 360 / numSeats;
-            const radius = 175; // 半径调整为175，使得座位更加美观地围绕
+            const radius = 225; // 半径调整为225，使得座位位于圆的外侧
 
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
                 const radian = angle * Math.PI / 180;
-                const x = 200 + radius * Math.cos(radian) - 30; // 200 是容器中心，30是座位宽度的一半
-                const y = 200 + radius * Math.sin(radian) - 15; // 200 是容器中心，15 是座位高度的一半
+                const x = 250 + radius * Math.cos(radian) - 30; // 250 是容器中心，30是座位宽度的一半
+                const y = 250 + radius * Math.sin(radian) - 15; // 250 是容器中心，15 是座位高度的一半
 
                 const seat = document.createElement('div');
                 seat.className = 'seat';
-                seat.style.left = x + 'px';
-                seat.style.top = y + 'px';
+                seat.style.transform = `translate(${x}px, ${y}px)`;
                 seat.contentEditable = true;
                 seat.innerText = `座位${i + 1}`;
                 seat.onclick = function () {
