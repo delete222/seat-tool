@@ -86,7 +86,7 @@
         <button onclick="generateSeats()">生成座位图</button>
         <button onclick="saveLayout()">保存布局</button>
         <button onclick="resetLayout()">重置布局</button>
-        <button onclick="startSwap()">互换座位</button>
+        <button onclick="enableSwapMode()">互换座位</button>
         <button onclick="confirmSwap()">确认互换</button>
         <button onclick="deleteSelectedSeat()">删除选中座位</button>
         <button onclick="downloadSeatingChart()">下载座位图</button>
@@ -100,6 +100,7 @@
         let savedLayout = null;
         let selectedSeat = null;
         let swapSeats = [];
+        let swapMode = false; // 标志变量，用于跟踪当前是否处于互换模式
 
         function generateSeats() {
             const numSeats = parseInt(document.getElementById('num-seats').value, 10);
@@ -131,10 +132,16 @@
                     }
                     selectedSeat = seat;
                     seat.classList.add('selected');
-                    addSeatToSwap(seat);
+                    handleSeatClick(seat);
                 };
 
                 seatingChart.appendChild(seat);
+            }
+        }
+
+        function handleSeatClick(seat) {
+            if (swapMode) {
+                addSeatToSwap(seat);
             }
         }
 
@@ -152,6 +159,11 @@
             document.querySelectorAll('.seat').forEach(seat => seat.classList.remove('selected'));
         }
 
+        function enableSwapMode() {
+            swapMode = true;
+            startSwap();
+        }
+
         function confirmSwap() {
             if (swapSeats.length == 2) {
                 let seat1 = swapSeats[0];
@@ -166,6 +178,7 @@
 
                 swapSeats.forEach(seat => seat.classList.remove('selected'));
                 swapSeats = [];
+                swapMode = false;
             } else {
                 alert('请选择两个座位进行互换');
             }
@@ -206,7 +219,7 @@
                     }
                     selectedSeat = seat;
                     seat.classList.add('selected');
-                    addSeatToSwap(seat);
+                    handleSeatClick(seat);
                 };
 
                 seatingChart.appendChild(seat);
@@ -223,18 +236,6 @@
             }
         }
 
-        function downloadSeatingChart() {
-            const seatingChart = document.getElementById('seating-chart');
-            htmlToImage.toPng(seatingChart).then(dataUrl => {
-                const link = document.createElement('a');
-                link.download = 'seating_chart.png';
-                link.href = dataUrl;
-                link.click();
-            }).catch(error => {
-                console.error('下载座位图失败：', error);
-            });
-        }
-
         document.addEventListener('click', function(event) {
             // 如果点击的是不属于座位的区域，取消选中所有座位
             if (!event.target.classList.contains('seat')) {
@@ -244,9 +245,33 @@
             }
         });
 
+        function downloadSeatingChart() {
+            const seatingChart = document.getElementById('seating-chart');
+            const svgElement = seatingChart.cloneNode(true);
+
+            svgElement.style.removeProperty('width');
+            svgElement.style.removeProperty('height');
+
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const image = new Image();
+
+            image.onload = function() {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                context.drawImage(image, 0, 0);
+                const link = document.createElement('a');
+                link.download = 'seating_chart.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+
+            image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+        }
+
         // 初始化页面上的座位
         generateSeats();
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.9.0/dist/html-to-image.min.js"></script>
 </body>
 </html>
