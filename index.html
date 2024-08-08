@@ -124,7 +124,8 @@
                 seat.style.top = y + 'px';
                 seat.contentEditable = true;
                 seat.innerText = `座位${i + 1}`;
-                seat.onclick = function() {
+                seat.onclick = function(event) {
+                    event.stopPropagation();
                     if (selectedSeat) {
                         selectedSeat.classList.remove('selected');
                     }
@@ -198,7 +199,8 @@
                 seat.style.top = seatData.top;
                 seat.contentEditable = true;
                 seat.innerText = seatData.text;
-                seat.onclick = function() {
+                seat.onclick = function(event) {
+                    event.stopPropagation();
                     if (selectedSeat) {
                         selectedSeat.classList.remove('selected');
                     }
@@ -223,17 +225,28 @@
 
         function downloadSeatingChart() {
             const seatingChart = document.getElementById('seating-chart');
-            html2canvas(seatingChart, {backgroundColor: null}).then(canvas => {
+            htmlToImage.toPng(seatingChart).then(dataUrl => {
                 const link = document.createElement('a');
                 link.download = 'seating_chart.png';
-                link.href = canvas.toDataURL('image/png');
+                link.href = dataUrl;
                 link.click();
+            }).catch(error => {
+                console.error('下载座位图失败：', error);
             });
         }
+
+        document.addEventListener('click', function(event) {
+            // 如果点击的是不属于座位的区域，取消选中所有座位
+            if (!event.target.classList.contains('seat')) {
+                document.querySelectorAll('.seat').forEach(seat => seat.classList.remove('selected'));
+                selectedSeat = null;
+                swapSeats = [];
+            }
+        });
 
         // 初始化页面上的座位
         generateSeats();
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.7.1"></script>
 </body>
 </html>
