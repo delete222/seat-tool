@@ -15,6 +15,13 @@
             background-color: #f0f0f0;
         }
 
+        #version {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-weight: bold;
+        }
+
         #controls {
             margin-bottom: 20px;
         }
@@ -76,6 +83,7 @@
     </style>
 </head>
 <body>
+    <div id="version">版本号：1.0</div>
     <div id="controls">
         <div class="input-area">
             <label for="client-names">客户:</label>
@@ -84,7 +92,7 @@
             <textarea id="company-names" placeholder="每行一个我司姓名"></textarea>
         </div>
         <label for="num-seats">座位数量:</label>
-        <input type="number" id="num-seats" min="1" value="12">
+        <input type="number" id="num-seats" min="12" value="12">
         <button onclick="generateSeats()">生成座位图</button>
     </div>
     <div id="seating-chart">
@@ -93,13 +101,13 @@
 
     <script>
         function generateSeats() {
-            const numSeats = parseInt(document.getElementById('num-seats').value, 10);
+            const numSeats = 12; // 固定为12个座位
             const seatingChart = document.getElementById('seating-chart');
             const clientNames = document.getElementById('client-names').value.trim().split('\n').filter(name => name.trim() !== '');
             const companyNames = document.getElementById('company-names').value.trim().split('\n').filter(name => name.trim() !== '');
-            
-            if (clientNames.length + companyNames.length < numSeats) {
-                alert("提供的姓名总数少于座位数量。请补全姓名后再试。");
+
+            if (clientNames.length < 6 || companyNames.length < 6) {
+                alert("请至少提供6个客户姓名和6个我司姓名。");
                 return;
             }
 
@@ -108,12 +116,14 @@
             const angleStep = 360 / numSeats;
             const radius = 250;
 
-            // 按照新的顺序生成座位
-            let seatingOrder = [];
-            for (let i = 0, j = 0; i < Math.ceil(numSeats / 2); i++, j++) {
-              seatingOrder.push(companyNames[i] || `我司${i + 1}`);
-              seatingOrder.push(clientNames[j] || `客户${j + 1}`);
-            }
+            const seatingOrder = [
+                companyNames[0], clientNames[0],
+                companyNames[1], clientNames[1],
+                companyNames[2], clientNames[2],
+                companyNames[3], clientNames[3],
+                companyNames[4], clientNames[4],
+                companyNames[5], clientNames[5]
+            ];
 
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
