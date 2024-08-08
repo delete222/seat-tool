@@ -100,6 +100,7 @@
         let savedLayout = null;
         let selectedSeat = null;
         let swapSeats = [];
+        let isSwapMode = false;
 
         function generateSeats() {
             const numSeats = parseInt(document.getElementById('num-seats').value, 10);
@@ -131,10 +132,16 @@
                     }
                     selectedSeat = seat;
                     seat.classList.add('selected');
-                    addSeatToSwap(seat);
+                    handleSeatClick(seat);
                 };
 
                 seatingChart.appendChild(seat);
+            }
+        }
+
+        function handleSeatClick(seat) {
+            if (isSwapMode) {
+                addSeatToSwap(seat);
             }
         }
 
@@ -149,6 +156,7 @@
 
         function startSwap() {
             swapSeats = [];
+            isSwapMode = true;
             document.querySelectorAll('.seat').forEach(seat => seat.classList.remove('selected'));
         }
 
@@ -166,6 +174,7 @@
 
                 swapSeats.forEach(seat => seat.classList.remove('selected'));
                 swapSeats = [];
+                isSwapMode = false;
             } else {
                 alert('请选择两个座位进行互换');
             }
@@ -206,7 +215,7 @@
                     }
                     selectedSeat = seat;
                     seat.classList.add('selected');
-                    addSeatToSwap(seat);
+                    handleSeatClick(seat);
                 };
 
                 seatingChart.appendChild(seat);
@@ -241,9 +250,10 @@
                 document.querySelectorAll('.seat').forEach(seat => seat.classList.remove('selected'));
                 selectedSeat = null;
                 swapSeats = [];
+                isSwapMode = false;
             } else {
                 // 当点击的是座位时，检查是否需要弹出提示
-                if (swapSeats.length === 2) {
+                if (isSwapMode && swapSeats.length === 2) {
                     alert('只能选择两个座位进行互换');
                 }
             }
