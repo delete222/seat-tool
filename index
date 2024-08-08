@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>座位图生成器</title>
+    <style>
+        #seating-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .seat {
+            position: absolute;
+            border: 1px solid black;
+            padding: 5px;
+            background-color: white;
+            cursor: pointer;
+        }
+        .circle {
+            border-radius: 50%;
+            background-color: blue;
+            color: white;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: relative;
+        }
+        input {
+            margin: 5px 0;
+        }
+        .remove-button {
+            background: none;
+            border: none;
+            color: red;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <label for="num-seats">座位数量:</label>
+        <input type="number" id="num-seats" min="1" value="10">
+        <button onclick="generateSeats()">生成座位图</button>
+    </div>
+    <div id="seating-chart">
+        <div class="circle">餐叙座位图</div>
+    </div>
+
+    <script>
+        function generateSeats() {
+            const numSeats = document.getElementById('num-seats').value;
+            const seatingChart = document.getElementById('seating-chart');
+            const circle = seatingChart.querySelector('.circle');
+            
+            // Remove existing seats
+            seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
+            
+            const angleStep = 360 / numSeats;
+            const radius = 150; // half of circle diameter
+            
+            for (let i = 0; i < numSeats; i++) {
+                const angle = angleStep * i - 90;
+                const x = radius + radius * Math.cos(angle * Math.PI / 180);
+                const y = radius + radius * Math.sin(angle * Math.PI / 180);
+                
+                const seat = document.createElement('div');
+                seat.className = 'seat';
+                seat.style.left = x + 'px';
+                seat.style.top = y + 'px';
+                seat.contentEditable = true;
+                seat.innerText = `座位${i+1}`;
+                seat.onclick = function() {
+                    if(confirm("确定要删除这个座位吗？")) {
+                        seat.remove();
+                    }
+                }
+                seatingChart.appendChild(seat);
+            }
+        }
+    </script>
+</body>
+</html>
