@@ -27,7 +27,26 @@
             box-sizing: border-box;
         }
 
-        .circle {
+        .circle-small {
+            border-radius: 50%;
+            background-color: #4a82d6;
+            color: white;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            user-select: none;
+        }
+
+        .circle-large {
             border-radius: 50%;
             background-color: #4a82d6;
             color: white;
@@ -91,10 +110,8 @@
         <button onclick="deleteSelectedSeat()">删除选中座位</button>
         <button onclick="downloadSeatingChart()">下载座位图</button>
     </div>
-    <div id="seating-chart">
-        <div class="circle" contenteditable="true">输入包厢名称</div>
-    </div>
-    <div class="version">版本: 1.0.0</div>
+    <div id="seating-chart"></div>
+    <div class="version">版本: 2.1.0</div>
 
     <script>
         let savedLayout = null;
@@ -103,19 +120,38 @@
         function generateSeats() {
             const numSeats = parseInt(document.getElementById('num-seats').value, 10);
             const seatingChart = document.getElementById('seating-chart');
-            const circle = seatingChart.querySelector('.circle');
 
-            // 移除现有的座位
+            // 移除现有的座位和圆圈
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
+            seatingChart.querySelectorAll('.circle-small, .circle-large').forEach(circle => circle.remove());
+
+            let circle, radius, center;
+
+            if (numSeats <= 16) {
+                circle = document.createElement('div');
+                circle.className = 'circle-small';
+                circle.contentEditable = true;
+                circle.innerText = '输入包厢名称';
+                radius = 200;
+                center = 325;
+            } else {
+                circle = document.createElement('div');
+                circle.className = 'circle-large';
+                circle.contentEditable = true;
+                circle.innerText = '输入包厢名称';
+                radius = 350;
+                center = 400;
+            }
+
+            seatingChart.appendChild(circle);
 
             const angleStep = 360 / numSeats;
-            const radius = 350; // 调整半径，使得座位外移
 
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
                 const radian = angle * Math.PI / 180;
-                const x = 400 + radius * Math.cos(radian); // 400 是容器中心
-                const y = 400 + radius * Math.sin(radian); // 400 是容器中心
+                const x = center + radius * Math.cos(radian);
+                const y = center + radius * Math.sin(radian);
 
                 const seat = document.createElement('div');
                 seat.className = 'seat';
