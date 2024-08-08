@@ -139,7 +139,7 @@
                 circle.className = 'circle-large';
                 circle.contentEditable = true;
                 circle.innerText = '输入包厢名称';
-                radius = 350;
+                radius = 300;
                 center = 400;
             }
 
@@ -150,8 +150,8 @@
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
                 const radian = angle * Math.PI / 180;
-                const x = center + radius * Math.cos(radian);
-                const y = center + radius * Math.sin(radian);
+                const x = center + (radius + 50) * Math.cos(radian); // 增加50像素的距离使座位在圈外
+                const y = center + (radius + 50) * Math.sin(radian);
 
                 const seat = document.createElement('div');
                 seat.className = 'seat';
