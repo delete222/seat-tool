@@ -84,7 +84,7 @@
             <textarea id="company-names" placeholder="每行一个我司姓名"></textarea>
         </div>
         <label for="num-seats">座位数量:</label>
-        <input type="number" id="num-seats" min="1" value="10">
+        <input type="number" id="num-seats" min="1" value="12">
         <button onclick="generateSeats()">生成座位图</button>
     </div>
     <div id="seating-chart">
@@ -95,34 +95,44 @@
         function generateSeats() {
             const numSeats = parseInt(document.getElementById('num-seats').value, 10);
             const seatingChart = document.getElementById('seating-chart');
-            const circle = seatingChart.querySelector('.circle');
-            const clientNames = document.getElementById('client-names').value.trim().split('\n');
-            const companyNames = document.getElementById('company-names').value.trim().split('\n');
+            const clientNames = document.getElementById('client-names').value.trim().split('\n').filter(name => name.trim() !== '');
+            const companyNames = document.getElementById('company-names').value.trim().split('\n').filter(name => name.trim() !== '');
+            
+            // Validate the number of provided names
+            if (clientNames.length + companyNames.length < numSeats) {
+                alert("提供的姓名总数少于座位数量。请补全姓名后再试。");
+                return;
+            }
 
-            // 移除现有的座位
+            // Remove existing seats
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
 
             const angleStep = 360 / numSeats;
-            const radius = 250; // 调整半径，使得座位外移
+            const radius = 250; // Adjust radius to place seats outside the circle
 
+            // Combine names in the desired order
+            const seatingOrder = [];
+            let i = 0, j = 0;
+            for (let k = 0; k < numSeats; k++) {
+                if (k % 2 === 0) { // Alternating between company and client names
+                    seatingOrder.push(companyNames[i++]);
+                } else {
+                    seatingOrder.push(clientNames[j++]);
+                }
+            }
+
+            // Place seats around the circle
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
                 const radian = angle * Math.PI / 180;
-                const x = 300 + radius * Math.cos(radian); // 300 是容器中心
-                const y = 300 + radius * Math.sin(radian); // 300 是容器中心
+                const x = 300 + radius * Math.cos(radian); // Center is at 300
+                const y = 300 + radius * Math.sin(radian); // Center is at 300
 
                 const seat = document.createElement('div');
                 seat.className = 'seat';
                 seat.style.left = x + 'px';
                 seat.style.top = y + 'px';
-
-                if (i % 2 === 0) {
-                    const index = Math.floor(i / 2);
-                    seat.innerText = clientNames[index] ? clientNames[index] : `客户${index + 1}`;
-                } else {
-                    const index = Math.floor(i / 2);
-                    seat.innerText = companyNames[index] ? companyNames[index] : `我司${index + 1}`;
-                }
+                seat.innerText = seatingOrder[i] ? seatingOrder[i] : `座位${i + 1}`;
 
                 seat.onclick = function () {
                     if (confirm("确定要删除这个座位吗？")) {
