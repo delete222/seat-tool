@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +12,7 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
+            background-color: #ffffff;
         }
 
         #controls {
@@ -22,43 +21,45 @@
 
         #seating-chart {
             position: relative;
-            width: 500px;
-            height: 500px;
+            width: 600px;
+            height: 600px;
         }
 
         .circle {
             border-radius: 50%;
-            background-color: blue;
+            background-color: #4a82d6;
             color: white;
-            width: 300px;
-            height: 300px;
+            width: 400px;
+            height: 400px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
+            font-size: 20px;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .seat {
             position: absolute;
-            border: 1px solid black;
-            padding: 5px;
+            border: 1px solid #4a82d6;
             background-color: white;
             text-align: center;
             cursor: pointer;
-            width: 60px;
-            height: 30px;
-            line-height: 20px;
+            width: 80px;
+            height: 40px;
+            line-height: 40px;
             box-sizing: border-box;
-            will-change: transform;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            user-select: none;
+            transform: translate(-50%, -50%);
         }
-
     </style>
 </head>
-
 <body>
     <div id="controls">
         <label for="num-seats">座位数量:</label>
@@ -66,12 +67,12 @@
         <button onclick="generateSeats()">生成座位图</button>
     </div>
     <div id="seating-chart">
-        <div class="circle">餐叙座位图</div>
+        <div class="circle">紫荆书院·钱塘厅</div>
     </div>
 
     <script>
         function generateSeats() {
-            const numSeats = document.getElementById('num-seats').value;
+            const numSeats = parseInt(document.getElementById('num-seats').value, 10);
             const seatingChart = document.getElementById('seating-chart');
             const circle = seatingChart.querySelector('.circle');
 
@@ -79,17 +80,18 @@
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
 
             const angleStep = 360 / numSeats;
-            const radius = 225; // 半径调整为225，使得座位位于圆的外侧
+            const radius = 250; // 调整半径，使得座位外移
 
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
                 const radian = angle * Math.PI / 180;
-                const x = 250 + radius * Math.cos(radian) - 30; // 250 是容器中心，30是座位宽度的一半
-                const y = 250 + radius * Math.sin(radian) - 15; // 250 是容器中心，15 是座位高度的一半
+                const x = 300 + radius * Math.cos(radian); // 300 是容器中心
+                const y = 300 + radius * Math.sin(radian); // 300 是容器中心
 
                 const seat = document.createElement('div');
                 seat.className = 'seat';
-                seat.style.transform = `translate(${x}px, ${y}px)`;
+                seat.style.left = x + 'px';
+                seat.style.top = y + 'px';
                 seat.contentEditable = true;
                 seat.innerText = `座位${i + 1}`;
                 seat.onclick = function () {
@@ -102,5 +104,4 @@
         }
     </script>
 </body>
-
 </html>
