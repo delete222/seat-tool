@@ -88,7 +88,7 @@
         <button onclick="generateSeats()">生成座位图</button>
     </div>
     <div id="seating-chart">
-        <div class="circle">33紫荆书院·钱塘厅</div>
+        <div class="circle">4紫荆书院·钱塘厅</div>
     </div>
 
     <script>
@@ -107,23 +107,15 @@
 
             const angleStep = 360 / numSeats;
             const radius = 250;
-            
-            const seatingOrder = [];
 
-            const minLen = Math.min(clientNames.length, companyNames.length);
-
-            // 按图片要求的顺序：我司、客户、我司、客户...
-            for (let i = 0; i < minLen; i++) {
-                seatingOrder.push(companyNames[i]);
-                seatingOrder.push(clientNames[i]);
-            }
-
-            // 处理公司或客户名单较长的情况
-            if (clientNames.length > companyNames.length) {
-                seatingOrder.push(...clientNames.slice(minLen));
-            } else if (companyNames.length > clientNames.length) {
-                seatingOrder.push(...companyNames.slice(minLen));
-            }
+            const seatingOrder = [
+                companyNames[0], clientNames[1],
+                companyNames[2], clientNames[3],
+                companyNames[5], clientNames[5],
+                companyNames[4], clientNames[4],
+                companyNames[3], clientNames[2],
+                companyNames[1], clientNames[0]
+            ];
 
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
