@@ -41,6 +41,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            user-select: none;
         }
 
         .seat {
@@ -70,6 +71,12 @@
             font-size: 12px;
             color: #888;
         }
+
+        @media print {
+            body, #seating-chart {
+                background-color: transparent;
+            }
+        }
     </style>
 </head>
 <body>
@@ -79,44 +86,20 @@
         <button onclick="generateSeats()">生成座位图</button>
         <button onclick="saveLayout()">保存布局</button>
         <button onclick="resetLayout()">重置布局</button>
+        <button onclick="startSwap()">互换座位</button>
+        <button onclick="confirmSwap()">确认互换</button>
         <button onclick="deleteSelectedSeat()">删除选中座位</button>
+        <button onclick="downloadSeatingChart()">下载座位图</button>
     </div>
     <div id="seating-chart">
-        <div class="circle">紫荆书院·钱塘厅</div>
+        <div class="circle" contenteditable="true">紫荆书院·钱塘厅</div>
     </div>
     <div class="version">版本: 1.0.0</div>
 
     <script>
         let savedLayout = null;
         let selectedSeat = null;
-
-        function makeDraggable(element) {
-            element.onmousedown = function(event) {
-                event.preventDefault();
-                let shiftX = event.clientX - element.getBoundingClientRect().left;
-                let shiftY = event.clientY - element.getBoundingClientRect().top;
-
-                function moveAt(pageX, pageY) {
-                    element.style.left = pageX - shiftX + 'px';
-                    element.style.top = pageY - shiftY + 'px';
-                }
-
-                function onMouseMove(event) {
-                    moveAt(event.pageX, event.pageY);
-                }
-
-                document.addEventListener('mousemove', onMouseMove);
-
-                element.onmouseup = function() {
-                    document.removeEventListener('mousemove', onMouseMove);
-                    element.onmouseup = null;
-                };
-            };
-
-            element.ondragstart = function() {
-                return false;
-            };
-        }
+        let swapSeats = [];
 
         function generateSeats() {
             const numSeats = parseInt(document.getElementById('num-seats').value, 10);
@@ -147,10 +130,43 @@
                     }
                     selectedSeat = seat;
                     seat.classList.add('selected');
+                    addSeatToSwap(seat);
                 };
 
-                makeDraggable(seat);
                 seatingChart.appendChild(seat);
+            }
+        }
+
+        function addSeatToSwap(seat) {
+            if (swapSeats.length < 2) {
+                swapSeats.push(seat);
+                seat.classList.add('selected');
+            } else {
+                alert('只能选择两个座位进行互换');
+            }
+        }
+
+        function startSwap() {
+            swapSeats = [];
+            document.querySelectorAll('.seat').forEach(seat => seat.classList.remove('selected'));
+        }
+
+        function confirmSwap() {
+            if (swapSeats.length == 2) {
+                let seat1 = swapSeats[0];
+                let seat2 = swapSeats[1];
+
+                let tempLeft = seat1.style.left;
+                let tempTop = seat1.style.top;
+                seat1.style.left = seat2.style.left;
+                seat1.style.top = seat2.style.top;
+                seat2.style.left = tempLeft;
+                seat2.style.top = tempTop;
+
+                swapSeats.forEach(seat => seat.classList.remove('selected'));
+                swapSeats = [];
+            } else {
+                alert('请选择两个座位进行互换');
             }
         }
 
@@ -188,9 +204,9 @@
                     }
                     selectedSeat = seat;
                     seat.classList.add('selected');
+                    addSeatToSwap(seat);
                 };
 
-                makeDraggable(seat);
                 seatingChart.appendChild(seat);
             });
             alert('布局已重置');
@@ -205,8 +221,19 @@
             }
         }
 
+        function downloadSeatingChart() {
+            const seatingChart = document.getElementById('seating-chart');
+            html2canvas(seatingChart, {backgroundColor: null}).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'seating_chart.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
         // 初始化页面上的座位
         generateSeats();
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
 </body>
 </html>
