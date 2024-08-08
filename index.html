@@ -17,6 +17,9 @@
 
         #controls {
             margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         #seating-chart {
@@ -58,16 +61,37 @@
             user-select: none;
             transform: translate(-50%, -50%);
         }
+
+        .input-area {
+            display: flex;
+            margin: 10px 0;
+        }
+
+        .input-area label {
+            margin-right: 10px;
+        }
+
+        .input-area textarea {
+            width: 200px;
+            height: 100px;
+            margin-right: 20px;
+        }
     </style>
 </head>
 <body>
     <div id="controls">
+        <div class="input-area">
+            <label for="client-names">客户:</label>
+            <textarea id="client-names" placeholder="每行一个客户姓名"></textarea>
+            <label for="company-names">我司:</label>
+            <textarea id="company-names" placeholder="每行一个我司姓名"></textarea>
+        </div>
         <label for="num-seats">座位数量:</label>
         <input type="number" id="num-seats" min="1" value="10">
         <button onclick="generateSeats()">生成座位图</button>
     </div>
     <div id="seating-chart">
-        <div class="circle">紫荆书院·钱塘厅</div>
+        <div class="circle">钱塘厅</div>
     </div>
 
     <script>
@@ -75,6 +99,8 @@
             const numSeats = parseInt(document.getElementById('num-seats').value, 10);
             const seatingChart = document.getElementById('seating-chart');
             const circle = seatingChart.querySelector('.circle');
+            const clientNames = document.getElementById('client-names').value.trim().split('\n');
+            const companyNames = document.getElementById('company-names').value.trim().split('\n');
 
             // 移除现有的座位
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
@@ -92,13 +118,21 @@
                 seat.className = 'seat';
                 seat.style.left = x + 'px';
                 seat.style.top = y + 'px';
-                seat.contentEditable = true;
-                seat.innerText = `座位${i + 1}`;
+
+                if (i % 2 === 0) {
+                    const index = Math.floor(i / 2);
+                    seat.innerText = clientNames[index] ? clientNames[index] : `客户${index + 1}`;
+                } else {
+                    const index = Math.floor(i / 2);
+                    seat.innerText = companyNames[index] ? companyNames[index] : `我司${index + 1}`;
+                }
+
                 seat.onclick = function () {
                     if (confirm("确定要删除这个座位吗？")) {
                         seat.remove();
                     }
                 };
+
                 seatingChart.appendChild(seat);
             }
         }
