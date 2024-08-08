@@ -15,14 +15,21 @@
             background-color: #f0f0f0;
         }
 
+        #version {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-weight: bold;
+        }
+
         #controls {
             margin-bottom: 20px;
         }
 
         #seating-chart {
             position: relative;
-            width: 600px;
-            height: 600px;
+            width: 660px;
+            height: 660px;
         }
 
         .circle {
@@ -76,6 +83,7 @@
     </style>
 </head>
 <body>
+    <div id="version">版本号：1.0</div>
     <div id="controls">
         <div class="input-area">
             <label for="client-names">客户:</label>
@@ -88,7 +96,7 @@
         <button onclick="generateSeats()">生成座位图</button>
     </div>
     <div id="seating-chart">
-        <div class="circle">4紫荆书院·钱塘厅</div>
+        <div class="circle">紫荆书院·钱塘厅</div>
     </div>
 
     <script>
@@ -106,22 +114,22 @@
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
 
             const angleStep = 360 / numSeats;
-            const radius = 250;
+            const radius = 300;
 
-            const seatingOrder = [
-                companyNames[0], clientNames[1],
-                companyNames[2], clientNames[3],
-                companyNames[5], clientNames[5],
-                companyNames[4], clientNames[4],
-                companyNames[3], clientNames[2],
-                companyNames[1], clientNames[0]
-            ];
+            const seatingOrder = [];
+            for (let i = 0; i < numSeats; i++) {
+                if (i % 2 === 0) {
+                    seatingOrder.push(companyNames.shift() || `我司${i / 2 + 1}`);
+                } else {
+                    seatingOrder.push(clientNames.shift() || `客户${(i - 1) / 2 + 1}`);
+                }
+            }
 
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
                 const radian = angle * Math.PI / 180;
-                const x = 300 + radius * Math.cos(radian);
-                const y = 300 + radius * Math.sin(radian);
+                const x = 330 + radius * Math.cos(radian);
+                const y = 330 + radius * Math.sin(radian);
 
                 const seat = document.createElement('div');
                 seat.className = 'seat';
