@@ -9,6 +9,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
+            width: 600px; /* 宽度调整为合适大小 */
+            height: 400px; /* 高度调整为合适大小 */
         }
         .seat {
             position: absolute;
@@ -16,6 +19,11 @@
             padding: 5px;
             background-color: white;
             cursor: pointer;
+            text-align: center;
+            box-sizing: border-box; /* 使padding生效，保持统一尺寸 */
+            width: 60px; /* 固定宽度 */
+            height: 30px; /* 固定高度 */
+            line-height: 20px; /* 行高设置为与字体大小一致 */
         }
         .circle {
             border-radius: 50%;
@@ -61,24 +69,25 @@
             seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
             
             const angleStep = 360 / numSeats;
-            const radius = 150; // half of circle diameter
+            const radius = 150 - 25; // Circle radius less half seat width (for positioning)
             
             for (let i = 0; i < numSeats; i++) {
                 const angle = angleStep * i - 90;
-                const x = radius + radius * Math.cos(angle * Math.PI / 180);
-                const y = radius + radius * Math.sin(angle * Math.PI / 180);
-                
+                const radian = angle * Math.PI / 180;
+                const x = 300 / 2 + radius * Math.cos(radian) - 30; // Center of circle plus radius minus half seat width
+                const y = 300 / 2 + radius * Math.sin(radian) - 15; // Center of circle plus radius minus half seat height
+
                 const seat = document.createElement('div');
                 seat.className = 'seat';
                 seat.style.left = x + 'px';
                 seat.style.top = y + 'px';
                 seat.contentEditable = true;
-                seat.innerText = `座位${i+1}`;
-                seat.onclick = function() {
-                    if(confirm("确定要删除这个座位吗？")) {
+                seat.innerText = `座位${i + 1}`;
+                seat.onclick = function () {
+                    if (confirm("确定要删除这个座位吗？")) {
                         seat.remove();
                     }
-                }
+                };
                 seatingChart.appendChild(seat);
             }
         }
