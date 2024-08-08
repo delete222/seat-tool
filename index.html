@@ -92,7 +92,7 @@
         <button onclick="downloadSeatingChart()">下载座位图</button>
     </div>
     <div id="seating-chart">
-        <div class="circle" contenteditable="true">紫荆书院·钱塘厅</div>
+        <div class="circle" contenteditable="true">输入包厢名称</div>
     </div>
     <div class="version">版本: 1.0.0</div>
 
@@ -149,6 +149,9 @@
             if (swapSeats.length < 2) {
                 swapSeats.push(seat);
                 seat.classList.add('selected');
+                if (swapSeats.length === 2) {
+                    alert('只能选择两个座位进行互换');
+                }
             } else {
                 alert('只能选择两个座位进行互换');
             }
