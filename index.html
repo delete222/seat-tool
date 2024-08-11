@@ -1,251 +1,521 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>座位图生成器</title>
+    <title>座位图</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .input-section {
+            flex: 1;
+            padding: 10px;
+            box-sizing: border-box;
+            max-width: 600px;
+        }
+
+        .input-section textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #007bff;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .input-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .actions {
+            margin-top: 30px; /* 调整 margin-top 以将按钮和功能区域下移 */
+            text-align: center;
+            width: 100%;
+        }
+
+        .actions button,
+        .actions input[type="number"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .actions input[type="number"] {
+            background-color: #fff;
+            color: #007bff;
+            border: 1px solid #007bff;
+            text-align: center;
+            width: 60px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .actions button:hover {
+            background-color: #0056b3;
+        }
+
+        .meeting-room {
+            text-align: center;
+            background-color: #fff;
+            padding: 40px; /* 增加 padding 使白色背景区域变大 */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #ffffff;
-        }
-
-        #controls {
-            margin-bottom: 20px;
-        }
-
-        #seating-chart {
-            position: relative;
-            width: 800px;
-            height: 800px;
-            border: 1px solid #ccc;
+            flex-basis: 100%;
             box-sizing: border-box;
+            position: relative;
         }
 
-        .circle-small {
-            border-radius: 50%;
-            background-color: #4a82d6;
-            color: white;
-            width: 400px;
-            height: 400px;
+        .seat-row {
             display: flex;
             justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 20px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            user-select: none;
-        }
-
-        .circle-large {
-            border-radius: 50%;
-            background-color: #4a82d6;
-            color: white;
-            width: 600px;
-            height: 600px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 20px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            user-select: none;
+            margin: 5px 0;
         }
 
         .seat {
-            position: absolute;
-            border: 1px solid #4a82d6;
+            width: 70px;
+            height: 30px;
             background-color: white;
-            text-align: center;
-            cursor: pointer;
-            width: 80px;
-            height: 40px;
-            line-height: 40px;
+            border: 1px solid #007bff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2px 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
             box-sizing: border-box;
-            border-radius: 8px;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-            user-select: none;
-            transform: translate(-50%, -50%);
+            cursor: pointer;
         }
 
-        .selected {
-            border: 2px solid red;
+        .seat input {
+            width: 90%;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            padding: 4px;
+            cursor: pointer;
         }
 
-        .version {
+        .seat-main {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .seat-selected {
+            border-color: red;
+        }
+
+        .table-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .table {
+            background-color: #007bff;
+            color: white;
+            height: 80px;
+            margin: 5px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        /* 提示区域的样式 */
+        .message {
+            margin: 10px 0;
+            font-weight: bold;
+            color: red;
+        }
+
+        .table input {
+            width: 95%;
+            text-align: center;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 16px;
+            padding: 0;
+        }
+
+        .led {
+            width: 30px;
+            height: 80px;
+            background-color: #007bff;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            text-align: center;
+            margin: 0 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        .led input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            border: none;
+            background: transparent;
+            color: #fff;
+            font-size: 16px;
+            padding: 0;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        .version-info {
             position: fixed;
-            bottom: 10px;
             right: 10px;
-            font-size: 12px;
-            color: #888;
-        }
-
-        @media print {
-            body, #seating-chart {
-                background-color: transparent;
-            }
+            bottom: 10px;
+            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
+
 <body>
-    <div id="controls">
-        <label for="num-seats">座位数量:</label>
-        <input type="number" id="num-seats" min="1" value="10">
-        <button onclick="generateSeats()">生成座位图</button>
-        <button onclick="saveLayout()">保存布局</button>
-        <button onclick="resetLayout()">重置布局</button>
-        <button onclick="deleteSelectedSeat()">删除选中座位</button>
-        <button onclick="downloadSeatingChart()">下载座位图</button>
+    <div class="container">
+        <div class="input-section">
+            <label for="top-seats">上方座位</label>
+            <textarea id="top-seats" placeholder="每行输入一个名字"></textarea>
+        </div>
+        <div class="input-section">
+            <label for="bottom-seats">下方座位</label>
+            <textarea id="bottom-seats" placeholder="每行输入一个名字"></textarea>
+        </div>
+        <div class="actions">
+            <button onclick="promptForMainSeats()">自动排座位</button>
+        </div>
+        <div class="meeting-room">
+            <div class="seat-row" id="top-row">
+                <!-- 默认每排8个座位 -->
+                <div class="seat" onclick="seatClicked(this, 'top')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'top')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'top')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'top')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'top')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'top')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'top')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'top')"><input type="text" class="seat-input"></div>
+            </div>
+            <div class="table-container">
+                <div class="led left" style="visibility: hidden;"><input type="text" value="屏 幕"></div>
+                <div class="table"><input type="text" value="请输入会议室名称"></div>
+                <div class="led right"><input type="text" value="屏 幕"></div>
+            </div>
+            <div class="seat-row" id="bottom-row">
+                <!-- 默认每排8个座位 -->
+                <div class="seat" onclick="seatClicked(this, 'bottom')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'bottom')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'bottom')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'bottom')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'bottom')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'bottom')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'bottom')"><input type="text" class="seat-input"></div>
+                <div class="seat" onclick="seatClicked(this, 'bottom')"><input type="text" class="seat-input"></div>
+            </div>
+            <div class="actions">
+                <label for="top-seat-count">定义顶部座位数:</label>
+                <input type="number" id="top-seat-count" value="8" min="0" onchange="updateSeatCount('top')">
+                <label for="bottom-seat-count">定义底部座位数:</label>
+                <input type="number" id="bottom-seat-count" value="8" min="0" onchange="updateSeatCount('bottom')">
+                <button onclick="toggleLEDPosition()">调整屏幕位置</button>
+                <button onclick="startSwapSeats()">换座位</button>
+                <button onclick="startRemoveSeat()">移除特定座位</button>
+            </div>
+        </div>
+        <div class="message" id="message"></div>
+        <!-- 提示信息区域 -->
+        <div class="version-info">@SteveYang</div> <!-- 署名信息 -->
     </div>
-    <div id="seating-chart"></div>
-    <div class="version">版本: 1.0.0</div>
 
     <script>
-        let savedLayout = null;
-        let selectedSeat = null;
+        let isScreenRight = true;
+        let selectedMainSeatTop = null;
+        let selectedMainSeatBottom = null;
+        let swapMode = false;
+        let removeMode = false;
+        let selectedSwapSeats = [];
 
-        function generateSeats() {
-            const numSeats = parseInt(document.getElementById('num-seats').value, 10);
-            const seatingChart = document.getElementById('seating-chart');
+        function showMessage(text) {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = text;
+        }
 
-            // 移除现有的座位和圆圈
-            seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
-            seatingChart.querySelectorAll('.circle-small, .circle-large').forEach(circle => circle.remove());
+        function clearMessageAfter(seconds) {
+            setTimeout(() => {
+                showMessage('');
+            }, seconds * 1000);
+        }
 
-            let circle, radius, center;
+        function updateTableWidth() {
+            const topRow = document.getElementById('top-row');
+            const bottomRow = document.getElementById('bottom-row');
+            const table = document.querySelector('.table');
 
-            if (numSeats < 14) {
-                circle = document.createElement('div');
-                circle.className = 'circle-small';
-                circle.contentEditable = true;
-                circle.innerText = '输入包厢名称';
-                radius = 200;
-                center = 400;
+            const topSeats = topRow.getElementsByClassName('seat');
+            const bottomSeats = bottomRow.getElementsByClassName('seat');
+
+            const totalSeats = Math.max(topSeats.length, bottomSeats.length);
+
+            // 设置会议桌的宽度
+            table.style.width = (totalSeats * 80) + 'px';
+        }
+
+        function updateSeatCount(position) {
+            const seatRow = document.getElementById(position + '-row');
+            const seatCount = parseInt(document.getElementById(position + '-seat-count').value, 10);
+
+            // 根据新的座位数量增减座位
+            while (seatRow.children.length < seatCount) {
+                addSeat(position, seatRow);
+            }
+
+            while (seatRow.children.length > seatCount) {
+                removeSeat(position, seatRow);
+            }
+
+            updateTableWidth();
+        }
+
+        function addSeat(position, seatRow) {
+            const newSeat = document.createElement('div');
+            newSeat.className = 'seat';
+            newSeat.innerHTML = '<input type="text" class="seat-input">';
+            newSeat.setAttribute('onclick', `seatClicked(this, '${position}')`);
+            seatRow.appendChild(newSeat);
+        }
+
+        function removeSeat(position, seatRow) {
+            if (seatRow.children.length > 0) {
+                seatRow.removeChild(seatRow.lastChild);
+            }
+        }
+
+        function toggleLEDPosition() {
+            const ledLeft = document.querySelector('.led.left');
+            const ledRight = document.querySelector('.led.right');
+
+            isScreenRight = !isScreenRight;
+
+            if (isScreenRight) {
+                ledRight.style.visibility = 'visible';
+                ledLeft.style.visibility = 'hidden';
             } else {
-                circle = document.createElement('div');
-                circle.className = 'circle-large';
-                circle.contentEditable = true;
-                circle.innerText = '输入包厢名称';
-                radius = 300;
-                center = 400;
+                ledRight.style.visibility = 'hidden';
+                ledLeft.style.visibility = 'visible';
             }
 
-            seatingChart.appendChild(circle);
-
-            const angleStep = 360 / numSeats;
-
-            for (let i = 0; i < numSeats; i++) {
-                const angle = angleStep * i - 90;
-                const radian = angle * Math.PI / 180;
-                const x = center + (radius + 50) * Math.cos(radian); // 增加50像素的距离使座位在圈外
-                const y = center + (radius + 50) * Math.sin(radian);
-
-                const seat = document.createElement('div');
-                seat.className = 'seat';
-                seat.style.left = x + 'px';
-                seat.style.top = y + 'px';
-                seat.contentEditable = true;
-                seat.innerText = `座位${i + 1}`;
-                seat.onclick = function(event) {
-                    event.stopPropagation();
-                    if (selectedSeat) {
-                        selectedSeat.classList.remove('selected');
-                    }
-                    selectedSeat = seat;
-                    seat.classList.add('selected');
-                };
-
-                seatingChart.appendChild(seat);
-            }
+            autoArrangeSeats(selectedMainSeatTop, selectedMainSeatBottom);
         }
 
-        function saveLayout() {
-            const seatingChart = document.getElementById('seating-chart');
-            const seats = seatingChart.querySelectorAll('.seat');
-            savedLayout = Array.from(seats).map(seat => ({
-                text: seat.innerText,
-                left: seat.style.left,
-                top: seat.style.top
-            }));
-            alert('布局已保存');
-        }
-
-        function resetLayout() {
-            if (!savedLayout) {
-                alert('没有已保存的布局');
+        function promptForMainSeats() {
+            if (!selectedMainSeatTop || !selectedMainSeatBottom) {
+                showMessage('请点击选择顶部和底部的主位后，再进行座位排列。');
+                clearMessageAfter(3);
                 return;
             }
-            const seatingChart = document.getElementById('seating-chart');
+            autoArrangeSeats(selectedMainSeatTop, selectedMainSeatBottom);
+        }
 
-            // 移除现有的座位
-            seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
-
-            savedLayout.forEach(seatData => {
-                const seat = document.createElement('div');
-                seat.className = 'seat';
-                seat.style.left = seatData.left;
-                seat.style.top = seatData.top;
-                seat.contentEditable = true;
-                seat.innerText = seatData.text;
-                seat.onclick = function(event) {
-                    event.stopPropagation();
-                    if (selectedSeat) {
-                        selectedSeat.classList.remove('selected');
+        function selectMainSeat(seat, position) {
+            if (!swapMode && !removeMode) {
+                seat.classList.toggle('seat-main');
+                if (seat.classList.contains('seat-main')) {
+                    if (position === 'top') {
+                        if (selectedMainSeatTop) {
+                            selectedMainSeatTop.classList.remove('seat-main');
+                        }
+                        selectedMainSeatTop = seat;
+                    } else if (position === 'bottom') {
+                        if (selectedMainSeatBottom) {
+                            selectedMainSeatBottom.classList.remove('seat-main');
+                        }
+                        selectedMainSeatBottom = seat;
                     }
-                    selectedSeat = seat;
-                    seat.classList.add('selected');
-                };
-
-                seatingChart.appendChild(seat);
-            });
-            alert('布局已重置');
+                } else {
+                    if (position === 'top') {
+                        selectedMainSeatTop = null;
+                    } else if (position === 'bottom') {
+                        selectedMainSeatBottom = null;
+                    }
+                }
+            }
         }
 
-        function deleteSelectedSeat() {
-            if (selectedSeat) {
-                selectedSeat.remove();
-                selectedSeat = null;
+        function autoArrangeSeats(mainSeatTop, mainSeatBottom) {
+            const mainSeatIndexTop = Array.from(mainSeatTop.parentElement.children).indexOf(mainSeatTop);
+            const mainSeatIndexBottom = Array.from(mainSeatBottom.parentElement.children).indexOf(mainSeatBottom);
+
+            arrangeSeats('top', mainSeatIndexTop);
+            arrangeSeats('bottom', mainSeatIndexBottom);
+            updateTableWidth();
+
+            // 取消选中状态
+            mainSeatTop.classList.remove('seat-main');
+            mainSeatBottom.classList.remove('seat-main');
+            selectedMainSeatTop = null;
+            selectedMainSeatBottom = null;
+
+            return true;
+        }
+
+        function arrangeSeats(position, mainSeatIndex) {
+            const input = document.getElementById(position + '-seats').value.trim();
+            const names = input.split('\n').map(name => name.trim()).filter(name => name);
+            const seatRow = document.getElementById(position + '-row');
+            const seats = seatRow.getElementsByClassName('seat');
+
+            if (mainSeatIndex < 0 || mainSeatIndex >= seats.length) {
+                showMessage('无效的主宾位置');
+                clearMessageAfter(3);
+                return;
+            }
+
+            if (names.length === 0) {
+                showMessage('请输入座位名单');
+                clearMessageAfter(3);
+                return;
+            }
+
+            // 清空所有座位的名字
+            for (const seat of seats) {
+                seat.querySelector('.seat-input').value = '';
+            }
+
+            // 初始化指针
+            let leftIndex = mainSeatIndex - 1;
+            let rightIndex = mainSeatIndex + 1;
+            let toggle = (position === 'bottom') ? false : true; // 如果是底部座位，先从右边开始排
+
+            seats[mainSeatIndex].querySelector('.seat-input').value = names[0] || '';
+            let nameIndex = 1;
+
+            while (nameIndex < names.length) {
+                if (toggle) {
+                    if (rightIndex < seats.length) {
+                        seats[rightIndex].querySelector('.seat-input').value = names[nameIndex++] || '';
+                        rightIndex++;
+                    } else {
+                        break;
+                    }
+                } else {
+                    if (leftIndex >= 0) {
+                        seats[leftIndex].querySelector('.seat-input').value = names[nameIndex++] || '';
+                        leftIndex--;
+                    } else {
+                        break;
+                    }
+                }
+                toggle = !toggle;
+            }
+
+            // 补全超出的名字
+            while (nameIndex < names.length) {
+                // 找到第一个没有名字的座位，补上剩下的名字
+                for (let i = 0; i < seats.length; i++) {
+                    if (!seats[i].querySelector('.seat-input').value) {
+                        seats[i].querySelector('.seat-input').value = names[nameIndex++] || '';
+                        if (nameIndex >= names.length) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        function startSwapSeats() {
+            swapMode = true;
+            removeMode = false;
+            showMessage('已进入换座位模式，选择两个你要互换的座位。');
+        }
+
+        function startRemoveSeat() {
+            removeMode = true;
+            swapMode = false;
+            showMessage('已进入移除模式，选择你要移除的座位。');
+        }
+
+        function seatClicked(seat, position) {
+            if (swapMode) {
+                seat.classList.toggle('seat-selected');
+                if (seat.classList.contains('seat-selected')) {
+                    selectedSwapSeats.push(seat);
+                    if (selectedSwapSeats.length === 2) {
+                        swapSeats(selectedSwapSeats[0], selectedSwapSeats[1]);
+                        selectedSwapSeats.forEach(seat => seat.classList.remove('seat-selected'));
+                        selectedSwapSeats = [];
+                        swapMode = false;
+                        showMessage('座位已互换完毕。');
+                        clearMessageAfter(3);
+                    }
+                } else {
+                    const index = selectedSwapSeats.indexOf(seat);
+                    if (index > -1) {
+                        selectedSwapSeats.splice(index, 1);
+                    }
+                }
+            } else if (removeMode) {
+                seat.parentElement.removeChild(seat);
+                removeMode = false;
+                showMessage('座位已移除。');
+                updateTableWidth();
+                clearMessageAfter(3);
             } else {
-                alert('请选择一个座位');
+                selectMainSeat(seat, position);
             }
         }
 
-        function downloadSeatingChart() {
-            const seatingChart = document.getElementById('seating-chart');
-            htmlToImage.toPng(seatingChart).then(dataUrl => {
-                const link = document.createElement('a');
-                link.download = 'seating_chart.png';
-                link.href = dataUrl;
-                link.click();
-            }).catch(error => {
-                console.error('下载座位图失败：', error);
-            });
+        function swapSeats(seat1, seat2) {
+            const seat1Input = seat1.querySelector('.seat-input');
+            const seat2Input = seat2.querySelector('.seat-input');
+            const temp = seat1Input.value;
+            seat1Input.value = seat2Input.value;
+            seat2Input.value = temp;
         }
 
-        document.addEventListener('click', function(event) {
-            // 如果点击的是不属于座位的区域，取消选中所有座位
-            if (!event.target.classList.contains('seat')) {
-                document.querySelectorAll('.seat').forEach(seat => seat.classList.remove('selected'));
-                selectedSeat = null;
-            }
-        });
-
-        // 初始化页面上的座位
-        generateSeats();
+        window.addEventListener('resize', updateTableWidth);
+        updateTableWidth();
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.9.0/dist/html-to-image.min.js"></script>
 </body>
+
 </html>
