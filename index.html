@@ -400,69 +400,70 @@
             return true;
         }
 
-        function arrangeSeats(position, mainSeatIndex) {
-            const input = document.getElementById(position + '-seats').value.trim();
-            const names = input.split('\n').map(name => name.trim()).filter(name => name);
-            const seatRow = document.getElementById(position + '-row');
-            const seats = seatRow.getElementsByClassName('seat');
+function arrangeSeats(position, mainSeatIndex) {
+    const input = document.getElementById(position + '-seats').value.trim();
+    const names = input.split('\n').map(name => name.trim().split('\t')[0]).filter(name => name); // 修改这里，剔除职务信息
+    const seatRow = document.getElementById(position + '-row');
+    const seats = seatRow.getElementsByClassName('seat');
 
-            if (mainSeatIndex < 0 || mainSeatIndex >= seats.length) {
-                showMessage('无效的主宾位置');
-                clearMessageAfter(3);
-                return;
+    if (mainSeatIndex < 0 || mainSeatIndex >= seats.length) {
+        showMessage('无效的主宾位置');
+        clearMessageAfter(3);
+        return;
+    }
+
+    if (names.length === 0) {
+        showMessage('请输入座位名单');
+        clearMessageAfter(3);
+        return;
+    }
+
+    // 清空所有座位的名字
+    for (const seat of seats) {
+        seat.querySelector('.seat-input').value = '';
+    }
+
+    // 初始化指针
+    let leftIndex = mainSeatIndex - 1;
+    let rightIndex = mainSeatIndex + 1;
+    let toggle = (position === 'bottom') ? false : true; // 如果是底部座位，先从右边开始排
+
+    seats[mainSeatIndex].querySelector('.seat-input').value = names[0] || '';
+    let nameIndex = 1;
+
+    while (nameIndex < names.length) {
+        if (toggle) {
+            if (rightIndex < seats.length) {
+                seats[rightIndex].querySelector('.seat-input').value = names[nameIndex++] || '';
+                rightIndex++;
+            } else {
+                break;
             }
-
-            if (names.length === 0) {
-                showMessage('请输入座位名单');
-                clearMessageAfter(3);
-                return;
+        } else {
+            if (leftIndex >= 0) {
+                seats[leftIndex].querySelector('.seat-input').value = names[nameIndex++] || '';
+                leftIndex--;
+            } else {
+                break;
             }
+        }
+        toggle = !toggle;
+    }
 
-            // 清空所有座位的名字
-            for (const seat of seats) {
-                seat.querySelector('.seat-input').value = '';
-            }
-
-            // 初始化指针
-            let leftIndex = mainSeatIndex - 1;
-            let rightIndex = mainSeatIndex + 1;
-            let toggle = (position === 'bottom') ? false : true; // 如果是底部座位，先从右边开始排
-
-            seats[mainSeatIndex].querySelector('.seat-input').value = names[0] || '';
-            let nameIndex = 1;
-
-            while (nameIndex < names.length) {
-                if (toggle) {
-                    if (rightIndex < seats.length) {
-                        seats[rightIndex].querySelector('.seat-input').value = names[nameIndex++] || '';
-                        rightIndex++;
-                    } else {
-                        break;
-                    }
-                } else {
-                    if (leftIndex >= 0) {
-                        seats[leftIndex].querySelector('.seat-input').value = names[nameIndex++] || '';
-                        leftIndex--;
-                    } else {
-                        break;
-                    }
-                }
-                toggle = !toggle;
-            }
-
-            // 补全超出的名字
-            while (nameIndex < names.length) {
-                // 找到第一个没有名字的座位，补上剩下的名字
-                for (let i = 0; i < seats.length; i++) {
-                    if (!seats[i].querySelector('.seat-input').value) {
-                        seats[i].querySelector('.seat-input').value = names[nameIndex++] || '';
-                        if (nameIndex >= names.length) {
-                            break;
-                        }
-                    }
+    // 补全超出的名字
+    while (nameIndex < names.length) {
+        // 找到第一个没有名字的座位，补上剩下的名字
+        for (let i = 0; i < seats.length; i++) {
+            if (!seats[i].querySelector('.seat-input').value) {
+                seats[i].querySelector('.seat-input').value = names[nameIndex++] || '';
+                if (nameIndex >= names.length) {
+                    break;
                 }
             }
         }
+    }
+}
+
 
         function startSwapSeats() {
             swapMode = true;
