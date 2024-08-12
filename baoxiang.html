@@ -3,29 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>座位图生成器</title>
+    <title>圆桌座位图生成器</title>
     <style>
         body {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start; /* 垂直方向居上对齐 */
+            flex-direction: row;
+            justify-content: space-between;
             min-height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: white; /* 将页面背景设为白色 */
+            background-color: white;
         }
 
         #controls {
-            margin-bottom: 20px;
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
             padding: 10px;
             background-color: #fff;
             border: 1px solid #ccc;
             border-radius: 5px;
+            max-width: 200px;
+        }
+
+        #name-lists textarea {
+            width: 100%;
+            box-sizing: border-box;
         }
 
         #seating-chart-container {
@@ -35,9 +38,9 @@
             align-items: center;
             padding: 20px;
             box-sizing: border-box;
-            background-color: #fff; /* 确保容器是白色 */
-            width: 100%; /* 占满宽度 */
-            max-width: 1000px; /* 限制最大宽度以适应大屏幕 */
+            background-color: #fff;
+            width: 100%;
+            max-width: 1000px;
         }
 
         #seating-chart {
@@ -46,12 +49,12 @@
             height: 90vmin;
             box-sizing: border-box;
             background-color: white;
-            border: none; /* 去掉边框 */
+            border: none;
         }
 
         .circle {
             border-radius: 50%;
-            background-color: #3973ca; /* 使用新的颜色 */
+            background-color: #3973ca;
             color: white;
             display: flex;
             justify-content: center;
@@ -79,13 +82,13 @@
 
         .seat {
             position: absolute;
-            border: 1px solid #3973ca; /* 使用新的颜色 */
+            border: 1px solid #3973ca;
             background-color: white;
             text-align: center;
             cursor: pointer;
             width: 10vmin;
-            height: 5vmin;
-            line-height: 5vmin;
+            height: 4vmin; /* 调整高度 */
+            line-height: 4vmin; /* 调整行高 */
             border-radius: 8px;
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
             user-select: none;
@@ -102,11 +105,43 @@
             border: 2px solid red;
         }
 
-        /* 修改署名区域的样式 */
+        #name-pool {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 200px;
+            overflow-y: auto;
+        }
+
+        .name-group {
+            margin-bottom: 10px;
+        }
+
+        .name-item {
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .name-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .assigned {
+            background-color: #d3d3d3;
+            pointer-events: none;
+        }
+
         .version-info {
             position: fixed;
             bottom: 10px;
-            right: 10px;
+            left: 10px;
             font-size: 2vmin;
             color: #888;
         }
@@ -117,21 +152,34 @@
         <label for="num-seats">座位数量:</label>
         <input type="number" id="num-seats" min="1" value="10">
         <button onclick="generateSeats()">生成座位图</button>
-        <button onclick="saveLayout()">保存布局</button>
-        <button onclick="resetLayout()">重置布局</button>
         <button onclick="deleteSelectedSeat()">删除选中座位</button>
+        <button onclick="unassignSeat()">取消分配</button>
+        <label for="customer-names">客户名单:</label>
+        <textarea id="customer-names" rows="5" placeholder="每行一个名字"></textarea>
+        <label for="company-names">我司名单:</label>
+        <textarea id="company-names" rows="5" placeholder="每行一个名字"></textarea>
+        <button onclick="generateNamePool()">生成待选名字</button>
+        <button onclick="promptForFileName()">下载配置</button>
+        <input type="file" id="upload-config" style="display:none;" onchange="uploadConfig(event)">
+        <button onclick="document.getElementById('upload-config').click();">上传配置</button>
     </div>
     <div id="seating-chart-container">
         <div id="seating-chart"></div>
     </div>
-    <!-- 提示信息区域 -->
-    <div class="version-info">@SteveYang</div> <!-- 署名信息 -->
+    <div id="name-pool">
+        <div class="name-group" id="customer-group">
+            <h4>客户</h4>
+        </div>
+        <div class="name-group" id="company-group">
+            <h4>我司</h4>
+        </div>
+    </div>
+    <div class="version-info">©Steve Yang</div>
 
     <script>
-        let savedLayout = null;
         let selectedSeat = null;
 
-        function generateSeats() {
+        function generateSeats(seatConfigs = {}) {
             const numSeats = parseInt(document.getElementById('num-seats').value, 10);
             const seatingChart = document.getElementById('seating-chart');
 
@@ -140,95 +188,88 @@
             let circleClass, radius;
             if (numSeats <= 14) {
                 circleClass = 'circle-small';
-                radius = 30; // 中等大小的圆圈
+                radius = 30;
             } else {
                 circleClass = 'circle-large';
-                radius = 35; // 较大圆圈
+                radius = 35;
             }
 
-            // 动态调整中心圆圈的大小
             const circle = document.createElement('div');
             circle.className = `circle ${circleClass}`;
             circle.contentEditable = true;
-            circle.innerText = '输入包厢名称';
-
+            circle.innerText = seatConfigs.circleInnerText || '输入包厢名称';
             seatingChart.appendChild(circle);
 
-            const center = 50;
-            const angleStep = 360 / numSeats;
+            if (seatConfigs.seats) {
+                seatConfigs.seats.forEach((config) => {
+                    addSeat(config.left, config.top, config.text, config.assignedNameItem);
+                });
+            } else {
+                const center = 50;
+                const angleStep = 360 / numSeats;
 
-            for (let i = 0; i < numSeats; i++) {
-                const angle = angleStep * i - 90;
-                const radian = angle * Math.PI / 180;
-                const x = center + (radius + 9) * Math.cos(radian); // 调整距离使座位离圆圈更近
-                const y = center + (radius + 9) * Math.sin(radian);
+                for (let i = 0; i < numSeats; i++) {
+                    const angle = angleStep * i - 90;
+                    const radian = angle * Math.PI / 180;
+                    const x = center + (radius + 7.5) * Math.cos(radian);
+                    const y = center + (radius + 6.1) * Math.sin(radian);
 
-                const seat = document.createElement('div');
-                seat.className = 'seat';
-                seat.style.left = x + '%';
-                seat.style.top = y + '%';
-                seat.contentEditable = true;
-                seat.innerText = `座位${i + 1}`;
-                seat.onclick = (event) => {
-                    event.stopPropagation();
-                    if (selectedSeat) {
-                        selectedSeat.classList.remove('selected');
-                    }
-                    selectedSeat = seat;
-                    seat.classList.add('selected');
-                };
-
-                seatingChart.appendChild(seat);
+                    addSeat(x + '%', y + '%', `座位${i + 1}`);
+                }
             }
         }
 
-        function saveLayout() {
-            const seatingChart = document.getElementById('seating-chart');
-            const seats = seatingChart.querySelectorAll('.seat');
-            savedLayout = Array.from(seats).map(seat => ({
-                text: seat.innerText,
-                left: seat.style.left,
-                top: seat.style.top
-            }));
-            alert('布局已保存');
-        }
+        function addSeat(left, top, text, assignedNameItem = null) {
+            const seat = document.createElement('div');
+            seat.className = 'seat';
+            seat.style.left = left;
+            seat.style.top = top;
+            seat.contentEditable = true;
+            seat.innerText = text;
 
-        function resetLayout() {
-            if (!savedLayout) {
-                alert('没有已保存的布局');
-                return;
+            if (assignedNameItem) {
+                const nameGroup = assignedNameItem.isCustomer ? document.getElementById('customer-group') : document.getElementById('company-group');
+                seat.originalText = text.split('\n')[0];
+                seat.innerText = assignedNameItem.name;
+                const nameItem = nameGroup.children[assignedNameItem.index + 1];
+                seat.assignedNameItem = nameItem;
+                nameItem.classList.add('assigned');
             }
-            const seatingChart = document.getElementById('seating-chart');
 
-            seatingChart.querySelectorAll('.seat').forEach(seat => seat.remove());
+            seat.onclick = (event) => {
+                event.stopPropagation();
+                if (selectedSeat) {
+                    selectedSeat.classList.remove('selected');
+                }
+                selectedSeat = seat;
+                seat.classList.add('selected');
+            };
 
-            savedLayout.forEach(({ text, left, top }) => {
-                const seat = document.createElement('div');
-                seat.className = 'seat';
-                seat.style.left = left;
-                seat.style.top = top;
-                seat.contentEditable = true;
-                seat.innerText = text;
-                seat.onclick = (event) => {
-                    event.stopPropagation();
-                    if (selectedSeat) {
-                        selectedSeat.classList.remove('selected');
-                    }
-                    selectedSeat = seat;
-                    seat.classList.add('selected');
-                };
-
-                seatingChart.appendChild(seat);
-            });
-            alert('布局已重置');
+            document.getElementById('seating-chart').appendChild(seat);
         }
 
         function deleteSelectedSeat() {
             if (selectedSeat) {
+                if (selectedSeat.assignedNameItem) {
+                    selectedSeat.assignedNameItem.classList.remove('assigned');
+                    selectedSeat.originalText = null;
+                    selectedSeat.assignedNameItem = null;
+                }
                 selectedSeat.remove();
                 selectedSeat = null;
             } else {
                 alert('请选择一个座位');
+            }
+        }
+
+        function unassignSeat() {
+            if (selectedSeat && selectedSeat.assignedNameItem) {
+                selectedSeat.assignedNameItem.classList.remove('assigned');
+                selectedSeat.innerText = selectedSeat.originalText;
+                selectedSeat.originalText = null;
+                selectedSeat.assignedNameItem = null;
+            } else {
+                alert('请选择一个已经分配名字的座位');
             }
         }
 
@@ -241,7 +282,117 @@
             }
         });
 
-        // 初始化页面上的座位
+        function generateNamePool() {
+            const customerNames = document.getElementById('customer-names').value.split('\n');
+            const companyNames = document.getElementById('company-names').value.split('\n');
+            const customerGroup = document.getElementById('customer-group');
+            const companyGroup = document.getElementById('company-group');
+
+            customerGroup.innerHTML = '<h4>客户</h4>';
+            companyGroup.innerHTML = '<h4>我司</h4>';
+
+            customerNames.forEach((name, index) => {
+                const cleanName = cleanNameFunc(name);
+                addNameItem(customerGroup, cleanName, index + 1);
+            });
+
+            companyNames.forEach((name, index) => {
+                const cleanName = cleanNameFunc(name);
+                addNameItem(companyGroup, cleanName, index + 1);
+            });
+        }
+
+        function cleanNameFunc(name) {
+            const cleanName = name.split('\t')[0].trim();
+            return cleanName;
+        }
+
+        function addNameItem(group, name, index) {
+            if (name.trim() !== '') {
+                const nameItem = document.createElement('div');
+                nameItem.className = 'name-item';
+                nameItem.innerText = `${index}. ${name.trim()}`;
+                nameItem.onclick = () => {
+                    if (selectedSeat) {
+                        if (selectedSeat.assignedNameItem) {
+                            selectedSeat.assignedNameItem.classList.remove('assigned');
+                        }
+                        selectedSeat.originalText = selectedSeat.innerText.split('\n')[0];
+                        selectedSeat.innerText = nameItem.innerText.split(/\d+\.\s*/)[1];
+                        selectedSeat.assignedNameItem = nameItem;
+                        nameItem.classList.add('assigned');
+                    } else {
+                        alert('请先选择一个座位');
+                    }
+                };
+                group.appendChild(nameItem);
+            }
+        }
+
+        function promptForFileName() {
+            const fileName = prompt("请输入文件名：", "");
+            if (fileName) {
+                downloadConfig(fileName);
+            }
+        }
+
+        function downloadConfig(fileName) {
+            const seats = Array.from(document.querySelectorAll('.seat')).map(seat => ({
+                left: seat.style.left,
+                top: seat.style.top,
+                text: seat.innerText,
+                assignedNameItem: seat.assignedNameItem ? {
+                    index: Array.from(seat.assignedNameItem.parentElement.children).indexOf(seat.assignedNameItem) - 1,
+                    isCustomer: seat.assignedNameItem.parentElement.id === 'customer-group',
+                    name: seat.assignedNameItem.innerText.split(/\d+\.\s*/)[1]
+                } : null
+            }));
+
+            const config = {
+                numSeats: document.getElementById('num-seats').value,
+                circleInnerText: document.querySelector('.circle').innerText,
+                customerNames: document.getElementById('customer-names').value,
+                companyNames: document.getElementById('company-names').value,
+                seats
+            };
+
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const formattedDate = `${month}月${day}日${hours}点${minutes}分`;
+
+            const fullFileName = `${fileName}-餐叙座位图-${formattedDate}导出.json`;
+
+            const blob = new Blob([JSON.stringify(config)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fullFileName;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function uploadConfig(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const config = JSON.parse(event.target.result);
+
+                    document.getElementById('num-seats').value = config.numSeats;
+
+                    document.getElementById('customer-names').value = config.customerNames;
+                    document.getElementById('company-names').value = config.companyNames;
+                    generateNamePool();
+
+                    generateSeats(config);
+                };
+                reader.readAsText(file);
+            }
+        }
+
         generateSeats();
     </script>
 </body>
