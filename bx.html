@@ -82,6 +82,7 @@
 
         .seat {
             position: absolute;
+            /* set default border color here */
             border: 1px solid #3973ca;
             background-color: white;
             text-align: center;
@@ -103,6 +104,14 @@
 
         .selected {
             border: 2px solid red;
+        }
+
+        .customer-seat {
+            border: 1px solid green;
+        }
+
+        .company-seat {
+            border: 1px solid red;
         }
 
         #name-pool {
@@ -162,6 +171,7 @@
         <button onclick="promptForFileName()">导出配置</button>
         <input type="file" id="upload-config" style="display:none;" onchange="uploadConfig(event)">
         <button onclick="document.getElementById('upload-config').click();">上传配置</button>
+        <button onclick="togglePreviewMode()" id="toggle-button">预览模式</button>
     </div>
     <div id="seating-chart-container">
         <div id="seating-chart"></div>
@@ -178,6 +188,7 @@
 
     <script>
         let selectedSeat = null;
+        let previewModeOn = false;
 
         function generateSeats(seatConfigs = {}) {
             const numSeats = parseInt(document.getElementById('num-seats').value, 10);
@@ -233,6 +244,7 @@
                 seat.innerText = assignedNameItem.name;
                 const nameItem = nameGroup.children[assignedNameItem.index + 1];
                 seat.assignedNameItem = nameItem;
+                seat.style.border = assignedNameItem.isCustomer ? '1px solid green' : '1px solid red';
                 nameItem.classList.add('assigned');
             }
 
@@ -264,8 +276,10 @@
 
         function unassignSeat() {
             if (selectedSeat && selectedSeat.assignedNameItem) {
+                const index = Array.from(document.getElementById('seating-chart').children).indexOf(selectedSeat);
                 selectedSeat.assignedNameItem.classList.remove('assigned');
-                selectedSeat.innerText = selectedSeat.originalText;
+                selectedSeat.innerText = `座位${index}`;
+                selectedSeat.style.border = '1px solid #3973ca'; // restore original border
                 selectedSeat.originalText = null;
                 selectedSeat.assignedNameItem = null;
             } else {
@@ -317,9 +331,11 @@
                         if (selectedSeat.assignedNameItem) {
                             selectedSeat.assignedNameItem.classList.remove('assigned');
                         }
+                        const isCustomer = group.id === 'customer-group';
                         selectedSeat.originalText = selectedSeat.innerText.split('\n')[0];
                         selectedSeat.innerText = nameItem.innerText.split(/\d+\.\s*/)[1];
                         selectedSeat.assignedNameItem = nameItem;
+                        selectedSeat.style.border = isCustomer ? '1px solid green' : '1px solid red';
                         nameItem.classList.add('assigned');
                     } else {
                         alert('请先选择一个座位');
@@ -391,6 +407,22 @@
                 };
                 reader.readAsText(file);
             }
+        }
+
+        function togglePreviewMode() {
+            const seats = document.querySelectorAll('.seat');
+            seats.forEach(seat => {
+                if (previewModeOn) {
+                    seat.style.border = '1px solid #3973ca';
+                } else {
+                    if (seat.assignedNameItem) {
+                        const isCustomer = seat.assignedNameItem.parentElement.id === 'customer-group';
+                        seat.style.border = isCustomer ? '1px solid green' : '1px solid red';
+                    }
+                }
+            });
+            previewModeOn = !previewModeOn;
+            document.getElementById('toggle-button').innerText = previewModeOn ? '区分模式' : '预览模式';
         }
 
         generateSeats();
