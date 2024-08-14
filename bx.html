@@ -335,7 +335,7 @@
                         selectedSeat.originalText = selectedSeat.innerText.split('\n')[0];
                         selectedSeat.innerText = nameItem.innerText.split(/\d+\.\s*/)[1];
                         selectedSeat.assignedNameItem = nameItem;
-                        selectedSeat.style.border = isCustomer ? '1px solid green' : '1px solid red';
+                        selectedSeat.style.border = isCustomer ? '2px solid green' : '2px solid red';
                         nameItem.classList.add('assigned');
                     } else {
                         alert('请先选择一个座位');
