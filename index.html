@@ -53,12 +53,37 @@
             background-color: #0056b3;
             transform: translateY(-3px);
         }
+        .version-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 2vmin;
+            color: #888;
+        }
     </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 设置页面有效期
+            const expiryDate = new Date("2025-12-30"); // 替换成实际的最后工作日期
+            const currentDate = new Date();
+            
+            if (currentDate > expiryDate) {
+                document.body.innerHTML = "<div class='container'><h1>You don't have access!</h1><p>Please contact Steve Yang for renewal tool.</p></div>";
+                document.body.style.background = '#f5f7fa';
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>选择座位图</h1>
         <a href="https://delete222.github.io/seat-tool/hys" class="button">会议室座位图</a>
+        <a href="https://delete222.github.io/seat-tool/bx" class="button">圆桌座位图</a>
+                    <div class="version-info">© SteveYang</div>
+    </div>
+</body>
+</html>
         <a href="https://delete222.github.io/seat-tool/bx" class="button">圆桌座位图</a>
     </div>
 </body>
