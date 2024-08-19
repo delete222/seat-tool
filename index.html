@@ -13,6 +13,8 @@
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            position: relative;
+            padding-bottom: 40px;
         }
         .container {
             text-align: center;
@@ -51,6 +53,16 @@
             font-size: 2vmin;
             color: #888;
         }
+        .counter-container {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #888;
+            padding: 10px 0;
+            background-color: transparent; /* 修改背景色 */
+        }
     </style>
 
     <script>
@@ -65,6 +77,8 @@
             }
         });
     </script>
+
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </head>
 <body>
     <div class="container">
@@ -72,6 +86,10 @@
         <a href="/hys" class="button">会议室座位图</a>
         <a href="/bx" class="button">圆桌座位图</a>
         <div class="version-info">© SteveYang</div>
+    </div>
+
+    <div class="counter-container">
+        本工具总访问量 <span id="busuanzi_value_site_pv"></span> 次
     </div>
 </body>
 </html>
