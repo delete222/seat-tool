@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>每日通报</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #F7F9FB;
+            margin: 0;
+            padding: 20px;
+            color: #333333;
+        }
+        h1 {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 8px 6px;
+            text-align: center;
+        }
+        th {
+            background-color: #4A90E2;
+            color: #ffffff;
+        }
+        .date-cell {
+            background-color: #ffffff !important;  /* 强制日期列背景色为白色 */
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #cccccc;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .container div {
+            width: 48%;
+        }
+        label {
+            font-weight: bold;
+            color: #333333;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .section-title {
+            background-color: #E1E8ED;
+            padding: 10px;
+            border: 1px solid #dddddd;
+            text-align: left;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333333;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4A90E2;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #357ABD;
+        }
+        button:focus {
+            outline: none;
+        }
+        #form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #report {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+        }
+        .bg-s td:not(.date-cell) { background-color: #FFF0F0; }
+        .bg-vip td:not(.date-cell) { background-color: #FFCCCC; }
+        .bg-top td:not(.date-cell) { background-color: #FF6666; }
+    </style>
+</head>
+<body>
+    <h1>每日通报</h1>
+    <form id="form">
+        <div class="container">
+            <div>
+                <label for="hangzhou">杭州客户输入区</label>
+                <textarea id="hangzhou" placeholder="请输入杭州客户数据"></textarea>
+            </div>
+            <div>
+                <label for="beijing">北京客户输入区</label>
+                <textarea id="beijing" placeholder="请输入北京客户数据"></textarea>
+            </div>
+        </div>
+        <div class="button-group">
+            <button type="button" onclick="generateReport()">生成通报</button>
+            <button type="button" onclick="copyToClipboard()">一键复制</button>
+            <button type="button" onclick="exportPDF()">导出PDF</button>
+        </div>
+    </form>
+    <div id="report"></div>
+    <!-- 引入 jsPDF 和 html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        function parseData(data) {
+            let lines = data.split('\n').filter(line => line.trim() !== '');
+            let parsedData = {};
+
+            lines.forEach(line => {
+                let fields = line.split('\t');
+                if (fields.length >= 11) { // 舍弃发起单位和客户属性
+                    const date = fields[0];
+
+                    if (!parsedData[date]) {
+                        parsedData[date] = [];
+                    }
+
+                    parsedData[date].push({
+                        日期: fields[0],
+                        客户单位: fields[1],
+                        行业: fields[2],
+                        陪同领导: fields[3],
+                        人数: fields[4],
+                        级别: fields[5],
+                        办事处陪同人: fields[6],
+                        接待信息: fields[7],
+                        时间: fields[8],
+                        接待员: fields[9]
+                    });
+                }
+            });
+
+            return parsedData;
+        }
+
+        function generateSectionTitle(title) {
+            let titleRow = document.createElement('tr');
+            let th = document.createElement('th');
+            th.colSpan = 10;
+            th.classList.add('section-title');
+            th.textContent = title;
+            titleRow.appendChild(th);
+            return titleRow;
+        }
+
+        function generateTableHeader() {
+            let headRow = document.createElement('tr');
+            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '时间', '接待员'].forEach(header => {
+                let th = document.createElement('th');
+                th.textContent = header;
+                headRow.appendChild(th);
+            });
+            return headRow;
+        }
+
+        function getChineseDayOfWeek(dateString) {
+            const dayOfWeekMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const date = new Date(dateString.replace(/年|月/g, '-').replace('日', ''));
+            return dayOfWeekMap[date.getDay()];
+        }
+
+        function generateReport() {
+            let hangzhouData = document.getElementById('hangzhou').value;
+            let beijingData = document.getElementById('beijing').value;
+
+            let parsedHangzhouData = parseData(hangzhouData);
+            let parsedBeijingData = parseData(beijingData);
+
+            let reportDiv = document.getElementById('report');
+            reportDiv.innerHTML = '';
+
+            let table = document.createElement('table');
+            let tbody = document.createElement('tbody');
+
+            function appendDataToTable(data, sectionTitle) {
+                if (Object.keys(data).length) {
+                    tbody.appendChild(generateSectionTitle(sectionTitle));
+                    tbody.appendChild(generateTableHeader());
+
+                    for (let date in data) {
+                        let totalBatches = data[date].length;
+
+                        let dateCell = document.createElement('td');
+                        dateCell.classList.add('date-cell');
+                        dateCell.rowSpan = totalBatches;
+                        const chineseDayOfWeek = getChineseDayOfWeek(date);
+                        dateCell.innerHTML = `${date.split('年')[1]}<br />（${chineseDayOfWeek}）<br />${totalBatches}批`;
+
+                        data[date].forEach((entry, index) => {
+                            let row = document.createElement('tr');
+                            let isFirstRow = index === 0;
+
+                            if (isFirstRow) {
+                                row.appendChild(dateCell);
+                            }
+
+                            ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '时间', '接待员'].forEach(key => {
+                                let td = document.createElement('td');
+                                td.textContent = entry[key] || '/';
+                                row.appendChild(td);
+                            });
+
+                            // 根据级别设置背景色
+                            if (entry['级别'] === 'S') {
+                                row.querySelectorAll('td').forEach(cell => {
+                                    if (!cell.classList.contains('date-cell')) {
+                                        cell.style.backgroundColor = '#FFF0F0';
+                                    }
+                                });
+                            } else if (entry['级别'] === 'VIP') {
+                                row.querySelectorAll('td').forEach(cell => {
+                                    if (!cell.classList.contains('date-cell')) {
+                                        cell.style.backgroundColor = '#FFCCCC';
+                                    }
+                                });
+                            } else if (entry['级别'] === 'TOP') {
+                                row.querySelectorAll('td').forEach(cell => {
+                                    if (!cell.classList.contains('date-cell')) {
+                                        cell.style.backgroundColor = '#FF6666';
+                                    }
+                                });
+                            }
+
+                            tbody.appendChild(row);
+                        });
+                    }
+                }
+            }
+
+            appendDataToTable(parsedHangzhouData, '杭州接待信息通报');
+            appendDataToTable(parsedBeijingData, '北京接待信息通报');
+
+            table.appendChild(tbody);
+            reportDiv.appendChild(table);
+        }
+
+        function copyToClipboard() {
+            const reportDiv = document.getElementById('report');
+            const range = document.createRange();
+            range.selectNode(reportDiv);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('copy');
+            selection.removeAllRanges();
+            alert('已复制到剪贴板');
+        }
+
+        async function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const reportDiv = document.getElementById('report');
+
+            // 使用 html2canvas 获取多页 PDF 所需要的数据
+            const canvas = await html2canvas(reportDiv, { scale: 2 });
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const imgWidth = 210; // A4宽度 210mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            // 添加第一页
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= 297; // A4高度 297mm
+
+            // 添加后续页面
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= 297;
+            }
+
+            // 导出生成的 PDF
+            pdf.save('report.pdf');
+        }
+
+    </script>
+</body>
+</html>
