@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>座位图生成器</title>
+    <title>接待工具库</title>
     <style>
         body {
             display: flex;
@@ -27,9 +27,15 @@
             color: #333;
             letter-spacing: 1px;
         }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
         .button {
             display: inline-block;
-            margin: 20px;
             padding: 15px 30px;
             font-size: 18px;
             color: #fff;
@@ -65,13 +71,17 @@
             }
         });
     </script>
-        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>选择座位图</h1>
-        <a href="/hys" class="button">会议室座位图</a>
-        <a href="/bx" class="button">圆桌座位图</a>
+        <h1>选择要使用的功能</h1>
+        <div class="buttons">
+            <a href="/hys" class="button">会议室座位图</a>
+            <a href="/bx" class="button">圆桌座位图</a>
+            <a href="/ribao" class="button">接待日报生成</a>
+            <a href="/zhoubao" class="button">接待周报生成</a>
+        </div>
         <div class="version-info">© SteveYang 本工具总访问量 <span id="busuanzi_value_site_pv"></span> 次</div>
     </div>
 </body>
