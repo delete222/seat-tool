@@ -36,6 +36,10 @@
         }
         .date-cell {
             background-color: #ffffff !important;  /* 强制日期列背景色为白色 */
+            min-width: 70px;
+        }
+        .reception-cell {
+            min-width: 140px;
         }
         textarea {
             width: 100%;
@@ -224,6 +228,9 @@
                             ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '时间', '接待员'].forEach(key => {
                                 let td = document.createElement('td');
                                 td.textContent = entry[key] || '/';
+                                if (key === '接待信息') {
+                                    td.classList.add('reception-cell');
+                                }
                                 row.appendChild(td);
                             });
 
