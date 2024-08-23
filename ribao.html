@@ -39,7 +39,7 @@
             color: #ffffff;
         }
         .date-cell {
-            background-color: #ffffff !重要; /* 强制日期列背景色为白色 */
+            background-color: #ffffff !important; /* 强制日期列背景色为白色 */
             min-width: 70px;
         }
         .reception-cell {
@@ -148,13 +148,13 @@
         </div>
     </form>
     <div id="report"></div>
-    <div class="version-info">© SteveYang</div>
+    <div class="version-info">© SteveYang </div>
     <!-- 引入 jsPDF 和 html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <script>
-        function parseData(data, sortField) {
+        function parseData(data, sortField, futureFactoryField = '未来工厂') {
             let lines = data.split('\n').filter(line => line.trim() !== '');
             let parsedData = {};
 
@@ -183,7 +183,7 @@
                 }
             });
 
-            // 按指定的展厅时间排序
+            // 按指定的展厅时间排序，未来工厂排在杭州展厅之后
             for (let date in parsedData) {
                 parsedData[date].sort((a, b) => {
                     let aReceptionPlaces = a['接待信息'].split('/');
@@ -195,10 +195,25 @@
                     let aSortFieldIndex = aReceptionPlaces.indexOf(sortField);
                     let bSortFieldIndex = bReceptionPlaces.indexOf(sortField);
 
+                    let aFutureFactoryIndex = aReceptionPlaces.indexOf(futureFactoryField);
+                    let bFutureFactoryIndex = bReceptionPlaces.indexOf(futureFactoryField);
+
                     let aSortFieldTime = aSortFieldIndex !== -1 ? aReceptionTimes[aSortFieldIndex] : '24:00';
                     let bSortFieldTime = bSortFieldIndex !== -1 ? bReceptionTimes[bSortFieldIndex] : '24:00';
 
-                    return aSortFieldTime.localeCompare(bSortFieldTime, 'zh-CN', { numeric: true });
+                    let aFutureFactoryTime = aFutureFactoryIndex !== -1 ? aReceptionTimes[aFutureFactoryIndex] : '24:00';
+                    let bFutureFactoryTime = bFutureFactoryIndex !== -1 ? bReceptionTimes[bFutureFactoryIndex] : '24:00';
+
+                    // 优先按照杭州展厅时间排序，其次是未来工厂时间
+                    if (aSortFieldIndex !== -1 && bSortFieldIndex !== -1) {
+                        return aSortFieldTime.localeCompare(bSortFieldTime, 'zh-CN', { numeric: true });
+                    } else if (aSortFieldIndex !== -1 && bSortFieldIndex === -1) {
+                        return -1; // 杭州展厅排在前面
+                    } else if (aSortFieldIndex === -1 && bSortFieldIndex !== -1) {
+                        return 1; // 杭州展厅排在前面
+                    } else {
+                        return aFutureFactoryTime.localeCompare(bFutureFactoryTime, 'zh-CN', { numeric: true });
+                    }
                 });
             }
 
