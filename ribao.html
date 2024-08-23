@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>每日通报</title>
     <style>
         body {
@@ -10,6 +11,9 @@
             margin: 0;
             padding: 20px;
             color: #333333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         h1 {
             text-align: center;
@@ -35,7 +39,7 @@
             color: #ffffff;
         }
         .date-cell {
-            background-color: #ffffff !important;  /* 强制日期列背景色为白色 */
+            background-color: #ffffff !重要; /* 强制日期列背景色为白色 */
             min-width: 70px;
         }
         .reception-cell {
@@ -99,14 +103,29 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex: 1;
         }
         .button-group {
             display: flex;
             justify-content: center;
         }
-        .bg-s td:not(.date-cell) { background-color: #FFF0F0; }
-        .bg-vip td:not(.date-cell) { background-color: #FFCCCC; }
-        .bg-top td:not(.date-cell) { background-color: #FF6666; }
+        .bg-s td:not(.date-cell) {
+            background-color: #FFF0F0;
+        }
+        .bg-vip td:not(.date-cell) {
+            background-color: #FF9999;
+        }
+        .bg-top td:not(.date-cell) {
+            background-color: #FF6666;
+        }
+        .version-info {
+            text-align: center;
+            font-size: 1.6vmin;
+            color: #888;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 0;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -129,17 +148,20 @@
         </div>
     </form>
     <div id="report"></div>
+    <div class="version-info">© SteveYang</div>
     <!-- 引入 jsPDF 和 html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <script>
-        function parseData(data) {
+        function parseData(data, sortField) {
             let lines = data.split('\n').filter(line => line.trim() !== '');
             let parsedData = {};
 
             lines.forEach(line => {
-                let fields = line.split('\t');
-                if (fields.length >= 11) { // 舍弃发起单位和客户属性
+                let fields = line.split(/\t+/); // 允许任意多个制表符分隔符
+
+                if (fields.length >= 9) { // 至少8个字段才能解析
                     const date = fields[0];
 
                     if (!parsedData[date]) {
@@ -155,11 +177,30 @@
                         级别: fields[5],
                         办事处陪同人: fields[6],
                         接待信息: fields[7],
-                        时间: fields[8],
-                        接待员: fields[9]
+                        接待时间: fields[8] ? fields[8].replace(/：/g, ':') : '/', // 将全角冒号替换为半角冒号
+                        接待员: fields[9] || '/' // 处理可能缺失的字段
                     });
                 }
             });
+
+            // 按指定的展厅时间排序
+            for (let date in parsedData) {
+                parsedData[date].sort((a, b) => {
+                    let aReceptionPlaces = a['接待信息'].split('/');
+                    let bReceptionPlaces = b['接待信息'].split('/');
+
+                    let aReceptionTimes = a['接待时间'].split('/');
+                    let bReceptionTimes = b['接待时间'].split('/');
+
+                    let aSortFieldIndex = aReceptionPlaces.indexOf(sortField);
+                    let bSortFieldIndex = bReceptionPlaces.indexOf(sortField);
+
+                    let aSortFieldTime = aSortFieldIndex !== -1 ? aReceptionTimes[aSortFieldIndex] : '24:00';
+                    let bSortFieldTime = bSortFieldIndex !== -1 ? bReceptionTimes[bSortFieldIndex] : '24:00';
+
+                    return aSortFieldTime.localeCompare(bSortFieldTime, 'zh-CN', { numeric: true });
+                });
+            }
 
             return parsedData;
         }
@@ -176,7 +217,7 @@
 
         function generateTableHeader() {
             let headRow = document.createElement('tr');
-            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '时间', '接待员'].forEach(header => {
+            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '接待时间', '接待员'].forEach(header => {
                 let th = document.createElement('th');
                 th.textContent = header;
                 headRow.appendChild(th);
@@ -190,12 +231,44 @@
             return dayOfWeekMap[date.getDay()];
         }
 
+        function formatDate(date) {
+            let [year, month, day] = date.split('-');
+            return `${parseInt(month)}月${parseInt(day)}日`;
+        }
+
+        function getReportDateRange(parsedHangzhouData, parsedBeijingData) {
+            let dates = [];
+
+            function extractDates(data) {
+                for (let date in data) {
+                    dates.push(date);
+                }
+            }
+
+            extractDates(parsedHangzhouData);
+            extractDates(parsedBeijingData);
+
+            if (dates.length === 0) {
+                return null;
+            }
+
+            dates.sort((a, b) => new Date(a) - new Date(b));
+
+            let startDate = dates[0].replace(/年|月/g, '-').replace('日', '');
+            let endDate = dates[dates.length - 1].replace(/年|月/g, '-').replace('日', '');
+
+            let formattedStartDate = formatDate(startDate);
+            let formattedEndDate = formatDate(endDate);
+
+            return `${formattedStartDate}-${formattedEndDate}`;
+        }
+
         function generateReport() {
             let hangzhouData = document.getElementById('hangzhou').value;
             let beijingData = document.getElementById('beijing').value;
 
-            let parsedHangzhouData = parseData(hangzhouData);
-            let parsedBeijingData = parseData(beijingData);
+            let parsedHangzhouData = parseData(hangzhouData, '杭州展厅'); // 标记杭州数据
+            let parsedBeijingData = parseData(beijingData, '望京展厅'); // 标记北京数据
 
             let reportDiv = document.getElementById('report');
             reportDiv.innerHTML = '';
@@ -225,9 +298,9 @@
                                 row.appendChild(dateCell);
                             }
 
-                            ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '时间', '接待员'].forEach(key => {
+                            ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '接待时间', '接待员'].forEach(key => {
                                 let td = document.createElement('td');
-                                td.textContent = entry[key] || '/';
+                                td.textContent = entry[key] || '/'; // 确保显示时也使用半角冒号
                                 if (key === '接待信息') {
                                     td.classList.add('reception-cell');
                                 }
@@ -244,7 +317,7 @@
                             } else if (entry['级别'] === 'VIP') {
                                 row.querySelectorAll('td').forEach(cell => {
                                     if (!cell.classList.contains('date-cell')) {
-                                        cell.style.backgroundColor = '#FFCCCC';
+                                        cell.style.backgroundColor = '#FF9999'; // 深色
                                     }
                                 });
                             } else if (entry['级别'] === 'TOP') {
@@ -266,6 +339,9 @@
 
             table.appendChild(tbody);
             reportDiv.appendChild(table);
+
+            const reportDateRange = getReportDateRange(parsedHangzhouData, parsedBeijingData);
+            window.reportDateRange = reportDateRange;
         }
 
         function copyToClipboard() {
@@ -306,9 +382,9 @@
             }
 
             // 导出生成的 PDF
-            pdf.save('report.pdf');
+            let filename = window.reportDateRange ? `${window.reportDateRange}客户信息通报.pdf` : '客户信息通报.pdf';
+            pdf.save(filename);
         }
-
     </script>
 </body>
 </html>
