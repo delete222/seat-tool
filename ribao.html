@@ -144,6 +144,7 @@
         <div class="button-group">
             <button type="button" onclick="generateReport()">生成通报</button>
             <button type="button" onclick="copyToClipboard()">一键复制</button>
+            <button type="button" onclick="copyTableAsImage()">一键复制图片</button>
             <button type="button" onclick="exportPDF()">导出PDF</button>
         </div>
     </form>
@@ -160,14 +161,14 @@
 
             lines.forEach(line => {
                 let fields = line.split(/\t+/); // 允许任意多个制表符分隔符
-
+                
                 if (fields.length >= 9) { // 至少8个字段才能解析
                     const date = fields[0];
-
+                    
                     if (!parsedData[date]) {
                         parsedData[date] = [];
                     }
-
+                    
                     parsedData[date].push({
                         日期: fields[0],
                         客户单位: fields[1],
@@ -253,7 +254,7 @@
 
         function getReportDateRange(parsedHangzhouData, parsedBeijingData) {
             let dates = [];
-
+            
             function extractDates(data) {
                 for (let date in data) {
                     dates.push(date);
@@ -399,6 +400,17 @@
             // 导出生成的 PDF
             let filename = window.reportDateRange ? `${window.reportDateRange}客户信息通报.pdf` : '客户信息通报.pdf';
             pdf.save(filename);
+        }
+
+        async function copyTableAsImage() {
+            const reportDiv = document.getElementById('report');
+            const canvas = await html2canvas(reportDiv, { scale: 2 });
+            canvas.toBlob(blob => {
+                const item = new ClipboardItem({ 'image/png': blob });
+                navigator.clipboard.write([item]).then(() => {
+                    alert('表格已复制为图片');
+                });
+            });
         }
     </script>
 </body>
