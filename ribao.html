@@ -45,6 +45,11 @@
         .reception-cell {
             min-width: 140px;
         }
+        .leader-cell {
+            width: 150px; /* 固定陪同领导列的宽度 */
+            word-wrap: break-word; /* 增加单词换行 */
+            word-break: break-all; /* 当单词太长时强制换行 */
+        }
         textarea {
             width: 100%;
             height: 150px;
@@ -236,6 +241,10 @@
             ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '接待时间', '接待员'].forEach(header => {
                 let th = document.createElement('th');
                 th.textContent = header;
+                // 为陪同领导这一列添加 class
+                if (header === '陪同领导') {
+                    th.classList.add('leader-cell');
+                }
                 headRow.appendChild(th);
             });
             return headRow;
@@ -317,6 +326,10 @@
                             ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '接待时间', '接待员'].forEach(key => {
                                 let td = document.createElement('td');
                                 td.textContent = entry[key] || '/'; // 确保显示时也使用半角冒号
+                                // 为陪同领导这一列添加 class
+                                if (key === '陪同领导') {
+                                    td.classList.add('leader-cell');
+                                }
                                 if (key === '接待信息') {
                                     td.classList.add('reception-cell');
                                 }
