@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编码分析工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            resize: none;
+        }
+        table {
+            width: 60%;
+            margin: 20px 0;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+            color: #555;
+        }
+        td {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #f4f4f4;
+        }
+        .unknown-department {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #fff3cd;
+        }
+    </style>
+    <!-- 引入 SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h1>编码分析工具</h1>
+    <div class="form-group">
+        <label for="dateStart">开始日期：</label>
+        <input type="date" id="dateStart">
+        
+        <label for="dateEnd">结束日期：</label>
+        <input type="date" id="dateEnd">
+    </div>
+    <div class="form-group">
+        <textarea id="codeInput" placeholder="在这里粘贴你的编码..."></textarea>
+    </div>
+    <button onclick="analyzeCodes()">分析</button>
+    <button onclick="exportToExcel()">导出 Excel</button>
+    
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>部门名称</th>
+                <th>数量</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td>总计</td>
+                <td id="totalCount"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="unknown-department" id="unknownDepartmentList">
+        <h2>未知部门的流程单号</h2>
+        <ul id="unknownList"></ul>
+    </div>
+
+    <script>
+        const departmentMapping = {
+            "100000": "供应链管理部",
+            "200000": "广东代表处",
+            "300000": "江苏代表处",
+            "400000": "上海代表处",
+            "500000": "半导体产品线",
+            "600000": "浙江代表处",
+            "700000": "安徽代表处",
+            "080000": "研究开发部",
+            "260000": "行业BG",
+            "270000": "商业BG",
+            "280000": "运营管理部",
+            "290000": "技术委员会",
+            "310000": "总裁办公室",
+            "320000": "财经管理部",
+            "330000": "信息技术部",
+            "340000": "人力资源部",
+            "350000": "法务与道德合规部",
+            "450000": "人才研学中心",
+            "430000": "技术服务部",
+            "490000": "智能终端产品线",
+            "520000": "网络产品线",
+            "530000": "云与计算存储产品线",
+            "540000": "解决方案部",
+            "560000": "国际BG",
+            "570000": "品牌营销部",
+            "690000": "运营商BG",
+            "790000": "未知部门",
+            "D20000": "广东代表处",
+            "D50000": "深圳代表处",
+            "DK0000": "广西代表处",
+            "DX0000": "香港代表处",
+            "DN0000": "黑龙江代表处",
+            "DQ0000": "吉林代表处",
+            "DD0000": "辽宁代表处",
+            "DS0000": "内蒙古代表处",
+            "D80000": "福建代表处",
+            "DP0000": "湖南代表处",
+            "DM0000": "海南代表处",
+            "D30000": "江苏代表处",
+            "D60000": "浙江代表处",
+            "D40000": "上海代表处",
+            "DT0000": "宁夏代表处",
+            "DU0000": "青海代表处",
+            "DF0000": "陕西代表处",
+            "DY0000": "新疆代表处",
+            "DJ0000": "甘肃代表处",
+            "DG0000": "四川代表处",
+            "DZ0000": "云南代表处",
+            "DL0000": "贵州代表处",
+            "DH0000": "重庆代表处",
+            "DA0000": "河北代表处",
+            "DE0000": "山东代表处",
+            "DW0000": "天津代表处",
+            "DV0000": "山西代表处",
+            "DB0000": "河南代表处",
+            "DC0000": "湖北代表处",
+            "D70000": "安徽代表处",
+            "DR0000": "江西代表处",
+            "D00000": "集团代表处"
+        };
+
+        let departmentCount = {};
+        let unknownDepartments = [];
+
+        function analyzeCodes() {
+            const startDateInput = document.getElementById('dateStart').value;
+            const endDateInput = document.getElementById('dateEnd').value;
+
+            if (!startDateInput || !endDateInput) {
+                alert("请确保选择了开始日期和结束日期！");
+                return;
+            }
+
+            const startDate = new Date(startDateInput);
+            const endDate = new Date(endDateInput);
+            const codeInput = document.getElementById('codeInput').value.trim().split('\n');
+
+            departmentCount = {};
+            unknownDepartments = [];
+
+            codeInput.forEach(code => {
+                const parts = code.split('-');
+                if (parts.length < 4) {
+                    return;
+                }
+
+                const datePart = parts[0];
+                const departmentCodePart = parts[2].substring(0, 2) + "0000";
+
+                const date = new Date(datePart.substring(0, 4) + '-' + datePart.substring(4, 6) + '-' + datePart.substring(6, 8));
+
+                if (startDate <= date && date <= endDate) {
+                    if (departmentMapping[departmentCodePart]) {
+                        departmentCount[departmentMapping[departmentCodePart]] = (departmentCount[departmentMapping[departmentCodePart]] || 0) + 1;
+                    } else {
+                        unknownDepartments.push(code);
+                    }
+                }
+            });
+
+            updateTable(departmentCount);
+            updateUnknownDepartments(unknownDepartments);
+        }
+
+        function updateTable(departmentCount) {
+            const resultTable = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+            resultTable.innerHTML = '';
+
+            const sortedDepartments = Object.keys(departmentCount).sort((a, b) => departmentCount[a] - departmentCount[b]);
+
+            let totalCount = 0;
+            sortedDepartments.forEach(department => {
+                const row = document.createElement('tr');
+                const nameCell = document.createElement('td');
+                const countCell = document.createElement('td');
+
+                nameCell.innerText = department;
+                countCell.innerText = departmentCount[department];
+
+                row.appendChild(nameCell);
+                row.appendChild(countCell);
+                resultTable.appendChild(row);
+
+                totalCount += departmentCount[department];
+            });
+
+            document.getElementById('totalCount').innerText = totalCount;
+        }
+
+        function updateUnknownDepartments(unknownDepartments) {
+            const unknownList = document.getElementById('unknownList');
+            unknownList.innerHTML = '';
+
+            unknownDepartments.forEach(code => {
+                const listItem = document.createElement('li');
+                listItem.innerText = code;
+                unknownList.appendChild(listItem);
+            });
+        }
+
+        function exportToExcel() {
+            // 创建工作簿
+            const workbook = XLSX.utils.book_new();
+
+            // 创建统计表
+            const departmentData = [["部门名称", "数量"]];
+            Object.keys(departmentCount).sort((a, b) => departmentCount[a] - departmentCount[b]).forEach(department => {
+                departmentData.push([department, departmentCount[department]]);
+            });
+            departmentData.push(["总计", document.getElementById('totalCount').innerText]);
+            const departmentSheet = XLSX.utils.aoa_to_sheet(departmentData);
+            XLSX.utils.book_append_sheet(workbook, departmentSheet, "部门统计");
+
+            // 创建未知部门表
+            const unknownData = [["流程单号"]];
+            unknownDepartments.forEach(code => {
+                unknownData.push([code]);
+            });
+            const unknownSheet = XLSX.utils.aoa_to_sheet(unknownData);
+            XLSX.utils.book_append_sheet(workbook, unknownSheet, "未知部门");
+
+            // 导出 Excel 文件
+            XLSX.writeFile(workbook, "部门分析.xlsx");
+        }
+    </script>
+</body>
+</html>
