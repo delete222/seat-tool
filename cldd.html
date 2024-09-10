@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS 工时计算</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            padding-bottom: 60px; /* 增加底部padding，为署名信息留出空间 */
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .upload-section {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .upload-section input[type='file'] {
+            display: none;
+        }
+
+        .upload-section label,
+        .upload-section button {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            border: none;
+            display: inline-block;
+        }
+
+        .upload-section label:hover,
+        .upload-section button:hover {
+            background-color: #0056b3;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: #f7f9fc;
+            border: 1px solid #d1e3f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: #007bff;
+            text-align: center;
+            border-bottom: 1px solid #d1e3f0;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #e0e6ed;
+        }
+
+        th {
+            background-color: #e9f1f7;
+            font-weight: bold;
+        }
+
+        td {
+            background-color: #fff;
+        }
+
+        .version-info {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            font-size: 1em;
+            color: #888;
+        }
+    </style>
+</head>
+ <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<body>
+    <div class="container">
+        <h1>车牌号每日出车时长计算</h1>
+        <div class="upload-section">
+            <input type="file" id="fileInput">
+            <label for="fileInput">选择文件</label>
+            <button id="exportButton">导出 Excel</button>
+        </div>
+        <div id="resultsContainer" class="grid-container"></div>
+        <div class="version-info">© SteveYang 本工具总访问量 <span id="busuanzi_value_site_pv"></span> 次</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+    <script>
+        let gpsData = [];
+        let exportData = [];
+
+        document.getElementById('fileInput').addEventListener('change', uploadFile);
+        document.getElementById('exportButton').addEventListener('click', exportToExcel);
+
+        function uploadFile() {
+            const input = document.getElementById('fileInput');
+            const file = input.files[0];
+
+            if (!file) {
+                alert("请选择一个文件");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                processExcelData(jsonData);
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processExcelData(data) {
+            const headers = data[2];
+            const rows = data.slice(3).filter(row => row[0] !== "合计" && row.length > 1);
+
+            gpsData = rows.map(row => {
+                const obj = {};
+                headers.forEach((header, index) => {
+                    obj[header.trim()] = row[index];
+                });
+                return obj;
+            });
+
+            calculateAllWorkingHours();
+        }
+
+        function calculateAllWorkingHours() {
+            const results = {};
+            exportData = [];
+
+            gpsData.forEach(item => {
+                const plateNumber = item["车牌号码"];
+                const startTime = item["起始时间"];
+                const endTime = item["结束时间"];
+
+                if (!startTime || !endTime) {
+                    return;
+                }
+
+                const date = startTime.split(' ')[0];
+
+                if (!results[plateNumber]) {
+                    results[plateNumber] = {};
+                }
+
+                if (!results[plateNumber][date]) {
+                    results[plateNumber][date] = { startTime: startTime, endTime: endTime };
+                } else {
+                    if (new Date(startTime) < new Date(results[plateNumber][date].startTime)) {
+                        results[plateNumber][date].startTime = startTime;
+                    }
+                    if (new Date(endTime) > new Date(results[plateNumber][date].endTime)) {
+                        results[plateNumber][date].endTime = endTime;
+                    }
+                }
+            });
+
+            displayResults(results);
+        }
+
+        function displayResults(results) {
+            const resultsContainer = document.getElementById("resultsContainer");
+            resultsContainer.innerHTML = '';
+
+            for (const plateNumber in results) {
+                const card = document.createElement("div");
+                card.className = "card";
+
+                const vehicleHeader = document.createElement("h2");
+                vehicleHeader.textContent = `车牌号码: ${plateNumber}`;
+                card.appendChild(vehicleHeader);
+
+                const table = document.createElement("table");
+
+                const thead = document.createElement("thead");
+                const headerRow = document.createElement("tr");
+                headerRow.innerHTML = `
+                    <th>日期</th>
+                    <th>星期</th>
+                    <th>出车时长</th>
+                `;
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement("tbody");
+
+                for (const date in results[plateNumber]) {
+                    const startTime = new Date(results[plateNumber][date].startTime);
+                    const endTime = new Date(results[plateNumber][date].endTime);
+                    const workingHours = (endTime - startTime) / (1000 * 60 * 60);
+                    const formattedTime = formatTime(workingHours);
+                    const weekday = getWeekday(date);
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${date}</td>
+                        <td>${weekday}</td>
+                        <td>${formattedTime}</td>
+                    `;
+                    tbody.appendChild(row);
+
+                    exportData.push({
+                        "车牌号码": plateNumber,
+                        "日期": date,
+                        "星期": weekday,
+                        "出车时长": formattedTime
+                    });
+                }
+
+                table.appendChild(tbody);
+                card.appendChild(table);
+                resultsContainer.appendChild(card);
+            }
+        }
+
+        function getWeekday(dateString) {
+            const date = new Date(dateString);
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            return weekdays[date.getUTCDay()];
+        }
+
+        function formatTime(hours) {
+            const totalMinutes = Math.round(hours * 60);
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            return `${h}小时${m}分钟`;
+        }
+
+        function exportToExcel() {
+            if (!exportData.length) {
+                alert("没有数据可以导出");
+                return;
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, '结果');
+
+            XLSX.writeFile(workbook, '出车时长计算.xlsx');
+        }
+    </script>
+</body>
+
+</html>
