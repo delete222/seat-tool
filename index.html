@@ -29,8 +29,12 @@
         }
         .buttons {
             display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .button-row {
+            display: flex;
             justify-content: center;
-            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
         }
@@ -77,10 +81,15 @@
     <div class="container">
         <h1>选择要使用的功能</h1>
         <div class="buttons">
-            <a href="/hys" class="button">会议室座位图</a>
-            <a href="/bx" class="button">圆桌座位图</a>
-            <a href="/ribao" class="button">接待日报生成</a>
-            <a href="/bumen" class="button">代表处来访批次统计</a>
+            <div class="button-row">
+                <a href="/hys" class="button">会议室座位图</a>
+                <a href="/bx" class="button">圆桌座位图</a>
+                <a href="/ribao" class="button">接待日报生成</a>
+            </div>
+            <div class="button-row">
+                <a href="/bumen" class="button">代表处来访批次统计</a>
+                <a href="/cldd" class="button">出车工时计算</a>
+            </div>
         </div>
         <div class="version-info">© SteveYang 本工具总访问量 <span id="busuanzi_value_site_pv"></span> 次</div>
     </div>
