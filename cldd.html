@@ -12,22 +12,8 @@
             margin: 0;
             padding: 20px;
             box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            box-sizing: border-box;
-            position: relative;
-            padding-bottom: 60px; /* 增加底部padding，为署名信息留出空间 */
+            overflow-x: hidden; /* 禁止水平滚动 */
+            overflow-y: auto; /* 启用垂直滚动 */
         }
 
         h1 {
@@ -109,7 +95,7 @@
         }
 
         .version-info {
-            position: absolute;
+            position: fixed;
             bottom: 10px;
             left: 20px;
             font-size: 1em;
@@ -117,18 +103,16 @@
         }
     </style>
 </head>
- <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 <body>
-    <div class="container">
-        <h1>车牌号每日出车时长计算</h1>
-        <div class="upload-section">
-            <input type="file" id="fileInput">
-            <label for="fileInput">选择文件</label>
-            <button id="exportButton">导出 Excel</button>
-        </div>
-        <div id="resultsContainer" class="grid-container"></div>
-        <div class="version-info">© SteveYang 本工具总访问量 <span id="busuanzi_value_page_pv"></span> 次</div>
+    <h1>车牌号每日出车时长计算</h1>
+    <div class="upload-section">
+        <input type="file" id="fileInput">
+        <label for="fileInput">选择文件</label>
+        <button id="exportButton">导出 Excel</button>
     </div>
+    <div id="resultsContainer" class="grid-container"></div>
+    <div class="version-info">© SteveYang 本工具总访问量 <span id="busuanzi_value_page_pv"></span> 次</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
     <script>
