@@ -50,6 +50,11 @@
             word-wrap: break-word; /* 增加单词换行 */
             word-break: break-all; /* 当单词太长时强制换行 */
         }
+        .overall-journey-cell {
+            width: 250px; /* 固定陪同领导列的宽度 */
+            word-wrap: break-word; /* 增加单词换行 */
+            word-break: break-all; /* 当单词太长时强制换行 */
+        }
         textarea {
             width: 100%;
             height: 150px;
@@ -165,9 +170,9 @@
             let parsedData = {};
 
             lines.forEach(line => {
-                let fields = line.split(/\t+/); // 允许任意多个制表符分隔符
-                
-                if (fields.length >= 9) { // 至少8个字段才能解析
+                let fields = line.split('\t'); // 使用制表符分隔每个字段
+
+                if (fields.length >= 13) { // 至少13个字段才能解析
                     const date = fields[0];
                     
                     if (!parsedData[date]) {
@@ -184,12 +189,14 @@
                         办事处陪同人: fields[6],
                         接待信息: fields[7],
                         接待时间: fields[8] ? fields[8].replace(/：/g, ':') : '/', // 将全角冒号替换为半角冒号
-                        接待员: fields[9] || '/' // 处理可能缺失的字段
+                        接待员: fields[9] || '/', // 处理可能缺失的字段
+                        其它字段1: fields[10] || '/', // 其它字段占位
+                        其它字段2: fields[11] || '/', // 其它字段占位
+                        整体行程: fields[12] || '/' // 获取第13列作为整体行程
                     });
                 }
             });
 
-            // 按指定的展厅时间排序，未来工厂排在杭州展厅之后
             for (let date in parsedData) {
                 parsedData[date].sort((a, b) => {
                     let aReceptionPlaces = a['接待信息'].split('/');
@@ -210,13 +217,12 @@
                     let aFutureFactoryTime = aFutureFactoryIndex !== -1 ? aReceptionTimes[aFutureFactoryIndex] : '24:00';
                     let bFutureFactoryTime = bFutureFactoryIndex !== -1 ? bReceptionTimes[bFutureFactoryIndex] : '24:00';
 
-                    // 优先按照杭州展厅时间排序，其次是未来工厂时间
                     if (aSortFieldIndex !== -1 && bSortFieldIndex !== -1) {
                         return aSortFieldTime.localeCompare(bSortFieldTime, 'zh-CN', { numeric: true });
                     } else if (aSortFieldIndex !== -1 && bSortFieldIndex === -1) {
-                        return -1; // 杭州展厅排在前面
+                        return -1;
                     } else if (aSortFieldIndex === -1 && bSortFieldIndex !== -1) {
-                        return 1; // 杭州展厅排在前面
+                        return 1;
                     } else {
                         return aFutureFactoryTime.localeCompare(bFutureFactoryTime, 'zh-CN', { numeric: true });
                     }
@@ -229,7 +235,7 @@
         function generateSectionTitle(title) {
             let titleRow = document.createElement('tr');
             let th = document.createElement('th');
-            th.colSpan = 10;
+            th.colSpan = 11; // 修改为11列以容纳新列
             th.classList.add('section-title');
             th.textContent = title;
             titleRow.appendChild(th);
@@ -238,12 +244,13 @@
 
         function generateTableHeader() {
             let headRow = document.createElement('tr');
-            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '接待时间', '接待员'].forEach(header => {
+            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '接待时间', '接待员', '整体行程'].forEach(header => {
                 let th = document.createElement('th');
                 th.textContent = header;
-                // 为陪同领导这一列添加 class
                 if (header === '陪同领导') {
                     th.classList.add('leader-cell');
+                } else if (header === '整体行程') {
+                    th.classList.add('overall-journey-cell'); // 增加整体行程列的样式类
                 }
                 headRow.appendChild(th);
             });
@@ -292,8 +299,8 @@
             let hangzhouData = document.getElementById('hangzhou').value;
             let beijingData = document.getElementById('beijing').value;
 
-            let parsedHangzhouData = parseData(hangzhouData, '杭州展厅'); // 标记杭州数据
-            let parsedBeijingData = parseData(beijingData, '望京展厅'); // 标记北京数据
+            let parsedHangzhouData = parseData(hangzhouData, '杭州展厅');
+            let parsedBeijingData = parseData(beijingData, '望京展厅');
 
             let reportDiv = document.getElementById('report');
             reportDiv.innerHTML = '';
@@ -323,20 +330,21 @@
                                 row.appendChild(dateCell);
                             }
 
-                            ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '接待时间', '接待员'].forEach(key => {
+                            ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '接待时间', '接待员', '整体行程'].forEach(key => {
                                 let td = document.createElement('td');
-                                td.textContent = entry[key] || '/'; // 确保显示时也使用半角冒号
-                                // 为陪同领导这一列添加 class
+                                td.textContent = entry[key] || '/';
                                 if (key === '陪同领导') {
                                     td.classList.add('leader-cell');
                                 }
                                 if (key === '接待信息') {
                                     td.classList.add('reception-cell');
                                 }
+                                if (key === '整体行程') {
+                                    td.classList.add('overall-journey-cell'); // 增加整体行程列的样式类
+                                }
                                 row.appendChild(td);
                             });
 
-                            // 根据级别设置背景色
                             if (entry['级别'] === 'S') {
                                 row.querySelectorAll('td').forEach(cell => {
                                     if (!cell.classList.contains('date-cell')) {
@@ -346,7 +354,7 @@
                             } else if (entry['级别'] === 'VIP') {
                                 row.querySelectorAll('td').forEach(cell => {
                                     if (!cell.classList.contains('date-cell')) {
-                                        cell.style.backgroundColor = '#FF9999'; // 深色
+                                        cell.style.backgroundColor = '#FF9999';
                                     }
                                 });
                             } else if (entry['级别'] === 'TOP') {
@@ -390,19 +398,16 @@
             const pdf = new jsPDF('p', 'mm', 'a4');
             const reportDiv = document.getElementById('report');
 
-            // 使用 html2canvas 获取多页 PDF 所需要的数据
             const canvas = await html2canvas(reportDiv, { scale: 2 });
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
-            const imgWidth = 210; // A4宽度 210mm
+            const imgWidth = 210;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
             let heightLeft = imgHeight;
             let position = 0;
 
-            // 添加第一页
             pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-            heightLeft -= 297; // A4高度 297mm
+            heightLeft -= 297;
 
-            // 添加后续页面
             while (heightLeft >= 0) {
                 position = heightLeft - imgHeight;
                 pdf.addPage();
@@ -410,7 +415,6 @@
                 heightLeft -= 297;
             }
 
-            // 导出生成的 PDF
             let filename = window.reportDateRange ? `${window.reportDateRange}客户信息通报.pdf` : '客户信息通报.pdf';
             pdf.save(filename);
         }
