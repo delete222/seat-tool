@@ -108,15 +108,15 @@
     <div class="version-info">© Steve  本工具总访问量 <span id="busuanzi_value_page_pv"></span> 次</div>
 
     <script>
-        function parseData(data, sortField) {
+        function parseData(data, sortField, stats, isOther = false) {
             let lines = data.split('\n').filter(line => line.trim() !== '');
             let parsedData = [];
 
             lines.forEach(line => {
                 let fields = line.split('\t');
-
                 if (fields.length >= 13) {
                     let entry = {
+                        日期: fields[0],
                         客户单位: fields[1],
                         行业: fields[2],
                         陪同领导: fields[3],
@@ -125,7 +125,7 @@
                         办事处陪同人: fields[6],
                         时间: '/',
                         总体行程: fields[12] || '',
-                        讲解: '', 
+                        讲解: '',
                         接待: fields[9] || '',
                         展厅定制化: ''
                     };
@@ -136,17 +136,19 @@
                     let sortFieldIndex = receptionPlaces.indexOf(sortField);
                     if (sortFieldIndex !== -1) {
                         entry['时间'] = receptionTimes[sortFieldIndex];
-                        console.log(`拆分 - ${entry['客户单位']}: 展厅 ${sortField} 时间 ${entry['时间']}`);
+                        stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
+                        parsedData.push(entry);
                     }
 
-                    if (sortFieldIndex !== -1) {
-                        parsedData.push(entry);
+                    if (isOther && !receptionPlaces.includes('杭州展厅') && !receptionPlaces.includes('未来工厂')) {
+                        stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
                     }
                 }
             });
 
             parsedData.sort((a, b) => {
-                console.log(`排序 - 比较: ${a['客户单位']} (时间: ${a['时间']}) 和 ${b['客户单位']} (时间: ${b['时间']})`);
+                let dateComparison = a['日期'].localeCompare(b['日期'], 'zh-CN', { numeric: true });
+                if (dateComparison !== 0) return dateComparison;
                 return a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true });
             });
 
@@ -155,7 +157,7 @@
 
         function generateTableHeader() {
             let headRow = document.createElement('tr');
-            ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '时间', '总体行程', '讲解', '接待', '展厅定制化'].forEach(header => {
+            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '时间', '总体行程', '讲解', '接待', '展厅定制化'].forEach(header => {
                 let th = document.createElement('th');
                 th.textContent = header;
                 headRow.appendChild(th);
@@ -166,11 +168,30 @@
         function generateReport() {
             let hangzhouData = document.getElementById('hangzhou').value;
 
-            let parsedHangzhouData1 = parseData(hangzhouData, '杭州展厅');
-            let parsedHangzhouData2 = parseData(hangzhouData, '未来工厂');
+            let hangzhouStats = {};
+            let futureFactoryStats = {};
+            let otherStats = {};
+
+            let parsedHangzhouData1 = parseData(hangzhouData, '杭州展厅', hangzhouStats);
+            let parsedHangzhouData2 = parseData(hangzhouData, '未来工厂', futureFactoryStats);
+            parseData(hangzhouData, '', otherStats, true);
 
             let reportDiv = document.getElementById('report');
             reportDiv.innerHTML = '';
+
+            let statsSummary = `统计：`;
+            let allDates = Array.from(new Set([...Object.keys(hangzhouStats), ...Object.keys(futureFactoryStats), ...Object.keys(otherStats)]));
+            
+            allDates.sort().forEach(date => {
+                const hangzhouCount = hangzhouStats[date] || 0;
+                const futureFactoryCount = futureFactoryStats[date] || 0;
+                const otherCount = otherStats[date] || 0;
+                statsSummary += `${date}：杭州展厅 ${hangzhouCount} 批，未来工厂 ${futureFactoryCount} 批，其他接待 ${otherCount} 批; `;
+            });
+
+            let statsTitle = document.createElement('h3');
+            statsTitle.textContent = statsSummary.trim();
+            reportDiv.appendChild(statsTitle);
 
             [['杭州展厅值班表', parsedHangzhouData1], ['未来工厂值班表', parsedHangzhouData2]].forEach(([titleText, data]) => {
                 let title = document.createElement('h2');
@@ -183,13 +204,11 @@
 
                 data.forEach(entry => {
                     let row = document.createElement('tr');
-
                     Object.keys(entry).forEach(key => {
                         let td = document.createElement('td');
                         td.textContent = entry[key] || '';
                         row.appendChild(td);
                     });
-
                     tbody.appendChild(row);
                 });
 
@@ -200,7 +219,8 @@
 
         function copyToClipboard(sortField) {
             const sourceData = document.getElementById('hangzhou').value;
-            const parsedData = parseData(sourceData, sortField);
+            const stats = {};
+            const parsedData = parseData(sourceData, sortField, stats);
 
             const rows = parsedData.map(entry => Object.values(entry).join('\t')).join('\n');
             
