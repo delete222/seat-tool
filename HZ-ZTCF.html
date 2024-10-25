@@ -193,7 +193,7 @@
             statsTitle.textContent = statsSummary.trim();
             reportDiv.appendChild(statsTitle);
 
-            [['杭州展厅值班表', parsedHangzhouData1], ['未来工厂值班表', parsedHangzhouData2]].forEach(([titleText, data]) => {
+            [['杭州展厅', parsedHangzhouData1], ['未来工厂', parsedHangzhouData2]].forEach(([titleText, data]) => {
                 let title = document.createElement('h2');
                 title.textContent = titleText;
                 reportDiv.appendChild(title);
