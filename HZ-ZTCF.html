@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>杭州展厅拆分及时间排序</title>
+            <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -91,7 +92,7 @@
     </style>
 </head>
 <body>
-    <h1>杭州展厅时间排序</h1>
+    <h1>杭州展厅拆分及时间排序工具</h1>
     <form id="form">
         <div>
             <label for="hangzhou">杭州客户粘贴区</label>
@@ -104,7 +105,8 @@
         </div>
     </form>
     <div id="report"></div>
-    <div class="version-info">© Steve</div>
+    <div class="version-info">© Steve  本工具总访问量 <span id="busuanzi_value_page_pv"></span> 次</div>
+
     <script>
         function parseData(data, sortField) {
             let lines = data.split('\n').filter(line => line.trim() !== '');
