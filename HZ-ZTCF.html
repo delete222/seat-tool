@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>展厅时间排序工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #F7F9FB;
+            margin: 0;
+            padding: 20px;
+            color: #333333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-top: 20px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #000000;
+            padding: 8px 6px;
+            text-align: center;
+        }
+        th {
+            background-color: #4A90E2;
+            color: #ffffff;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #cccccc;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4A90E2;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #357ABD;
+        }
+        button:focus {
+            outline: none;
+        }
+        #form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #report {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex: 1;
+        }
+        .version-info {
+            text-align: center;
+            font-size: 1.6vmin;
+            color: #888;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>杭州展厅时间排序</h1>
+    <form id="form">
+        <div>
+            <label for="hangzhou">杭州客户粘贴区</label>
+            <textarea id="hangzhou" placeholder="请输入杭州客户数据"></textarea>
+        </div>
+        <div>
+            <button type="button" onclick="generateReport()">生成报告</button>
+            <button type="button" onclick="copyToClipboard('杭州展厅')">一键复制杭州展厅</button>
+            <button type="button" onclick="copyToClipboard('未来工厂')">一键复制未来工厂</button>
+        </div>
+    </form>
+    <div id="report"></div>
+    <div class="version-info">© Steve</div>
+    <script>
+        function parseData(data, sortField) {
+            let lines = data.split('\n').filter(line => line.trim() !== '');
+            let parsedData = [];
+
+            lines.forEach(line => {
+                let fields = line.split('\t');
+
+                if (fields.length >= 13) {
+                    let entry = {
+                        日期: fields[0],
+                        客户单位: fields[1],
+                        行业: fields[2],
+                        陪同领导: fields[3],
+                        人数: fields[4],
+                        级别: fields[5],
+                        办事处陪同人: fields[6],
+                        接待信息: '',
+                        时间: '/',
+                        接待员: fields[9] || '/',
+                        发起单位: fields[10] || '/',
+                        客户属性: fields[11] || '/',
+                        整体行程: fields[12] || '/'
+                    };
+
+                    let receptionPlaces = fields[7].split('/');
+                    let receptionTimes = fields[8].split('/');
+
+                    let sortFieldIndex = receptionPlaces.indexOf(sortField);
+                    if (sortFieldIndex !== -1) {
+                        entry['接待信息'] = sortField;
+                        entry['时间'] = receptionTimes[sortFieldIndex];
+                        console.log(`拆分 - ${entry['客户单位']}: 展厅 ${entry['接待信息']} 时间 ${entry['时间']}`);
+                    }
+
+                    if (entry['接待信息']) {
+                        parsedData.push(entry);
+                    }
+                }
+            });
+
+            parsedData.sort((a, b) => {
+                console.log(`排序 - Comparing: ${a['客户单位']} (时间: ${a['时间']}) 与 ${b['客户单位']} (时间: ${b['时间']})`);
+                return a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true });
+            });
+
+            return parsedData;
+        }
+
+        function generateTableHeader() {
+            let headRow = document.createElement('tr');
+            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '时间', '接待员', '发起单位', '客户属性', '整体行程'].forEach(header => {
+                let th = document.createElement('th');
+                th.textContent = header;
+                headRow.appendChild(th);
+            });
+            return headRow;
+        }
+
+        function generateReport() {
+            let hangzhouData = document.getElementById('hangzhou').value;
+
+            let parsedHangzhouData1 = parseData(hangzhouData, '杭州展厅');
+            let parsedHangzhouData2 = parseData(hangzhouData, '未来工厂');
+
+            let reportDiv = document.getElementById('report');
+            reportDiv.innerHTML = '';
+
+            [['杭州展厅值班表', parsedHangzhouData1], ['未来工厂值班表', parsedHangzhouData2]].forEach(([titleText, data]) => {
+                let title = document.createElement('h2');
+                title.textContent = titleText;
+                reportDiv.appendChild(title);
+
+                let table = document.createElement('table');
+                let tbody = document.createElement('tbody');
+                tbody.appendChild(generateTableHeader());
+
+                data.forEach(entry => {
+                    let row = document.createElement('tr');
+
+                    Object.keys(entry).forEach(key => {
+                        let td = document.createElement('td');
+                        td.textContent = entry[key] || '/';
+                        row.appendChild(td);
+                    });
+
+                    tbody.appendChild(row);
+                });
+
+                table.appendChild(tbody);
+                reportDiv.appendChild(table);
+            });
+        }
+
+        function copyToClipboard(sortField) {
+            const sourceData = document.getElementById('hangzhou').value;
+            const parsedData = parseData(sourceData, sortField);
+
+            const rows = parsedData.map(entry => Object.values(entry).join('\t')).join('\n');
+            
+            navigator.clipboard.writeText(rows).then(() => {
+                alert(`已复制${sortField}数据到剪贴板`);
+            }, () => {
+                alert('复制失败');
+            });
+        }
+    </script>
+</body>
+</html>
