@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>杭州展厅拆分及时间排序</title>
-            <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -117,19 +117,17 @@
 
                 if (fields.length >= 13) {
                     let entry = {
-                        日期: fields[0],
                         客户单位: fields[1],
                         行业: fields[2],
                         陪同领导: fields[3],
                         人数: fields[4],
                         级别: fields[5],
                         办事处陪同人: fields[6],
-                        接待信息: '',
                         时间: '/',
-                        接待员: fields[9] || '/',
-                        发起单位: fields[10] || '/',
-                        客户属性: fields[11] || '/',
-                        整体行程: fields[12] || '/'
+                        总体行程: fields[12] || '',
+                        讲解: '', 
+                        接待: fields[9] || '',
+                        展厅定制化: ''
                     };
 
                     let receptionPlaces = fields[7].split('/');
@@ -137,19 +135,18 @@
 
                     let sortFieldIndex = receptionPlaces.indexOf(sortField);
                     if (sortFieldIndex !== -1) {
-                        entry['接待信息'] = sortField;
                         entry['时间'] = receptionTimes[sortFieldIndex];
-                        console.log(`拆分 - ${entry['客户单位']}: 展厅 ${entry['接待信息']} 时间 ${entry['时间']}`);
+                        console.log(`拆分 - ${entry['客户单位']}: 展厅 ${sortField} 时间 ${entry['时间']}`);
                     }
 
-                    if (entry['接待信息']) {
+                    if (sortFieldIndex !== -1) {
                         parsedData.push(entry);
                     }
                 }
             });
 
             parsedData.sort((a, b) => {
-                console.log(`排序 - Comparing: ${a['客户单位']} (时间: ${a['时间']}) 与 ${b['客户单位']} (时间: ${b['时间']})`);
+                console.log(`排序 - 比较: ${a['客户单位']} (时间: ${a['时间']}) 和 ${b['客户单位']} (时间: ${b['时间']})`);
                 return a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true });
             });
 
@@ -158,7 +155,7 @@
 
         function generateTableHeader() {
             let headRow = document.createElement('tr');
-            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '时间', '接待员', '发起单位', '客户属性', '整体行程'].forEach(header => {
+            ['客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '时间', '总体行程', '讲解', '接待', '展厅定制化'].forEach(header => {
                 let th = document.createElement('th');
                 th.textContent = header;
                 headRow.appendChild(th);
@@ -189,7 +186,7 @@
 
                     Object.keys(entry).forEach(key => {
                         let td = document.createElement('td');
-                        td.textContent = entry[key] || '/';
+                        td.textContent = entry[key] || '';
                         row.appendChild(td);
                     });
 
