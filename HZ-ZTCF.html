@@ -102,7 +102,7 @@
             <button type="button" onclick="generateReport()">生成报告</button>
             <button type="button" onclick="copyToClipboard('杭州展厅')">一键复制杭州展厅</button>
             <button type="button" onclick="copyToClipboard('未来工厂')">一键复制未来工厂</button>
-            <button type="button" onclick="copyToClipboard('其他接待')">一键复制其他接待</button>
+            <button type="button" onclick="copyToClipboard('其它接待')">一键复制其它接待</button>
         </div>
     </form>
     <div id="report"></div>
@@ -135,13 +135,13 @@
                     let receptionTimes = fields[8].split('/');
 
                     let sortFieldIndex = receptionPlaces.indexOf(sortField);
-                    if (sortFieldIndex !== -1 && sortField !== '其他接待') {
+                    if (sortFieldIndex !== -1 && sortField !== '其它接待') {
                         entry['时间'] = receptionTimes[sortFieldIndex];
                         stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
                         parsedData.push(entry);
                     }
 
-                    if (sortField === '其他接待' && !receptionPlaces.includes('杭州展厅') && !receptionPlaces.includes('未来工厂')) {
+                    if (sortField === '其它接待' && !receptionPlaces.includes('杭州展厅') && !receptionPlaces.includes('未来工厂')) {
                         parsedData.push(entry);
                         stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
                     }
@@ -176,7 +176,7 @@
 
             let parsedHangzhouData1 = parseData(hangzhouData, '杭州展厅', hangzhouStats);
             let parsedHangzhouData2 = parseData(hangzhouData, '未来工厂', futureFactoryStats);
-            let parsedOtherData = parseData(hangzhouData, '其他接待', otherStats, true);
+            let parsedOtherData = parseData(hangzhouData, '其它接待', otherStats, true);
 
             let reportDiv = document.getElementById('report');
             reportDiv.innerHTML = '';
@@ -188,14 +188,14 @@
                 const hangzhouCount = hangzhouStats[date] || 0;
                 const futureFactoryCount = futureFactoryStats[date] || 0;
                 const otherCount = otherStats[date] || 0;
-                statsSummary += `${date}：杭州展厅 ${hangzhouCount} 批，未来工厂 ${futureFactoryCount} 批，其他接待 ${otherCount} 批; `;
+                statsSummary += `${date}：杭州展厅 ${hangzhouCount} 批，未来工厂 ${futureFactoryCount} 批，其它接待 ${otherCount} 批; `;
             });
 
             let statsTitle = document.createElement('h3');
             statsTitle.textContent = statsSummary.trim();
             reportDiv.appendChild(statsTitle);
 
-            [['杭州展厅', parsedHangzhouData1], ['未来工厂', parsedHangzhouData2], ['其他接待', parsedOtherData]].forEach(([titleText, data]) => {
+            [['杭州展厅', parsedHangzhouData1], ['未来工厂', parsedHangzhouData2], ['其它接待', parsedOtherData]].forEach(([titleText, data]) => {
                 let title = document.createElement('h2');
                 title.textContent = titleText;
                 reportDiv.appendChild(title);
