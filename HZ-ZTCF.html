@@ -102,6 +102,7 @@
             <button type="button" onclick="generateReport()">生成报告</button>
             <button type="button" onclick="copyToClipboard('杭州展厅')">一键复制杭州展厅</button>
             <button type="button" onclick="copyToClipboard('未来工厂')">一键复制未来工厂</button>
+            <button type="button" onclick="copyToClipboard('其他接待')">一键复制其他接待</button>
         </div>
     </form>
     <div id="report"></div>
@@ -127,20 +128,21 @@
                         总体行程: fields[12] || '',
                         讲解: '',
                         接待: fields[9] || '',
-                        展厅定制化: ''
+                        特殊需求: ''
                     };
 
                     let receptionPlaces = fields[7].split('/');
                     let receptionTimes = fields[8].split('/');
 
                     let sortFieldIndex = receptionPlaces.indexOf(sortField);
-                    if (sortFieldIndex !== -1) {
+                    if (sortFieldIndex !== -1 && sortField !== '其他接待') {
                         entry['时间'] = receptionTimes[sortFieldIndex];
                         stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
                         parsedData.push(entry);
                     }
 
-                    if (isOther && !receptionPlaces.includes('杭州展厅') && !receptionPlaces.includes('未来工厂')) {
+                    if (sortField === '其他接待' && !receptionPlaces.includes('杭州展厅') && !receptionPlaces.includes('未来工厂')) {
+                        parsedData.push(entry);
                         stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
                     }
                 }
@@ -157,7 +159,7 @@
 
         function generateTableHeader() {
             let headRow = document.createElement('tr');
-            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '时间', '总体行程', '讲解', '接待', '展厅定制化'].forEach(header => {
+            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '时间', '总体行程', '讲解', '接待', '特殊需求'].forEach(header => {
                 let th = document.createElement('th');
                 th.textContent = header;
                 headRow.appendChild(th);
@@ -174,14 +176,14 @@
 
             let parsedHangzhouData1 = parseData(hangzhouData, '杭州展厅', hangzhouStats);
             let parsedHangzhouData2 = parseData(hangzhouData, '未来工厂', futureFactoryStats);
-            parseData(hangzhouData, '', otherStats, true);
+            let parsedOtherData = parseData(hangzhouData, '其他接待', otherStats, true);
 
             let reportDiv = document.getElementById('report');
             reportDiv.innerHTML = '';
 
             let statsSummary = `统计：`;
             let allDates = Array.from(new Set([...Object.keys(hangzhouStats), ...Object.keys(futureFactoryStats), ...Object.keys(otherStats)]));
-            
+
             allDates.sort().forEach(date => {
                 const hangzhouCount = hangzhouStats[date] || 0;
                 const futureFactoryCount = futureFactoryStats[date] || 0;
@@ -193,7 +195,7 @@
             statsTitle.textContent = statsSummary.trim();
             reportDiv.appendChild(statsTitle);
 
-            [['杭州展厅', parsedHangzhouData1], ['未来工厂', parsedHangzhouData2]].forEach(([titleText, data]) => {
+            [['杭州展厅', parsedHangzhouData1], ['未来工厂', parsedHangzhouData2], ['其他接待', parsedOtherData]].forEach(([titleText, data]) => {
                 let title = document.createElement('h2');
                 title.textContent = titleText;
                 reportDiv.appendChild(title);
@@ -223,7 +225,7 @@
             const parsedData = parseData(sourceData, sortField, stats);
 
             const rows = parsedData.map(entry => Object.values(entry).join('\t')).join('\n');
-            
+
             navigator.clipboard.writeText(rows).then(() => {
                 alert(`已复制${sortField}数据到剪贴板`);
             }, () => {
