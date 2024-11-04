@@ -88,8 +88,8 @@
             color: #007bff;
         }
 
-        td.failure {
-            color: #ff4b5c;
+        td.failure, td.mismatch {
+            color: #ff4b5c; /* 红色表示匹配失败 */
         }
 
         td.potential-match {
@@ -175,6 +175,10 @@
             reader.readAsArrayBuffer(file);
         }
 
+        function normalizeTimeFormat(timeStr) {
+            return timeStr.replace(/：/g, ':');
+        }
+
         function parsePastedData() {
             const pasteArea = document.getElementById('pasteArea').value;
             const lines = pasteArea.trim().split('\n');
@@ -183,7 +187,7 @@
             pastedData = data.map(line => ({
                 '客户名称': line[1],
                 '展厅': line[7],
-                '时间': line[8]
+                '时间': normalizeTimeFormat(line[8])
             }));
 
             console.log('粘贴数据:', pastedData);
@@ -224,12 +228,13 @@
                         const cleanInfo = info.trim();
                         for (const [key, value] of Object.entries(exhibitionMapping)) {
                             if (cleanInfo.includes(key)) {
-                                const timeInfo = cleanInfo.match(/(\d{2}:\d{2})/);
+                                const timeInfo = cleanInfo.match(/(\d{2}[:：]\d{2})/);
                                 if (timeInfo) {
+                                    const formattedTime = normalizeTimeFormat(timeInfo[0]);
                                     if (value === "未来工厂") {
-                                        futureFactoryTimeExcel = timeInfo[0];
+                                        futureFactoryTimeExcel = formattedTime;
                                     } else if (value === "杭州展厅") {
-                                        hangzhouShowroomTimeExcel = timeInfo[0];
+                                        hangzhouShowroomTimeExcel = formattedTime;
                                     }
                                 }
                             }
@@ -243,15 +248,32 @@
                 const futureFactoryMatch = futureFactoryTimeExcel === futureFactoryTimePasted ? '✓' : '✗';
                 const hangzhouShowroomMatch = hangzhouShowroomTimeExcel === hangzhouShowroomTimePasted ? '✓' : '✗';
 
-                let recordStatus = '缺数据';
-                const statusClass = (excelRow && pastedMap[client]) ? 'success' : 'failure';
+                let recordStatus = '';
+                let statusClass = '';
 
                 if (excelRow && pastedMap[client]) {
-                    recordStatus = '两边都有';
+                    if (futureFactoryMatch === '✗' && hangzhouShowroomMatch === '✗') {
+                        recordStatus = '时间都不对';
+                        statusClass = 'mismatch';
+                    } else if (futureFactoryMatch === '✗') {
+                        recordStatus = '工厂时间不对';
+                        statusClass = 'mismatch';
+                    } else if (hangzhouShowroomMatch === '✗') {
+                        recordStatus = '基地展厅时间不对';
+                        statusClass = 'mismatch';
+                    } else {
+                        recordStatus = '均匹配';
+                        statusClass = 'success';
+                    }
                 } else if (excelRow) {
                     recordStatus = '缺粘贴数据';
+                    statusClass = 'failure';
                 } else if (pastedMap[client]) {
                     recordStatus = '缺RMP数据';
+                    statusClass = 'failure';
+                } else {
+                    recordStatus = '缺数据';
+                    statusClass = 'failure';
                 }
 
                 let potentialMatch = '';
@@ -274,8 +296,8 @@
                     <td>${hangzhouShowroomTimeExcel}</td>
                     <td>${futureFactoryTimePasted}</td>
                     <td>${futureFactoryTimeExcel}</td>
-                    <td>${hangzhouShowroomMatch}</td>
-                    <td>${futureFactoryMatch}</td>
+                    <td class="${hangzhouShowroomMatch === '✗' ? 'mismatch' : ''}">${hangzhouShowroomMatch}</td>
+                    <td class="${futureFactoryMatch === '✗' ? 'mismatch' : ''}">${futureFactoryMatch}</td>
                     <td class="${statusClass}">${recordStatus}</td>
                     <td class="${potentialClass}">${potentialMatch}</td>
                 `;
