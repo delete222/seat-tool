@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据对比展示</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e9f5ff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #064273;
+            margin: 0;
+            padding: 20px;
+            background-color: #e9f5ff; /* 与页面背景一致 */
+        }
+
+        #fileInput, #pasteArea {
+            display: block;
+            margin: 20px auto;
+            width: 90%;
+            max-width: 1000px;
+        }
+
+        #pasteArea {
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #064273;
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #064273;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #045081;
+        }
+
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 90%;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        th, td {
+            border: 1px solid #d1e4f3;
+            padding: 12px 15px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3e8fc1;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f0f8ff;
+        }
+
+        tr:hover {
+            background-color: #d0eafd;
+        }
+
+        td:nth-child(9) {
+            font-weight: bold;
+        }
+
+        td.success {
+            color: #007bff;
+        }
+
+        td.failure {
+            color: #ff4b5c;
+        }
+
+        td.potential-match {
+            color: #ffa500; /* 橙色表示疑似匹配 */
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #064273;
+            color: white;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>值班表 & RMP数据对比</h1>
+
+    <!-- 文件上传说明 -->
+    <h3 style="text-align: center;">请上传RMP导出的Excel</h3>
+    <input type="file" id="fileInput" accept=".xlsx" />
+
+    <!-- 数据粘贴区域 -->
+    <h3 style="text-align: center;">粘贴值班表数据：</h3>
+    <textarea id="pasteArea" placeholder="在这里粘贴数据..."></textarea>
+    <button onclick="parsePastedData()">解析粘贴的数据</button>
+
+    <!-- 展示结果的表格 -->
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>客户单位</th>
+                <th>杭州展厅(值班表)</th>
+                <th>杭州展厅(RMP)</th>
+                <th>未来工厂(值班表)</th>
+                <th>未来工厂(RMP)</th>
+                <th>展厅匹配情况</th>
+                <th>工厂匹配情况</th>
+                <th>状态</th>
+                <th>特殊匹配</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 结果将在这里显示 -->
+        </tbody>
+    </table>
+    
+    <!-- 添加版权信息 -->
+    <footer>
+        © Steve  本工具总访问量 <span id="busuanzi_value_page_pv"></span> 次
+    </footer>
+
+    <script>
+        const exhibitionMapping = {
+            "未来工厂": "未来工厂",
+            "杭州展厅": "杭州展厅",
+            "杭州基地展厅": "杭州展厅",
+            "新华三未来工厂": "未来工厂",
+            "杭州基地创新体验中心": "杭州展厅"
+        };
+
+        let pastedData = [];
+        let excelData = [];
+
+        document.getElementById('fileInput').addEventListener('change', handleFile, false);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                excelData = XLSX.utils.sheet_to_json(worksheet);
+
+                console.log('Excel数据:', excelData);
+                compareData();
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parsePastedData() {
+            const pasteArea = document.getElementById('pasteArea').value;
+            const lines = pasteArea.trim().split('\n');
+            const data = lines.map(line => line.split('\t')).filter(line => line.length >= 9);
+
+            pastedData = data.map(line => ({
+                '客户名称': line[1],
+                '展厅': line[7],
+                '时间': line[8]
+            }));
+
+            console.log('粘贴数据:', pastedData);
+            compareData();
+        }
+
+        function compareData() {
+            const resultTable = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+            resultTable.innerHTML = ''; // 清空表格
+
+            const pastedMap = pastedData.reduce((acc, row) => {
+                const exhibitions = row['展厅'].split('/');
+                const times = row['时间'].split('/');
+                const mappedData = { '杭州展厅': '/', '未来工厂': '/' };
+                exhibitions.forEach((exhibition, i) => {
+                    const time = times[i] || '/';
+                    if (exhibitionMapping[exhibition.trim()]) {
+                        const mappedExhibition = exhibitionMapping[exhibition.trim()];
+                        if (mappedExhibition === '杭州展厅') mappedData['杭州展厅'] = time;
+                        if (mappedExhibition === '未来工厂') mappedData['未来工厂'] = time;
+                    }
+                });
+                acc[row['客户名称']] = mappedData;
+                return acc;
+            }, {});
+
+            const allClients = new Set([...pastedData.map(row => row['客户名称']), ...excelData.map(row => row['客户名称'])]);
+
+            allClients.forEach(client => {
+                const excelRow = excelData.find(row => row['客户名称'] === client);
+                const pastedInfo = pastedMap[client] || { '杭州展厅': '/', '未来工厂': '/' };
+
+                let futureFactoryTimeExcel = '/', hangzhouShowroomTimeExcel = '/';
+
+                if (excelRow && excelRow['展厅']) {
+                    const exhibitionsRaw = excelRow['展厅'];
+                    exhibitionsRaw.split('，').forEach(info => {
+                        const cleanInfo = info.trim();
+                        for (const [key, value] of Object.entries(exhibitionMapping)) {
+                            if (cleanInfo.includes(key)) {
+                                const timeInfo = cleanInfo.match(/(\d{2}:\d{2})/);
+                                if (timeInfo) {
+                                    if (value === "未来工厂") {
+                                        futureFactoryTimeExcel = timeInfo[0];
+                                    } else if (value === "杭州展厅") {
+                                        hangzhouShowroomTimeExcel = timeInfo[0];
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                const futureFactoryTimePasted = pastedInfo['未来工厂'];
+                const hangzhouShowroomTimePasted = pastedInfo['杭州展厅'];
+
+                const futureFactoryMatch = futureFactoryTimeExcel === futureFactoryTimePasted ? '✓' : '✗';
+                const hangzhouShowroomMatch = hangzhouShowroomTimeExcel === hangzhouShowroomTimePasted ? '✓' : '✗';
+
+                let recordStatus = '缺数据';
+                const statusClass = (excelRow && pastedMap[client]) ? 'success' : 'failure';
+
+                if (excelRow && pastedMap[client]) {
+                    recordStatus = '两边都有';
+                } else if (excelRow) {
+                    recordStatus = '缺粘贴数据';
+                } else if (pastedMap[client]) {
+                    recordStatus = '缺RMP数据';
+                }
+
+                let potentialMatch = '';
+                let potentialClass = '';
+
+                if (!excelRow || !pastedMap[client]) {
+                    const isPotentialMatch = Array.from(allClients).some(name => 
+                        name !== client && getMatchPercentage(name, client) > 0.5
+                    );
+                    if (isPotentialMatch) {
+                        potentialMatch = '疑似匹配';
+                        potentialClass = 'potential-match';
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${client}</td>
+                    <td>${hangzhouShowroomTimePasted}</td>
+                    <td>${hangzhouShowroomTimeExcel}</td>
+                    <td>${futureFactoryTimePasted}</td>
+                    <td>${futureFactoryTimeExcel}</td>
+                    <td>${hangzhouShowroomMatch}</td>
+                    <td>${futureFactoryMatch}</td>
+                    <td class="${statusClass}">${recordStatus}</td>
+                    <td class="${potentialClass}">${potentialMatch}</td>
+                `;
+                resultTable.appendChild(tr);
+            });
+        }
+
+        function getMatchPercentage(str1, str2) {
+            const matches = Array.from(str1).filter(char => str2.includes(char)).length;
+            const longerLength = Math.max(str1.length, str2.length);
+            return matches / longerLength;
+        }
+    </script>
+</body>
+</html>
