@@ -132,11 +132,11 @@
                     };
 
                     let receptionPlaces = fields[7].split('/');
-                    let receptionTimes = fields[8].split('/');
+                    let receptionTimes = fields[8].split('/').map(time => time.replace(/：/g, ':')); // 将中文冒号替换为英文冒号
 
                     let sortFieldIndex = receptionPlaces.indexOf(sortField);
                     if (sortFieldIndex !== -1 && sortField !== '其它接待') {
-                        entry['时间'] = receptionTimes[sortFieldIndex];
+                        entry['时间'] = receptionTimes[sortFieldIndex] || '/';
                         stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
                         parsedData.push(entry);
                     }
