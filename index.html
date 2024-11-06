@@ -29,14 +29,9 @@
         }
         .buttons {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .button-row {
-            display: flex;
             justify-content: center;
+            align-items: center;
             gap: 10px;
-            margin-bottom: 20px;
         }
         .button {
             display: inline-block;
@@ -47,6 +42,7 @@
             border: none;
             border-radius: 30px;
             text-decoration: none;
+            cursor: pointer;
             transition: background-color 0.3s ease, transform 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
         }
@@ -61,40 +57,129 @@
             font-size: 1.6vmin;
             color: #888;
         }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 30px;
+            border: 0;
+            width: 60%;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+        }
+        .close {
+            color: #333;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: #999;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        @keyframes slideIn {
+            from {transform: translateY(-50px);}
+            to {transform: translateY(0);}
+        }
     </style>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // 设置页面有效期
-            const expiryDate = new Date("2025-12-30"); // 替换成实际的最后工作日期
-            const currentDate = new Date();
-            
-            if (currentDate > expiryDate) {
-                document.body.innerHTML = "<div class='container'><h1>The authorization for this tool has expired, You don't have access!</h1><p>Please contact Steve Yang for renewal tool.</p></div>";
-                document.body.style.background = '#f5f7fa';
-            }
-        });
-    </script>
-    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>选择要使用的功能</h1>
+        <h1>请选择类别</h1>
         <div class="buttons">
-            <div class="button-row">
-                <a href="/hys" class="button">会议室座位图</a>
-                <a href="/bx" class="button">圆桌座位图</a>
-                <a href="/ribao" class="button">接待日报生成</a>
-                <a href="/zhoubao" class="button">接待周报生成</a>
-            </div>
-            <div class="button-row">
-                <a href="/ztpx" class="button">值班表时间排序</a>
-                <a href="/HZ-ZTCF" class="button">杭州展厅拆分</a>
-                <a href="/rmp" class="button">值班表-RMP数据对比</a>
-                <a href="/cldd" class="button">出车工时计算</a>
-            </div>
+            <button class="button" onclick="showModal('modalReceptionist')">接待员工具</button>
+            <button class="button" onclick="showModal('modalManager')">值班经理工具</button>
+            <button class="button" onclick="showModal('modalExhibition')">展厅工具</button>
+            <button class="button" onclick="showModal('modalOther')">其它工具</button>
         </div>
         <div class="version-info">© SteveYang 本工具总访问量 <span id="busuanzi_value_site_pv"></span> 次</div>
     </div>
+
+    <!-- Modal for 接待员工具 -->
+    <div id="modalReceptionist" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modalReceptionist')">&times;</span>
+            <h2>接待员工具</h2>
+            <div class="buttons">
+                <a href="/hys" class="button">会议室座位图</a>
+                <a href="/bx" class="button">圆桌座位图</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for 值班经理工具 -->
+    <div id="modalManager" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modalManager')">&times;</span>
+            <h2>值班经理工具：①时间排序看是否冲突→②RMP数据对比维护线上数据→③写日报核对发邮件</h2>
+            <div class="buttons">
+                <a href="/ztpx" class="button">值班表时间排序</a>
+                <a href="/rmp" class="button">值班表-RMP数据对比</a>
+                <a href="/ribao" class="button">接待日报生成</a>
+                <a href="/zhoubao" class="button">接待周报生成</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for 展厅工具 -->
+    <div id="modalExhibition" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modalExhibition')">&times;</span>
+            <h2>展厅工具</h2>
+            <div class="buttons">
+                <a href="/HZ-ZTCF" class="button">杭州展厅拆分</a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal for 其它工具 -->
+    <div id="modalOther" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modalOther')">&times;</span>
+            <h2>其它工具</h2>
+            <div class="buttons">
+                <a href="/cldd" class="button">出车工时计算</a>
+                <a href="/bumen" class="button">代表处来访批次统计</a>              
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target && event.target.classList && event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+    </script>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </body>
 </html>
