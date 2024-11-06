@@ -107,14 +107,14 @@
 </head>
 <body>
     <div class="container">
-        <h1>请选择类别</h1>
+        <h1>请选择角色</h1>
         <div class="buttons">
-            <button class="button" onclick="showModal('modalReceptionist')">接待员工具</button>
-            <button class="button" onclick="showModal('modalManager')">值班经理工具</button>
-            <button class="button" onclick="showModal('modalExhibition')">展厅工具</button>
+            <button class="button" onclick="showModal('modalReceptionist')">接待员</button>
+            <button class="button" onclick="showModal('modalManager')">值班经理</button>
+            <button class="button" onclick="showModal('modalExhibition')">体验中心</button>
             <button class="button" onclick="showModal('modalOther')">其它工具</button>
         </div>
-        <div class="version-info">© SteveYang 本工具总访问量 <span id="busuanzi_value_site_pv"></span> 次，V3.1 新增二级页面，优化工具入口</div>，
+        <div class="version-info">© SteveYang 本工具总访问量 <span id="busuanzi_value_site_pv"></span> 次，V3.1 新增二级页面，优化工具入口</div>
     </div>
 
     <!-- Modal for 接待员工具 -->
@@ -123,8 +123,8 @@
             <span class="close" onclick="closeModal('modalReceptionist')">&times;</span>
             <h2>接待员工具</h2>
             <div class="buttons">
-                <a href="/hys" class="button">会议室座位图</a>
-                <a href="/bx" class="button">圆桌座位图</a>
+                <a href="/hys" class="button">会议室座位图生成</a>
+                <a href="/bx" class="button">圆桌座位图生成</a>
             </div>
         </div>
     </div>
@@ -147,7 +147,7 @@
     <div id="modalExhibition" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('modalExhibition')">&times;</span>
-            <h2>展厅工具</h2>
+            <h2>体验中心工具</h2>
             <div class="buttons">
                 <a href="/HZ-ZTCF" class="button">杭州展厅 & 工厂拆分及排序</a>
             </div>
