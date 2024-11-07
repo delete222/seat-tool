@@ -105,6 +105,7 @@
             <button type="button" onclick="copyToClipboard('杭州展厅')">一键复制杭州展厅</button>
             <button type="button" onclick="copyToClipboard('未来工厂')">一键复制未来工厂</button>
             <button type="button" onclick="copyToClipboard('其它接待')">一键复制其它接待</button>
+            <button type="button" onclick="copyHangzhouAndOthers()">一键复制杭州展厅+其它接待</button>
         </div>
     </form>
     <div id="report"></div>
@@ -231,6 +232,24 @@
 
             navigator.clipboard.writeText(rows).then(() => {
                 alert(`已复制${sortField}数据到剪贴板`);
+            }, () => {
+                alert('复制失败');
+            });
+        }
+
+        function copyHangzhouAndOthers() {
+            const sourceData = document.getElementById('hangzhou').value;
+
+            const hangzhouStats = {};
+            const otherStats = {};
+            const parsedHangzhouData = parseData(sourceData, '杭州展厅', hangzhouStats);
+            const parsedOtherData = parseData(sourceData, '其它接待', otherStats, true);
+
+            const combinedData = [...parsedHangzhouData, ...parsedOtherData];
+            const rows = combinedData.map(entry => Object.values(entry).join('\t')).join('\n');
+
+            navigator.clipboard.writeText(rows).then(() => {
+                alert('已复制杭州展厅+其它接待数据到剪贴板');
             }, () => {
                 alert('复制失败');
             });
