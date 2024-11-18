@@ -178,6 +178,13 @@
         }
 
         function normalizeTimeFormat(timeStr) {
+            const timeParts = timeStr.split(':');
+            if (timeParts.length === 2) {
+                let [hours, minutes] = timeParts;
+                hours = hours.padStart(2, '0');
+                minutes = minutes.padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
             return timeStr.replace(/：/g, ':');
         }
 
@@ -230,7 +237,7 @@
                         const cleanInfo = info.trim();
                         for (const [key, value] of Object.entries(exhibitionMapping)) {
                             if (cleanInfo.includes(key)) {
-                                const timeInfo = cleanInfo.match(/(\d{2}[:：]\d{2})/);
+                                const timeInfo = cleanInfo.match(/(\d{1,2}[:：]\d{2})/);
                                 if (timeInfo) {
                                     const formattedTime = normalizeTimeFormat(timeInfo[0]);
                                     if (value === "未来工厂") {
@@ -247,8 +254,8 @@
                 const futureFactoryTimePasted = pastedInfo['未来工厂'];
                 const hangzhouShowroomTimePasted = pastedInfo['杭州展厅'];
 
-                const futureFactoryMatch = futureFactoryTimeExcel === futureFactoryTimePasted ? '✓' : '✗';
-                const hangzhouShowroomMatch = hangzhouShowroomTimeExcel === hangzhouShowroomTimePasted ? '✓' : '✗';
+                const futureFactoryMatch = normalizeTimeFormat(futureFactoryTimeExcel) === normalizeTimeFormat(futureFactoryTimePasted) ? '✓' : '✗';
+                const hangzhouShowroomMatch = normalizeTimeFormat(hangzhouShowroomTimeExcel) === normalizeTimeFormat(hangzhouShowroomTimePasted) ? '✓' : '✗';
 
                 let recordStatus = '';
                 let statusClass = '';
