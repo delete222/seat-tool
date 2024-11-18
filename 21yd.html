@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预定信息生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 15px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 5px;
+            white-space: pre-line; /* Preserves line breaks */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>预定信息生成器</h1>
+        <textarea id="input" placeholder="粘贴预订信息在这里..."></textarea>
+        <button onclick="generateMessage()">生成回复信息</button>
+        <button onclick="copyToClipboard()">复制到剪贴板</button>
+        <h2>生成的回复信息：</h2>
+        <div id="output"></div>
+    </div>
+    <script>
+        function generateMessage() {
+            const input = document.getElementById('input').value;
+            const output = document.getElementById('output');
+
+            const lines = input.split('\n');
+            const date = lines[0].split(' ')[0];
+            const year = new Date().getFullYear();
+            const occasion = lines[0].split(' ')[1];
+            const location = lines[1];
+            const salespersonIndex = lines.findIndex(line => line.startsWith('销售人员'));
+            const salesperson = lines[salespersonIndex].split('：')[1].trim();
+            const personsInfoLine = lines.find(line => line.startsWith('用餐人数'));
+            const numberOfPeople = personsInfoLine.match(/\d+/)[0];
+
+            const dateObj = new Date();
+            dateObj.setFullYear(year, parseInt(date.split('月')[0], 10) - 1, parseInt(date.split('月')[1].replace('日', ''), 10));
+            const dayOfWeek = dateObj.getDay();
+            const weekDays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+            const weekDayName = weekDays[dayOfWeek];
+
+            const result = `尊敬的 ${salesperson} 先生/女士，您预订的${year}年${date} （${weekDayName}） ${location}${occasion}${numberOfPeople}位，新华三书苑为您准备好，恭候您的光临！
+垂询电话：18226839531
+导航：新华三集团
+地址：滨江区长河路466号
+期待您的到来，我们很荣幸为您提供服务！
+（温馨提示：若包厢预订取消，前一天晚上23点前取消，免收费用。
+午宴：10:30前取消，收取当餐餐费50%，10:30后取消按全额收取费用。
+晚宴：17:00前取消，收取当餐餐费50%，17:00后取消按全额收取费用。`;
+
+            output.textContent = result;
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(output).then(() => {
+                alert('复制成功！');
+            }, () => {
+                alert('复制失败，请手动复制。');
+            });
+        }
+    </script>
+</body>
+</html>
