@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
-<script>LA.init({id:"3KE4WAeb0ZUqWfc3",ck:"3KE4WAeb0ZUqWfc3",autoTrack:true,hashMode:true})</script>
-<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,11 +8,10 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
             background-color: #f4f4f4;
         }
 
@@ -25,19 +21,53 @@
             padding: 20px;
             background-color: white;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
 
-        h1 {
+        h1, h2 {
             text-align: center;
             margin-bottom: 20px;
         }
 
+        input[type="date"], input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
         textarea {
             width: 100%;
-            height: 150px;
-            margin-bottom: 15px;
+            height: 120px; /* 增加高度 */
             padding: 10px;
+            margin-bottom: 15px;
             box-sizing: border-box;
+        }
+
+        .toggle-group {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+        }
+
+        .toggle {
+            display: none;
+        }
+
+        .toggle + label {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .toggle:checked + label {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
         }
 
         button {
@@ -48,7 +78,8 @@
             border: none;
             cursor: pointer;
             font-size: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
         }
 
         button:hover {
@@ -60,49 +91,133 @@
             padding: 10px;
             background-color: #e9e9e9;
             border-radius: 5px;
-            white-space: pre-line; /* Preserves line breaks */
+            white-space: pre-line;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>预定信息生成器</h1>
-        <textarea id="input" placeholder="粘贴预订信息在这里..."></textarea>
+        <textarea id="input" placeholder="粘贴预订信息在这里..." onblur="parseInput()"></textarea>
+        
+        <input type="date" id="date" />
+
+        <div class="toggle-group">
+            <input type="radio" name="scene" id="lunch" class="toggle" value="午宴">
+            <label for="lunch">午宴</label>
+
+            <input type="radio" name="scene" id="dinner" class="toggle" value="晚宴">
+            <label for="dinner">晚宴</label>
+        </div>
+
+        <div class="toggle-group">
+            <input type="radio" name="location" id="largeTable" class="toggle" value="大圆桌">
+            <label for="largeTable">大圆桌</label>
+
+            <input type="radio" name="location" id="smallTable" class="toggle" value="小圆桌">
+            <label for="smallTable">小圆桌</label>
+        </div>
+
+        <input type="text" id="salesperson" placeholder="销售人员" />
+        <input type="number" id="numberOfPeople" placeholder="用餐人数" min="1" />
         <button onclick="generateMessage()">生成回复信息</button>
         <button onclick="copyToClipboard()">复制到剪贴板</button>
         <h2>生成的回复信息：</h2>
         <div id="output"></div>
     </div>
     <script>
-        function generateMessage() {
+        function parseInput() {
             const input = document.getElementById('input').value;
-            const output = document.getElementById('output');
-
             const lines = input.split('\n');
-            const date = lines[0].split(' ')[0];
-            const year = new Date().getFullYear();
-            const occasion = lines[0].split(' ')[1];
-            const location = lines[1];
-            const salespersonIndex = lines.findIndex(line => line.startsWith('销售人员'));
-            const salesperson = lines[salespersonIndex].split('：')[1].trim();
-            const personsInfoLine = lines.find(line => line.startsWith('用餐人数'));
-            const numberOfPeople = personsInfoLine.match(/\d+/)[0];
+            let dateFound = false;
 
-            const dateObj = new Date();
-            dateObj.setFullYear(year, parseInt(date.split('月')[0], 10) - 1, parseInt(date.split('月')[1].replace('日', ''), 10));
-            const dayOfWeek = dateObj.getDay();
+            for (const line of lines) {
+                if (!dateFound && line.match(/(\d+)月(\d+)日/)) {
+                    const dateParts = line.match(/(\d+)月(\d+)日/);
+                    if (dateParts) {
+                        const year = new Date().getFullYear();
+                        const month = parseInt(dateParts[1], 10);
+                        const day = parseInt(dateParts[2], 10);
+                        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                            dateFound = true;
+                            document.getElementById('date').value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        }
+                    }
+                }
+
+                if (!dateFound && line.match(/(\d{1,2})\.(\d{1,2})/)) {
+                    const dateParts = line.match(/(\d{1,2})\.(\d{1,2})/);
+                    if (dateParts) {
+                        const year = new Date().getFullYear();
+                        const month = parseInt(dateParts[1], 10);
+                        const day = parseInt(dateParts[2], 10);
+                        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                            dateFound = true;
+                            document.getElementById('date').value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        }
+                    }
+                }
+
+                if (['午餐', '午宴', '中午'].some(keyword => line.includes(keyword))) {
+                    document.getElementById('lunch').checked = true;
+                }
+                if (['晚餐', '晚宴', '晚上'].some(keyword => line.includes(keyword))) {
+                    document.getElementById('dinner').checked = true;
+                }
+
+                if (['大圆', '大桌', '大圆桌'].some(keyword => line.includes(keyword))) {
+                    document.getElementById('largeTable').checked = true;
+                }
+                if (['小圆', '小桌', '小圆桌'].some(keyword => line.includes(keyword))) {
+                    document.getElementById('smallTable').checked = true;
+                }
+
+                if ((line.includes('销售') || line.includes('销售人员')) && (line.includes(':') || line.includes('：'))) {
+                    const salesperson = line.split(/[：:]/)[1].trim();
+                    document.getElementById('salesperson').value = salesperson;
+                }
+
+                if ((line.includes('人数') || line.includes('用餐人数')) && (line.includes(':') || line.includes('：'))) {
+                    const numberOfPeople = line.split(/[：:]/)[1].match(/\d+/);
+                    if (numberOfPeople) {
+                        document.getElementById('numberOfPeople').value = numberOfPeople[0];
+                    }
+                }
+            }
+        }
+
+        function generateMessage() {
+            const date = document.getElementById('date').value;
+            const scene = document.querySelector('input[name="scene"]:checked') ? document.querySelector('input[name="scene"]:checked').value : '（未指定）';
+            const location = document.querySelector('input[name="location"]:checked') ? document.querySelector('input[name="location"]:checked').value : '（未指定）';
+            const salesperson = document.getElementById('salesperson').value || '（未指定）';
+            const numberOfPeople = document.getElementById('numberOfPeople').value || '（未指定）';
+
+            const dateObj = new Date(date);
+            const year = dateObj.getFullYear();
+            const month = dateObj.getMonth() + 1;
+            const day = dateObj.getDate();
+            const formattedDate = date ? `${year}年${month}月${day}日` : '（未指定日期）';
+
+            const dayOfWeek = date ? dateObj.getDay() : null;
             const weekDays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-            const weekDayName = weekDays[dayOfWeek];
+            const weekDayName = dayOfWeek !== null ? weekDays[dayOfWeek] : '（未指定周）';
 
-            const result = `尊敬的 ${salesperson} 先生/女士，您预订的${year}年${date} （${weekDayName}） ${location}${occasion}${numberOfPeople}位，新华三书苑为您准备好，恭候您的光临！
+            let cancellationPolicy = '';
+            if (scene === '晚宴') {
+                cancellationPolicy = '晚宴：17:00前取消，收取当餐餐费50%，17:00后取消按全额收取费用。';
+            } else if (scene === '午宴') {
+                cancellationPolicy = '午宴：10:30前取消，收取当餐餐费50%，10:30后取消按全额收取费用。';
+            }
+
+            const result = `尊敬的${salesperson}先生/女士，您预订的${formattedDate} （${weekDayName}） ${location}${scene}${numberOfPeople}位，新华三书苑为您准备好，恭候您的光临！
 垂询电话：18226839531
 导航：新华三集团
 地址：滨江区长河路466号
 期待您的到来，我们很荣幸为您提供服务！
-温馨提示：若包厢预订取消，前一天晚上23点前取消，免收费用。
-午宴：10:30前取消，收取当餐餐费50%，10:30后取消按全额收取费用。
-晚宴：17:00前取消，收取当餐餐费50%，17:00后取消按全额收取费用。`;
+温馨提示：若包厢预订取消，前一天晚上23点前取消，免收费用。\n${cancellationPolicy}`;
 
+            const output = document.getElementById('output');
             output.textContent = result;
         }
 
