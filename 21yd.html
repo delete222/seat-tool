@@ -96,6 +96,13 @@
             border-radius: 5px;
             white-space: pre-line;
         }
+
+        .version-info {
+            margin-top: 1px;
+            font-size: 14px;
+            color: #777;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -128,6 +135,7 @@
         <h2>生成的回复信息：</h2>
         <div id="output"></div>
     </div>
+    <div class="version-info">© Steve  本工具总访问量 <span id="busuanzi_value_page_pv"></span> 次</div>
     <script>
         function parseInput() {
             const input = document.getElementById('input').value;
