@@ -112,7 +112,44 @@
     <div id="report"></div>
     <div class="version-info">© Steve</div>
     <script>
-        function parseData(data, sortField) {
+        function adjustReceptionOrder(receptionInfo, times) {
+            const priorities = ["杭州展厅", "未来工厂"];
+            let places = receptionInfo.split('/');
+            let receptionTimes = times.split('/');
+
+            let priorityGroup = [];
+            let otherGroup = [];
+
+            // 按优先级对接待信息分组
+            places.forEach((place, index) => {
+                const time = receptionTimes[index] || '/';
+                const entry = { place, time };
+                if (priorities.includes(place)) {
+                    priorityGroup.push(entry);
+                } else {
+                    otherGroup.push(entry);
+                }
+            });
+
+            // 对优先组按优先级排序
+            priorityGroup.sort((a, b) => {
+                const priorityA = priorities.indexOf(a.place);
+                const priorityB = priorities.indexOf(b.place);
+                if (priorityA !== priorityB) {
+                    return priorityA - priorityB;
+                }
+                // 相同优先级按时间排序
+                return a.time.localeCompare(b.time, 'zh-CN', { numeric: true });
+            });
+
+            // 其他组按原顺序排列
+            return {
+                receptionInfo: [...priorityGroup.map(e => e.place), ...otherGroup.map(e => e.place)].join('/'),
+                times: [...priorityGroup.map(e => e.time), ...otherGroup.map(e => e.time)].join('/')
+            };
+        }
+
+        function parseData(data, city) {
             let lines = data.split('\n').filter(line => line.trim() !== '');
             let parsedData = [];
 
@@ -120,6 +157,13 @@
                 let fields = line.split('\t');
 
                 if (fields.length >= 13) {
+                    let adjusted = { receptionInfo: fields[7], times: fields[8] ? fields[8].replace(/：/g, ':') : '/' };
+
+                    // 如果是杭州数据，调整接待信息和时间顺序
+                    if (city === 'hangzhou') {
+                        adjusted = adjustReceptionOrder(fields[7], fields[8] ? fields[8].replace(/：/g, ':') : '/');
+                    }
+
                     parsedData.push({
                         日期: fields[0],
                         客户单位: fields[1],
@@ -128,8 +172,8 @@
                         人数: fields[4],
                         级别: fields[5],
                         办事处陪同人: fields[6],
-                        接待信息: fields[7],
-                        时间: fields[8] ? fields[8].replace(/：/g, ':') : '/',
+                        接待信息: adjusted.receptionInfo,
+                        时间: adjusted.times,
                         接待员: fields[9] || '/',
                         发起单位: fields[10] || '/',
                         客户属性: fields[11] || '/',
@@ -138,25 +182,30 @@
                 }
             });
 
-            parsedData.sort((a, b) => {
-                let aReceptionPlaces = a['接待信息'].split('/');
-                let bReceptionPlaces = b['接待信息'].split('/');
+            // 杭州排序规则：优先展厅，再按时间
+            if (city === 'hangzhou') {
+                parsedData.sort((a, b) => {
+                    const priorities = ["杭州展厅", "未来工厂"];
+                    const getPriorityIndex = info => {
+                        const place = info['接待信息'].split('/')[0];
+                        return priorities.indexOf(place) !== -1 ? priorities.indexOf(place) : priorities.length;
+                    };
 
-                let aReceptionTimes = a['时间'].split('/');
-                let bReceptionTimes = b['时间'].split('/');
+                    const priorityA = getPriorityIndex(a);
+                    const priorityB = getPriorityIndex(b);
 
-                let aSortFieldIndex = aReceptionPlaces.indexOf(sortField);
-                let bSortFieldIndex = bReceptionPlaces.indexOf(sortField);
+                    if (priorityA !== priorityB) {
+                        return priorityA - priorityB;
+                    }
+                    // 同优先级按时间排序
+                    return a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true });
+                });
+            }
 
-                let aSortFieldTime = aSortFieldIndex !== -1 ? aReceptionTimes[aSortFieldIndex] : '24:00';
-                let bSortFieldTime = bSortFieldIndex !== -1 ? bReceptionTimes[bSortFieldIndex] : '24:00';
-
-                console.log(`展厅拆分: ${a['客户单位']} - ${a['接待信息']} - 时间: ${aReceptionTimes}`);
-                console.log(`展厅拆分: ${b['客户单位']} - ${b['接待信息']} - 时间: ${bReceptionTimes}`);
-                console.log(`Comparing: ${a['客户单位']} (Time: ${aSortFieldTime}) with ${b['客户单位']} (Time: ${bSortFieldTime})`);
-
-                return aSortFieldTime.localeCompare(bSortFieldTime, 'zh-CN', { numeric: true });
-            });
+            // 北京排序规则：仅按时间
+            if (city === 'beijing') {
+                parsedData.sort((a, b) => a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true }));
+            }
 
             return parsedData;
         }
@@ -175,8 +224,8 @@
             let hangzhouData = document.getElementById('hangzhou').value;
             let beijingData = document.getElementById('beijing').value;
 
-            let parsedHangzhouData = parseData(hangzhouData, '杭州展厅');
-            let parsedBeijingData = parseData(beijingData, '望京展厅');
+            let parsedHangzhouData = parseData(hangzhouData, 'hangzhou');
+            let parsedBeijingData = parseData(beijingData, 'beijing');
 
             let reportDiv = document.getElementById('report');
             reportDiv.innerHTML = '';
@@ -208,7 +257,7 @@
         }
 
         function copyToClipboard(city) {
-            const parsedData = city === 'hangzhou' ? parseData(document.getElementById('hangzhou').value, '杭州展厅') : parseData(document.getElementById('beijing').value, '望京展厅');
+            const parsedData = city === 'hangzhou' ? parseData(document.getElementById('hangzhou').value, 'hangzhou') : parseData(document.getElementById('beijing').value, 'beijing');
             const rows = parsedData.map(entry => Object.values(entry).join('\t')).join('\n');
             
             navigator.clipboard.writeText(rows).then(() => {
@@ -220,3 +269,4 @@
     </script>
 </body>
 </html>
+
