@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+<script>LA.init({id:"3KE4WAeb0ZUqWfc3",ck:"3KE4WAeb0ZUqWfc3",autoTrack:true,hashMode:true})</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +12,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
         button { margin-right: 10px; }
+        .version-info { margin-top: 20px; text-align: center; font-size: 0.9em; color: #666; }
     </style>
 </head>
 <body>
@@ -100,29 +103,30 @@ function calculateHours() {
         let effectiveHours = '';
         let overtimeHours = '';
 
-        if (isWeekend(formattedDate)) {
-            effectiveHours = "六日请手算";
-            overtimeHours = "六日请手算";
-        } else if (isDriving === '是') {
+        if (isDriving === '是') {
             const startTime = parseTime(startTimeStr);
             const endTime = parseTime(endTimeStr);
+            const effectiveHoursVal = calculateEffectiveHours(startTime, endTime);
 
-            effectiveHours = calculateEffectiveHours(startTime, endTime);
-
-            if (typeof effectiveHours === 'string' && effectiveHours === "跨天请手算") {
+            effectiveHours = effectiveHoursVal;
+            if (typeof effectiveHoursVal === 'string' && effectiveHoursVal === "跨天请手算") {
                 overtimeHours = "跨天请手算";
             } else {
-                overtimeHours = 0;
-                if (startTime < 8.5) {
-                    overtimeHours += 8.5 - startTime;
-                }
-
-                if (startTime <= 12 && endTime >= 13) {
-                    overtimeHours += 0.5;
-                }
-
-                if (endTime > 18) {
-                    overtimeHours += endTime - 18;
+                if (isWeekend(dateStr)) {
+                    // 周末的“核对后加班工时”就是“司机申报有效时间”
+                    overtimeHours = effectiveHoursVal;
+                } else {
+                    overtimeHours = 0;
+                    // 计算正常工作日的加班工时
+                    if (startTime < 8.5) {
+                        overtimeHours += 8.5 - startTime;
+                    }
+                    if (startTime <= 12 && endTime >= 13) {
+                        overtimeHours += 0.5;
+                    }
+                    if (endTime > 18) {
+                        overtimeHours += endTime - 18;
+                    }
                 }
             }
         }
@@ -157,6 +161,8 @@ function copyTable() {
         .catch(err => alert('复制失败，请手动复制'));
 }
 </script>
+
+<div class="version-info">© Steve  本工具总访问量 <span id="busuanzi_value_page_pv"></span> 次</div>
 
 </body>
 </html>
