@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司机工时计算器</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        button { margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+<h2>司机工时计算器</h2>
+<textarea id="inputData" placeholder="请在此粘贴数据"></textarea>
+<button onclick="calculateHours()">计算工时</button>
+<button onclick="copyTable()">复制结果</button>
+
+<table id="resultTable">
+    <thead>
+        <tr>
+            <th>日期</th>
+            <th>是否出车</th>
+            <th>司机申报开始时间</th>
+            <th>GPS开始时间</th>
+            <th>司机申报结束时间</th>
+            <th>GPS结束时间</th>
+            <th>司机申报有效时间</th>
+            <th>申报时间与GPS误差时长（分钟）</th>
+            <th>误差超过1h说明</th>
+            <th>工时申报备注</th>
+            <th>核对后加班工时</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function parseTime(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours + minutes / 60;
+}
+
+function isWeekend(dateStr) {
+    const date = new Date(dateStr);
+    const day = date.getUTCDay();
+    return day === 0 || day === 6; // 0=Sunday, 6=Saturday
+}
+
+function calculateEffectiveHours(startTime, endTime) {
+    if (!startTime || !endTime) return 0;
+
+    if (endTime < startTime || endTime === 0) {
+        return "跨天请手算";
+    }
+
+    let effectiveHours = endTime - startTime;
+
+    // 中午时间扣减
+    if (endTime >= 13 && startTime < 13.5) {
+        effectiveHours -= 0.5;
+    }
+
+    // 晚上时间扣减
+    if (endTime >= 18 && startTime < 18.5 && effectiveHours > 0.5) {
+        effectiveHours -= 0.5;
+    }
+
+    return effectiveHours;
+}
+
+function calculateHours() {
+    const inputData = document.getElementById('inputData').value.trim();
+    const rows = inputData.split('\n');
+    const resultTableBody = document.querySelector('#resultTable tbody');
+    resultTableBody.innerHTML = ''; // 清空之前的结果
+
+    rows.forEach(row => {
+        const cells = row.split('\t');
+        const isDriving = cells[1]?.trim();
+        const dateStr = cells[0]?.trim();
+
+        if (cells.length < 5) return;
+
+        const formattedDate = formatDate(dateStr);
+        const startTimeStr = cells[2] ? cells[2].trim() : '';
+        const endTimeStr = cells[4] ? cells[4].trim() : '';
+
+        let effectiveHours = '';
+        let overtimeHours = '';
+
+        if (isWeekend(formattedDate)) {
+            effectiveHours = "六日请手算";
+            overtimeHours = "六日请手算";
+        } else if (isDriving === '是') {
+            const startTime = parseTime(startTimeStr);
+            const endTime = parseTime(endTimeStr);
+
+            effectiveHours = calculateEffectiveHours(startTime, endTime);
+
+            if (typeof effectiveHours === 'string' && effectiveHours === "跨天请手算") {
+                overtimeHours = "跨天请手算";
+            } else {
+                overtimeHours = 0;
+                if (startTime < 8.5) {
+                    overtimeHours += 8.5 - startTime;
+                }
+
+                if (startTime <= 12 && endTime >= 13) {
+                    overtimeHours += 0.5;
+                }
+
+                if (endTime > 18) {
+                    overtimeHours += endTime - 18;
+                }
+            }
+        }
+
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${formattedDate}</td>
+            <td>${isDriving}</td>
+            <td>${startTimeStr}</td>
+            <td>${cells[3] || ''}</td>
+            <td>${endTimeStr}</td>
+            <td>${cells[5] || ''}</td>
+            <td>${typeof effectiveHours === 'number' ? effectiveHours.toFixed(2) : effectiveHours}</td>
+            <td>${cells[7] || ''}</td>
+            <td>${cells[8] || ''}</td>
+            <td>${cells[9] || ''}</td>
+            <td>${typeof overtimeHours === 'number' ? overtimeHours.toFixed(2) : overtimeHours}</td>
+        `;
+        resultTableBody.appendChild(newRow);
+    });
+}
+
+function copyTable() {
+    const rows = Array.from(document.querySelectorAll('#resultTable tbody tr'));
+    const textToCopy = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        return cells.map(cell => cell.textContent).join('\t');
+    }).join('\n');
+
+    navigator.clipboard.writeText(textToCopy)
+        .then(() => alert('表格内容已复制到剪贴板'))
+        .catch(err => alert('复制失败，请手动复制'));
+}
+</script>
+
+</body>
+</html>
