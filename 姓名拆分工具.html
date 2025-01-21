@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量姓名拆分与复制</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        textarea, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>批量姓名拆分与复制</h1>
+        <label for="fullNames">输入姓名（每行一个）：</label>
+        <textarea id="fullNames" rows="10" placeholder="例如：\n甄思洋\n欧阳娜娜"></textarea>
+
+        <button onclick="splitNames()">批量拆分姓名</button>
+        <button onclick="copyTableToClipboard()">复制结果到剪贴板</button>
+
+        <table id="resultTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>姓</th>
+                    <th>名</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <textarea id="clipboardContent" style="opacity: 0; height: 0; position: absolute;"></textarea>
+    </div>
+
+    <script>
+        function splitNames() {
+            const fullNames = document.getElementById('fullNames').value.trim().split('\n');
+            const table = document.getElementById('resultTable');
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (fullNames.length === 0 || (fullNames.length === 1 && fullNames[0] === '')) {
+                alert('请输入有效的姓名列表！');
+                return;
+            }
+
+            // 常见复姓列表
+            const compoundSurnames = [
+                "欧阳", "太史", "端木", "上官", "司马", "东方", "独孤", "南宫", "万俟", "闻人",
+                "夏侯", "诸葛", "尉迟", "公羊", "赫连", "澹台", "皇甫", "宗政", "濮阳", "公冶",
+                "太叔", "申屠", "公孙", "慕容", "仲孙", "钟离", "长孙", "宇文", "司徒", "司空",
+                "亓官", "司寇", "子车", "颛孙", "端木", "巫马", "公西", "漆雕", "乐正", "壤驷",
+                "公良", "拓跋", "夹谷", "宰父", "谷梁", "段干", "百里", "东郭", "微生", "公户",
+                "公玉", "公仪", "梁丘", "公仲", "公上", "公门", "公山", "公坚", "左丘", "公伯",
+                "西门", "公祖", "第五", "公乘", "贯丘", "公皙", "南门", "呼延", "归海", "羊舌",
+                "微生", "赫连", "淳于", "单于", "石勒", "石闾", "司城", "子言", "即墨", "达奚",
+                "褚师"
+            ];
+
+            fullNames.forEach(fullName => {
+                fullName = fullName.trim();
+                if (fullName.length < 2) return; // 跳过无效姓名
+
+                let lastName = "";
+                let firstName = "";
+
+                // 判断是否为复姓
+                if (compoundSurnames.some(surname => fullName.startsWith(surname))) {
+                    lastName = compoundSurnames.find(surname => fullName.startsWith(surname));
+                    firstName = fullName.slice(lastName.length);
+                } else {
+                    lastName = fullName.charAt(0); // 单姓
+                    firstName = fullName.slice(1);
+                }
+
+                const row = `<tr><td>${lastName}</td><td>${firstName}</td></tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+
+            table.style.display = 'table';
+        }
+
+        function copyTableToClipboard() {
+            const rows = document.querySelectorAll('#resultTable tbody tr');
+            if (rows.length === 0) {
+                alert('请先批量拆分姓名！');
+                return;
+            }
+
+            const clipboardContent = Array.from(rows).map(row => {
+                const cells = row.querySelectorAll('td');
+                return `${cells[0].textContent}\t${cells[1].textContent}`;
+            }).join('\n');
+
+            const textarea = document.getElementById('clipboardContent');
+            textarea.value = clipboardContent;
+            textarea.style.opacity = '1';
+            textarea.style.height = 'auto';
+            textarea.select();
+            document.execCommand('copy');
+            textarea.style.opacity = '0';
+            textarea.style.height = '0';
+
+            alert('结果已复制到剪贴板，可直接粘贴到 Excel！');
+        }
+    </script>
+</body>
+</html>

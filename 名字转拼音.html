@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>姓名转拼音工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .output {
+            margin-top: 20px;
+        }
+        .output textarea {
+            height: 100px;
+        }
+    </style>
+    <!-- 引入 pinyin-pro 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro"></script>
+</head>
+<body>
+    <h1>姓名转拼音工具</h1>
+    <p>在下面的框中粘贴姓名，每行一个：</p>
+    <textarea id="input" placeholder="每行一个姓名"></textarea>
+    <button onclick="convertToPinyin()">转换为拼音</button>
+    <div class="output">
+        <h2>拼音输出：</h2>
+        <textarea id="output" readonly></textarea>
+        <button onclick="copyToClipboard()">一键复制</button>
+    </div>
+
+    <script>
+        function convertToPinyin() {
+            const input = document.getElementById('input').value.trim();
+            const lines = input.split('\n'); // 按行分割输入
+            const convertedLines = lines.map(line => {
+                const chineseName = line.trim();
+                if (chineseName) {
+                    // 使用 pinyin-pro，将姓名中的姓氏和名字正确处理
+                    return window.pinyinPro.pinyin(chineseName, {
+                        toneType: 'none',
+                        type: 'array',
+                        mode: 'surname'
+                    }).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+                }
+                return '';
+            });
+            document.getElementById('output').value = convertedLines.join('\n');
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output');
+            output.select();
+            document.execCommand('copy');
+            alert('拼音已复制到剪贴板！');
+        }
+    </script>
+</body>
+</html>
