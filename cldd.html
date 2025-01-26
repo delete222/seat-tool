@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+<script>LA.init({id:"3KE4WAeb0ZUqWfc3",ck:"3KE4WAeb0ZUqWfc3",autoTrack:true,hashMode:true})</script>
     <title>车辆出车工时计算</title>
     <style>
         body {
@@ -121,6 +124,7 @@
         document.getElementById('exportButton').addEventListener('click', exportToExcel);
 
         function uploadFile() {
+            console.log("Upload file triggered"); // 控制台信息
             const input = document.getElementById('fileInput');
             const file = input.files[0];
 
@@ -131,12 +135,15 @@
 
             const reader = new FileReader();
             reader.onload = function (e) {
+                console.log("File loaded"); // 控制台信息
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
 
                 const firstSheetName = workbook.SheetNames[0];
+                console.log("Processing sheet:", firstSheetName); // 控制台信息
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                console.log("JSON Data:", jsonData); // 控制台信息
 
                 processExcelData(jsonData);
             };
@@ -145,8 +152,12 @@
         }
 
         function processExcelData(data) {
+            console.log("Processing Excel data"); // 控制台信息
             const headers = data[2];
             const rows = data.slice(3).filter(row => row[0] !== "合计" && row.length > 1);
+
+            console.log("Headers:", headers); // 控制台信息
+            console.log("Rows:", rows); // 控制台信息
 
             gpsData = rows.map(row => {
                 const obj = {};
@@ -156,10 +167,12 @@
                 return obj;
             });
 
+            console.log("Processed GPS Data:", gpsData); // 控制台信息
             calculateAllWorkingHours();
         }
 
         function calculateAllWorkingHours() {
+            console.log("Calculating all working hours"); // 控制台信息
             const results = {};
             exportData = [];
 
@@ -190,10 +203,12 @@
                 }
             });
 
+            console.log("Results:", results); // 控制台信息
             displayResults(results);
         }
 
         function displayResults(results) {
+            console.log("Displaying results"); // 控制台信息
             const resultsContainer = document.getElementById("resultsContainer");
             resultsContainer.innerHTML = '';
 
@@ -271,6 +286,7 @@
         }
 
         function exportToExcel() {
+            console.log("Exporting to Excel"); // 控制台信息
             if (!exportData.length) {
                 alert("没有数据可以导出");
                 return;
@@ -280,6 +296,7 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, '结果');
 
+            console.log("Workbook:", workbook); // 控制台信息
             XLSX.writeFile(workbook, '出车时长计算.xlsx');
         }
     </script>
