@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
-<script>LA.init({id:"3KE4WAeb0ZUqWfc3",ck:"3KE4WAeb0ZUqWfc3",autoTrack:true,hashMode:true})</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,8 +11,8 @@
             margin: 0;
             padding: 20px;
             box-sizing: border-box;
-            overflow-x: hidden; /* 禁止水平滚动 */
-            overflow-y: auto; /* 启用垂直滚动 */
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         h1 {
@@ -54,7 +52,7 @@
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(4, 1fr); /* 每行显示4个卡片 */
             gap: 20px;
         }
 
@@ -104,7 +102,6 @@
         }
     </style>
 </head>
-<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 <body>
     <h1>车牌号每日出车时长计算</h1>
     <div class="upload-section">
@@ -120,96 +117,70 @@
         let gpsData = [];
         let exportData = [];
 
-        // 监听文件选择事件，当文件选择时触发 uploadFile 函数
         document.getElementById('fileInput').addEventListener('change', uploadFile);
-        // 监听导出按钮点击事件，当点击按钮时触发 exportToExcel 函数
         document.getElementById('exportButton').addEventListener('click', exportToExcel);
 
-        // 处理文件上传
         function uploadFile() {
-            console.log("Upload file triggered"); // 控制台信息
             const input = document.getElementById('fileInput');
             const file = input.files[0];
 
-            // 如果没有选择文件，提示用户选择文件
             if (!file) {
                 alert("请选择一个文件");
                 return;
             }
 
-            // 创建 FileReader 实例读取文件内容
             const reader = new FileReader();
             reader.onload = function (e) {
-                console.log("File loaded"); // 控制台信息
-                const data = new Uint8Array(e.target.result); // 读取的文件内容作为 Uint8Array
-                const workbook = XLSX.read(data, { type: 'array' }); // 使用 XLSX 解析文件内容成 workbook 对象
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
 
-                const firstSheetName = workbook.SheetNames[0]; // 获取第一个工作表的名称
-                console.log("Processing sheet:", firstSheetName); // 控制台信息
-                const worksheet = workbook.Sheets[firstSheetName]; // 获取第一个工作表
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // 将工作表数据转换为 JSON 格式
-                console.log("JSON Data:", jsonData); // 控制台信息
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-                // 处理 Excel 数据
                 processExcelData(jsonData);
             };
 
-            // 将文件读入为 ArrayBuffer
             reader.readAsArrayBuffer(file);
         }
 
-        // 处理 Excel 数据
         function processExcelData(data) {
-            console.log("Processing Excel data"); // 控制台信息
-            const headers = data[2]; // 假设第三行是表头
-            const rows = data.slice(3).filter(row => row[0] !== "合计" && row.length > 1); // 过滤掉“合计”行和空行
+            const headers = data[2];
+            const rows = data.slice(3).filter(row => row[0] !== "合计" && row.length > 1);
 
-            console.log("Headers:", headers); // 控制台信息
-            console.log("Rows:", rows); // 控制台信息
-
-            // 将每一行数据转换为对象，并存储在 gpsData 数组中
             gpsData = rows.map(row => {
                 const obj = {};
                 headers.forEach((header, index) => {
-                    obj[header.trim()] = row[index]; // 去掉表头多余的空格
+                    obj[header.trim()] = row[index];
                 });
                 return obj;
             });
 
-            console.log("Processed GPS Data:", gpsData); // 控制台信息
-            // 计算所有工时
             calculateAllWorkingHours();
         }
 
-        // 计算每个车辆每天的出车时长
         function calculateAllWorkingHours() {
-            console.log("Calculating all working hours"); // 控制台信息
             const results = {};
             exportData = [];
 
-            // 遍历所有 GPS 数据
             gpsData.forEach(item => {
-                const plateNumber = item["车牌号码"]; // 车牌号码
-                const startTime = item["起始时间"]; // 起始时间
-                const endTime = item["结束时间"]; // 结束时间
+                const plateNumber = item["车牌号码"];
+                const startTime = item["起始时间"];
+                const endTime = item["结束时间"];
 
-                // 如果起始时间或结束时间不存在，则跳过当前数据
                 if (!startTime || !endTime) {
                     return;
                 }
 
-                const date = startTime.split(' ')[0]; // 获取日期部分
+                const date = startTime.split(' ')[0];
 
-                // 初始化结果对象
                 if (!results[plateNumber]) {
                     results[plateNumber] = {};
                 }
 
-                // 如果当日数据不存在，则初始化
                 if (!results[plateNumber][date]) {
                     results[plateNumber][date] = { startTime: startTime, endTime: endTime };
                 } else {
-                    // 更新最早的开始时间和最晚的结束时间
                     if (new Date(startTime) < new Date(results[plateNumber][date].startTime)) {
                         results[plateNumber][date].startTime = startTime;
                     }
@@ -219,37 +190,30 @@
                 }
             });
 
-            console.log("Results:", results); // 控制台信息
-            // 展示结果
             displayResults(results);
         }
 
-        // 展示计算结果
         function displayResults(results) {
-            console.log("Displaying results"); // 控制台信息
             const resultsContainer = document.getElementById("resultsContainer");
-            resultsContainer.innerHTML = ''; // 清空之前的结果
+            resultsContainer.innerHTML = '';
 
-            // 遍历结果数据
             for (const plateNumber in results) {
-                // 创建卡片元素
                 const card = document.createElement("div");
                 card.className = "card";
 
-                // 创建车牌号标题
                 const vehicleHeader = document.createElement("h2");
                 vehicleHeader.textContent = `车牌号码: ${plateNumber}`;
                 card.appendChild(vehicleHeader);
 
-                // 创建表格元素
                 const table = document.createElement("table");
 
-                // 创建表头
                 const thead = document.createElement("thead");
                 const headerRow = document.createElement("tr");
                 headerRow.innerHTML = `
                     <th>日期</th>
                     <th>星期</th>
+                    <th>开始出车时间</th>
+                    <th>结束出车时间</th>
                     <th>出车时长</th>
                 `;
                 thead.appendChild(headerRow);
@@ -257,28 +221,32 @@
 
                 const tbody = document.createElement("tbody");
 
-                // 遍历每个日期的数据
                 for (const date in results[plateNumber]) {
-                    const startTime = new Date(results[plateNumber][date].startTime);
-                    const endTime = new Date(results[plateNumber][date].endTime);
-                    const workingHours = (endTime - startTime) / (1000 * 60 * 60); // 计算出车时长
-                    const formattedTime = formatTime(workingHours); // 格式化时间
-                    const weekday = getWeekday(date); // 获取星期
+                    const startTime = results[plateNumber][date].startTime;
+                    const endTime = results[plateNumber][date].endTime;
+                    const workingHours = (new Date(endTime) - new Date(startTime)) / (1000 * 60 * 60);
+                    const formattedTime = formatTime(workingHours);
+                    const weekday = getWeekday(date);
 
-                    // 创建表格行
+                    const formattedStartTime = startTime.split(' ')[1].slice(0, 5);
+                    const formattedEndTime = endTime.split(' ')[1].slice(0, 5);
+
                     const row = document.createElement("tr");
                     row.innerHTML = `
                         <td>${date}</td>
                         <td>${weekday}</td>
+                        <td>${formattedStartTime}</td>
+                        <td>${formattedEndTime}</td>
                         <td>${formattedTime}</td>
                     `;
                     tbody.appendChild(row);
 
-                    // 将结果插入导出数据中
                     exportData.push({
                         "车牌号码": plateNumber,
                         "日期": date,
                         "星期": weekday,
+                        "开始出车时间": formattedStartTime,
+                        "结束出车时间": formattedEndTime,
                         "出车时长": formattedTime
                     });
                 }
@@ -289,14 +257,12 @@
             }
         }
 
-        // 根据日期字符串获取星期几
         function getWeekday(dateString) {
             const date = new Date(dateString);
             const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
             return weekdays[date.getUTCDay()];
         }
 
-        // 格式化时间，将小时转换为 “小时 + 分钟”
         function formatTime(hours) {
             const totalMinutes = Math.round(hours * 60);
             const h = Math.floor(totalMinutes / 60);
@@ -304,23 +270,18 @@
             return `${h}小时${m}分钟`;
         }
 
-        // 导出数据到 Excel 文件
         function exportToExcel() {
-            console.log("Exporting to Excel"); // 控制台信息
             if (!exportData.length) {
                 alert("没有数据可以导出");
                 return;
             }
 
-            // 将 JSON 数据转换为工作表
             const worksheet = XLSX.utils.json_to_sheet(exportData);
-            const workbook = XLSX.utils.book_new(); // 创建一个新的工作簿
-            XLSX.utils.book_append_sheet(workbook, worksheet, '结果'); // 将工作表添加到工作簿
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, '结果');
 
-            console.log("Workbook:", workbook); // 控制台信息
-            XLSX.writeFile(workbook, '出车时长计算.xlsx'); // 导出工作簿为 Excel 文件
+            XLSX.writeFile(workbook, '出车时长计算.xlsx');
         }
     </script>
 </body>
-
 </html>
