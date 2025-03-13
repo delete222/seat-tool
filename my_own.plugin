@@ -12,8 +12,8 @@ DOMAIN-KEYWORD,localhost.ptlogin2.qq.com,DIRECT
 DOMAIN-KEYWORD,localhost.weixin.qq.com,DIRECT
 
 # 这些域名可让用户手动分配策略
-DOMAIN-KEYWORD,apple-relay,PROXY
 DOMAIN,apple-relay.cloudflare.com,PROXY
 DOMAIN,apple-relay.fastly-edge.com,PROXY
 DOMAIN,cp4.cloudflare.com,PROXY
 DOMAIN,apple-relay.apple.com,PROXY
+DOMAIN-KEYWORD,apple-relay,PROXY
