@@ -1,0 +1,16 @@
+#!name= H3C&苹果智能分流
+
+
+[Rule]
+# 走DIRECT的直连规则
+DOMAIN-KEYWORD,push.apple.com,DIRECT
+DOMAIN-KEYWORD,h3c.com,DIRECT
+DOMAIN-KEYWORD,wxworkapi.h3c.com,DIRECT
+DOMAIN-KEYWORD,huawei-3com.com,DIRECT
+DOMAIN-KEYWORD,tail,DIRECT
+DOMAIN-KEYWORD,tailscale,DIRECT
+DOMAIN-KEYWORD,localhost.ptlogin2.qq.com,DIRECT
+DOMAIN-KEYWORD,localhost.weixin.qq.com,DIRECT
+
+# 这些域名可让用户手动分配策略
+DOMAIN-KEYWORD,apple-relay,PROXY
