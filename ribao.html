@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
-<script>LA.init({id:"3KE4WAeb0ZUqWfc3",ck:"3KE4WAeb0ZUqWfc3",autoTrack:true,hashMode:true})</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,21 +38,21 @@
             color: #ffffff;
         }
         .date-cell {
-            background-color: #ffffff !important; /* 强制日期列背景色为白色 */
+            background-color: #ffffff !important;
             min-width: 70px;
         }
         .reception-cell {
             min-width: 140px;
         }
         .leader-cell {
-            width: 150px; /* 固定陪同领导列的宽度 */
-            word-wrap: break-word; /* 增加单词换行 */
-            word-break: break-all; /* 当单词太长时强制换行 */
+            width: 150px;
+            word-wrap: break-word;
+            word-break: break-all;
         }
         .overall-journey-cell {
-            width: 250px; /* 固定陪同领导列的宽度 */
-            word-wrap: break-word; /* 增加单词换行 */
-            word-break: break-all; /* 当单词太长时强制换行 */
+            width: 250px;
+            word-wrap: break-word;
+            word-break: break-all;
         }
         textarea {
             width: 100%;
@@ -171,9 +169,9 @@
             let parsedData = {};
 
             lines.forEach(line => {
-                let fields = line.split('\t'); // 使用制表符分隔每个字段
+                let fields = line.split('\t'); 
 
-                if (fields.length >= 13) { // 至少13个字段才能解析
+                if (fields.length >= 13) {
                     const date = fields[0];
                     
                     if (!parsedData[date]) {
@@ -189,11 +187,11 @@
                         级别: fields[5],
                         办事处陪同人: fields[6],
                         接待信息: fields[7],
-                        接待时间: fields[8] ? fields[8].replace(/：/g, ':') : '/', // 将全角冒号替换为半角冒号
-                        接待员: fields[9] || '/', // 处理可能缺失的字段
-                        其它字段1: fields[10] || '/', // 其它字段占位
-                        其它字段2: fields[11] || '/', // 其它字段占位
-                        整体行程: fields[12] || '/' // 获取第13列作为整体行程
+                        接待时间: fields[8] ? fields[8].replace(/：/g, ':') : '/',
+                        接待员: fields[9] || '/',
+                        其它字段1: fields[10] || '/',
+                        其它字段2: fields[11] || '/',
+                        整体行程: fields[12] || '/'
                     });
                 }
             });
@@ -233,12 +231,25 @@
             return parsedData;
         }
 
-        function generateSectionTitle(title) {
+        function countLevels(data) {
+            const levelOrder = ['TOP', 'VIP', 'S', 'A+', 'A'];
+            let counts = { TOP: 0, VIP: 0, S: 0, 'A+': 0, A: 0 };
+
+            data.forEach(entry => {
+                if (counts.hasOwnProperty(entry['级别'])) {
+                    counts[entry['级别']]++;
+                }
+            });
+
+            return levelOrder.map(level => counts[level] > 0 ? `${level} ${counts[level]}批` : '').filter(entry => entry).join('；');
+        }
+
+        function generateSectionTitle(title, levelCounts) {
             let titleRow = document.createElement('tr');
             let th = document.createElement('th');
-            th.colSpan = 11; // 修改为11列以容纳新列
+            th.colSpan = 11;
             th.classList.add('section-title');
-            th.textContent = title;
+            th.textContent = `${title}（${levelCounts}）`;
             titleRow.appendChild(th);
             return titleRow;
         }
@@ -251,7 +262,7 @@
                 if (header === '陪同领导') {
                     th.classList.add('leader-cell');
                 } else if (header === '整体行程') {
-                    th.classList.add('overall-journey-cell'); // 增加整体行程列的样式类
+                    th.classList.add('overall-journey-cell');
                 }
                 headRow.appendChild(th);
             });
@@ -311,10 +322,11 @@
 
             function appendDataToTable(data, sectionTitle) {
                 if (Object.keys(data).length) {
-                    tbody.appendChild(generateSectionTitle(sectionTitle));
-                    tbody.appendChild(generateTableHeader());
-
                     for (let date in data) {
+                        let levelCounts = countLevels(data[date]);
+                        tbody.appendChild(generateSectionTitle(`${sectionTitle} ${date.split('年')[1]}`, levelCounts));
+                        tbody.appendChild(generateTableHeader());
+
                         let totalBatches = data[date].length;
 
                         let dateCell = document.createElement('td');
@@ -341,7 +353,7 @@
                                     td.classList.add('reception-cell');
                                 }
                                 if (key === '整体行程') {
-                                    td.classList.add('overall-journey-cell'); // 增加整体行程列的样式类
+                                    td.classList.add('overall-journey-cell');
                                 }
                                 row.appendChild(td);
                             });
