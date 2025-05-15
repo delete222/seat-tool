@@ -243,15 +243,28 @@
                 }
             });
 
-            return levelOrder.map(level => counts[level] > 0 ? `${level} ${counts[level]}批` : '').filter(entry => entry).join('；');
+            return levelOrder.map(level => counts[level] > 0 ? `${level} ${counts[level]}批` : '').filter(entry => entry).join('、');
         }
 
-        function generateSectionTitle(title, levelCounts) {
+        function getChineseDayOfWeek(dateString) {
+            const dayOfWeekMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const date = new Date(dateString.replace(/年|月/g, '-').replace('日', ''));
+            return dayOfWeekMap[date.getDay()];
+        }
+
+        function formatDate(date) {
+            let [year, month, day] = date.split('-');
+            return `${parseInt(month)}月${parseInt(day)}日`;
+        }
+
+        function generateSectionTitle(title, date, totalBatches, levelCounts) {
+            let chineseDayOfWeek = getChineseDayOfWeek(date);
+            let formattedDate = formatDate(date.replace(/年|月/g, '-').replace('日', ''));
             let titleRow = document.createElement('tr');
             let th = document.createElement('th');
             th.colSpan = 11;
             th.classList.add('section-title');
-            th.textContent = `${title}（${levelCounts}）`;
+            th.textContent = `${title}： ${formattedDate}（${chineseDayOfWeek}）共${totalBatches}批，其中：${levelCounts}`;
             titleRow.appendChild(th);
             return titleRow;
         }
@@ -269,17 +282,6 @@
                 headRow.appendChild(th);
             });
             return headRow;
-        }
-
-        function getChineseDayOfWeek(dateString) {
-            const dayOfWeekMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-            const date = new Date(dateString.replace(/年|月/g, '-').replace('日', ''));
-            return dayOfWeekMap[date.getDay()];
-        }
-
-        function formatDate(date) {
-            let [year, month, day] = date.split('-');
-            return `${parseInt(month)}月${parseInt(day)}日`;
         }
 
         function getReportDateRange(parsedHangzhouData, parsedBeijingData) {
@@ -326,10 +328,9 @@
                 if (Object.keys(data).length) {
                     for (let date in data) {
                         let levelCounts = countLevels(data[date]);
-                        tbody.appendChild(generateSectionTitle(`${sectionTitle} ${date.split('年')[1]}`, levelCounts));
-                        tbody.appendChild(generateTableHeader());
-
                         let totalBatches = data[date].length;
+                        tbody.appendChild(generateSectionTitle(sectionTitle, date, totalBatches, levelCounts));
+                        tbody.appendChild(generateTableHeader());
 
                         let dateCell = document.createElement('td');
                         dateCell.classList.add('date-cell');
