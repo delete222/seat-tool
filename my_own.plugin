@@ -10,6 +10,9 @@ DOMAIN-KEYWORD,tail,DIRECT
 DOMAIN-KEYWORD,tailscale,DIRECT
 DOMAIN-KEYWORD,localhost.ptlogin2.qq.com,DIRECT
 DOMAIN-KEYWORD,localhost.weixin.qq.com,DIRECT
+DOMAIN-KEYWORD,clashofclans,DIRECT
+DOMAIN-KEYWORD,supercell,DIRECT
+DOMAIN-KEYWORD,push.apple,DIRECT
 
 # 这些域名可让用户手动分配策略
 DOMAIN,apple-relay.cloudflare.com,PROXY
