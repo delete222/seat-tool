@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>CSV 时间格式转换 & 导出工具</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 30px; }
+    textarea { width: 100%; height: 200px; font-family: monospace; margin-bottom: 10px; }
+    button { margin: 5px 10px 5px 0; padding: 8px 16px; font-size: 14px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 6px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>CSV 时间格式转换工具（含中文编码 & Excel 格式修复）</h2>
+
+  <input type="file" accept=".csv" onchange="handleFile(event)">
+  <br>
+  <textarea id="input" placeholder="粘贴CSV文本，建议带表头，字段以逗号分隔（UTF-8或GBK均可）"></textarea>
+  <br>
+  <button onclick="convert()">转换</button>
+  <button onclick="copyOutput()">复制结果</button>
+  <button onclick="downloadExcel()">导出为 Excel（.xlsx）</button>
+
+  <h3>转换结果：</h3>
+  <pre id="output"></pre>
+
+  <script>
+    let parsedData = [];
+    let headers = [];
+
+    function pad(n) {
+      return n.toString().padStart(2, '0');
+    }
+
+    function formatTime(str) {
+      if (!str.trim()) return "";
+      const match = str.trim().match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2}) (\d{1,2}):(\d{1,2})$/);
+      if (!match) return str;
+      const [, y, m, d, h, min] = match;
+      return `${y}-${pad(m)}-${pad(d)} ${pad(h)}:${pad(min)}:00`;
+    }
+
+    function cleanExcelCell(value) {
+      if (typeof value !== 'string') return value;
+      const match = value.match(/^="?([^"]+)"?$/);
+      return match ? match[1] : value;
+    }
+
+    function convert() {
+      const raw = document.getElementById("input").value.trim();
+      if (!raw) return;
+      const results = Papa.parse(raw, { header: true, skipEmptyLines: true });
+      headers = results.meta.fields;
+      parsedData = results.data;
+
+      const startTimeKey = headers.find(h => h.includes('开始时间'));
+      const endTimeKey = headers.find(h => h.includes('结束时间'));
+
+      parsedData.forEach(row => {
+        for (const key in row) {
+          if (row[key]) {
+            row[key] = cleanExcelCell(row[key]);
+          }
+        }
+        if (row[startTimeKey]) row[startTimeKey] = formatTime(row[startTimeKey]);
+        if (row[endTimeKey]) row[endTimeKey] = formatTime(row[endTimeKey]);
+      });
+
+      const outputText = [headers.join(',')].concat(
+        parsedData.map(row => headers.map(h => row[h] || '').join(','))
+      ).join('\n');
+
+      document.getElementById("output").textContent = outputText;
+    }
+
+    function handleFile(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const decoder = new TextDecoder('gbk'); // 支持中文CSV
+        const text = decoder.decode(e.target.result);
+        document.getElementById("input").value = text;
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function copyOutput() {
+      const text = document.getElementById("output").textContent;
+      navigator.clipboard.writeText(text)
+        .then(() => alert("已复制到剪贴板！"))
+        .catch(() => alert("复制失败，请手动复制"));
+    }
+
+    function downloadExcel() {
+      if (!parsedData.length) return alert("请先转换数据");
+      const ws = XLSX.utils.json_to_sheet(parsedData, { header: headers });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "转换结果");
+      XLSX.writeFile(wb, "转换结果.xlsx");
+    }
+  </script>
+</body>
+</html>
