@@ -150,92 +150,103 @@
             };
         }
 
-function parseData(data, city) {
-    let lines = data.split('\n').filter(line => line.trim() !== '');
-    let parsedData = [];
+        function parseData(data, city) {
+            let lines = data.split('\n').filter(line => line.trim() !== '');
+            let parsedData = [];
 
-    lines.forEach(line => {
-        let fields = line.split('\t');
+            lines.forEach(line => {
+                let fields = line.split('\t');
 
-        if (fields.length >= 13) {
-            let adjusted = { receptionInfo: fields[7], times: fields[8] ? fields[8].replace(/：/g, ':') : '/' };
+                // 确保字段数量足够，新增的列也会被处理
+                if (fields.length >= 17) { // 新增4列后，总共有17个字段（索引0-16）
+                    let adjusted = { receptionInfo: fields[7], times: fields[8] ? fields[8].replace(/：/g, ':') : '/' };
 
-            // 如果是杭州数据，调整接待信息和时间顺序
-            if (city === 'hangzhou') {
-                adjusted = adjustReceptionOrder(fields[7], fields[8] ? fields[8].replace(/：/g, ':') : '/');
-            }
+                    // 如果是杭州数据，调整接待信息和时间顺序
+                    if (city === 'hangzhou') {
+                        adjusted = adjustReceptionOrder(fields[7], fields[8] ? fields[8].replace(/：/g, ':') : '/');
+                    }
 
-            parsedData.push({
-                日期: fields[0],
-                客户单位: fields[1],
-                行业: fields[2],
-                陪同领导: fields[3],
-                人数: fields[4],
-                级别: fields[5],
-                办事处陪同人: fields[6],
-                接待信息: adjusted.receptionInfo,
-                时间: adjusted.times,
-                接待员: fields[9] || '/',
-                发起单位: fields[10] || '/',
-                客户属性: fields[11] || '/',
-                整体行程: fields[12] || '/'
-            });
-        }
-    });
-
-    // 按日期分组
-    let groupedByDate = {};
-    parsedData.forEach(entry => {
-        const date = entry['日期'];
-        if (!groupedByDate[date]) {
-            groupedByDate[date] = [];
-        }
-        groupedByDate[date].push(entry);
-    });
-
-    let sortedData = [];
-
-    // 将日期键提取出来并排序
-    let sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(a) - new Date(b));
-
-    // 对每个日期的组应用特定规则进行排序
-    sortedDates.forEach(date => {
-        let entries = groupedByDate[date];
-
-        // 杭州排序规则：优先展厅，再按时间
-        if (city === 'hangzhou') {
-            entries.sort((a, b) => {
-                const priorities = ["杭州展厅", "未来工厂"];
-                const getPriorityIndex = info => {
-                    const place = info['接待信息'].split('/')[0];
-                    return priorities.indexOf(place) !== -1 ? priorities.indexOf(place) : priorities.length;
-                };
-
-                const priorityA = getPriorityIndex(a);
-                const priorityB = getPriorityIndex(b);
-
-                if (priorityA !== priorityB) {
-                    return priorityA - priorityB;
+                    parsedData.push({
+                        日期: fields[0],
+                        客户单位: fields[1],
+                        行业: fields[2],
+                        陪同领导: fields[3],
+                        人数: fields[4],
+                        级别: fields[5],
+                        办事处陪同人: fields[6],
+                        接待信息: adjusted.receptionInfo,
+                        时间: adjusted.times,
+                        接待员: fields[9] || '',
+                        发起单位: fields[10] || '',
+                        客户属性: fields[11] || '',
+                        整体行程: fields[12] || '',
+                        'BG客户业务属性': fields[13] || '',
+                        '是否同步': fields[14] || '',
+                        '领导陪同是否通过客户支持部邀请': fields[15] || '', // 修正为一个完整字段
+                        '主宾信息': fields[16] || '', // 修正为fields[16]
+                        '项目背景': fields[17] || ''  // 修正为fields[17]
+                    });
                 }
-                // 同优先级按时间排序
-                return a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true });
             });
+
+            // 按日期分组
+            let groupedByDate = {};
+            parsedData.forEach(entry => {
+                const date = entry['日期'];
+                if (!groupedByDate[date]) {
+                    groupedByDate[date] = [];
+                }
+                groupedByDate[date].push(entry);
+            });
+
+            let sortedData = [];
+
+            // 将日期键提取出来并排序
+            let sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(a) - new Date(b));
+
+            // 对每个日期的组应用特定规则进行排序
+            sortedDates.forEach(date => {
+                let entries = groupedByDate[date];
+
+                // 杭州排序规则：优先展厅，再按时间
+                if (city === 'hangzhou') {
+                    entries.sort((a, b) => {
+                        const priorities = ["杭州展厅", "未来工厂"];
+                        const getPriorityIndex = info => {
+                            const place = info['接待信息'].split('/')[0];
+                            return priorities.indexOf(place) !== -1 ? priorities.indexOf(place) : priorities.length;
+                        };
+
+                        const priorityA = getPriorityIndex(a);
+                        const priorityB = getPriorityIndex(b);
+
+                        if (priorityA !== priorityB) {
+                            return priorityA - priorityB;
+                        }
+                        // 同优先级按时间排序
+                        return a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true });
+                    });
+                }
+
+                // 北京排序规则：仅按时间
+                if (city === 'beijing') {
+                    entries.sort((a, b) => a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true }));
+                }
+
+                sortedData.push(...entries);
+            });
+
+            return sortedData;
         }
-
-        // 北京排序规则：仅按时间
-        if (city === 'beijing') {
-            entries.sort((a, b) => a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true }));
-        }
-
-        sortedData.push(...entries);
-    });
-
-    return sortedData;
-}
 
         function generateTableHeader() {
             let headRow = document.createElement('tr');
-            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '接待信息', '时间', '接待员', '发起单位', '客户属性', '整体行程'].forEach(header => {
+            [
+                '日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', 
+                '接待信息', '时间', '接待员', '发起单位', '客户属性', '整体行程',
+                'BG客户业务属性', '是否同步', '领导陪同是否通过客户支持部邀请', 
+                '主宾信息', '项目背景'
+            ].forEach(header => {
                 let th = document.createElement('th');
                 th.textContent = header;
                 headRow.appendChild(th);
@@ -267,7 +278,7 @@ function parseData(data, city) {
 
                     Object.keys(entry).forEach(key => {
                         let td = document.createElement('td');
-                        td.textContent = entry[key] || '/';
+                        td.textContent = entry[key] || '';
                         row.appendChild(td);
                     });
 
@@ -291,4 +302,4 @@ function parseData(data, city) {
         }
     </script>
 </body>
-</html>
+</html>    
