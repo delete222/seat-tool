@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VMess链接解析与批量修改工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            dark: '#1E293B',
+            light: '#F8FAFC'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .bg-gradient-blue {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-pulse-slow {
+        animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- 导航栏 -->
+  <header class="bg-gradient-blue text-white shadow-lg">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-link text-2xl"></i>
+        <h1 class="text-xl md:text-2xl font-bold text-shadow">VMess链接解析与批量修改工具</h1>
+      </div>
+      <nav>
+        <ul class="hidden md:flex space-x-6">
+          <li><a href="#" class="hover:text-gray-200 transition-colors duration-200 flex items-center"><i class="fa fa-home mr-1"></i>首页</a></li>
+          <li><a href="#" class="hover:text-gray-200 transition-colors duration-200 flex items-center"><i class="fa fa-info-circle mr-1"></i>关于</a></li>
+          <li><a href="#" class="hover:text-gray-200 transition-colors duration-200 flex items-center"><i class="fa fa-question-circle mr-1"></i>帮助</a></li>
+        </ul>
+        <button class="md:hidden text-white text-xl">
+          <i class="fa fa-bars"></i>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 主要内容 -->
+  <main class="flex-grow container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+      <!-- 介绍卡片 -->
+      <div class="bg-white rounded-xl shadow-md p-6 mb-8 card-hover">
+        <h2 class="text-2xl font-bold text-dark mb-4 flex items-center">
+          <i class="fa fa-info-circle text-primary mr-2"></i>工具介绍
+        </h2>
+        <p class="text-gray-700 leading-relaxed">
+          这个工具可以帮助你批量解析VMess协议的链接，并修改服务器地址（add字段）。只需复制包含多个vmess://链接的文本，粘贴到下方输入框，点击解析按钮，然后在生成的结果中修改服务器地址，最后点击"生成新链接"按钮即可批量生成修改后的链接。
+        </p>
+      </div>
+
+      <!-- 输入区域 -->
+      <div class="bg-white rounded-xl shadow-md p-6 mb-8 card-hover">
+        <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+          <i class="fa fa-paste text-primary mr-2"></i>输入VMess链接（可多条）
+        </h2>
+        <div class="relative">
+          <textarea 
+            id="vmessInput" 
+            class="w-full h-40 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 resize-none"
+            placeholder="请粘贴vmess://开头的链接，多条链接请分行输入..."></textarea>
+          <div class="absolute right-3 bottom-3">
+            <button id="pasteBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md transition-colors duration-200 flex items-center text-sm">
+              <i class="fa fa-paste mr-1"></i>粘贴
+            </button>
+          </div>
+        </div>
+        <div class="mt-4 flex justify-between">
+          <button id="parseBtn" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center">
+            <i class="fa fa-cog mr-2"></i>解析链接
+          </button>
+          <button id="clearBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg transition-colors duration-200 flex items-center">
+            <i class="fa fa-trash mr-2"></i>清空
+          </button>
+        </div>
+      </div>
+
+      <!-- 状态指示器 -->
+      <div id="statusIndicator" class="mb-6 hidden">
+        <div class="flex items-center">
+          <div id="statusIcon" class="w-6 h-6 rounded-full flex items-center justify-center mr-2"></div>
+          <p id="statusText" class="font-medium"></p>
+        </div>
+      </div>
+
+      <!-- 解析结果选项卡 -->
+      <div id="resultsTabs" class="hidden mb-8">
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8">
+            <button id="summaryTab" class="whitespace-nowrap py-4 px-1 border-b-2 border-primary text-sm font-medium text-primary">
+              汇总信息
+            </button>
+            <button id="detailsTab" class="whitespace-nowrap py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              详细信息
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- 汇总信息区域 -->
+      <div id="summarySection" class="hidden bg-white rounded-xl shadow-md p-6 mb-8 card-hover">
+        <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+          <i class="fa fa-list-alt text-primary mr-2"></i>解析汇总
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700 mb-2">链接总数</h3>
+            <p id="totalLinks" class="text-2xl font-bold text-primary"></p>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700 mb-2">成功解析</h3>
+            <p id="successLinks" class="text-2xl font-bold text-green-500"></p>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700 mb-2">解析失败</h3>
+            <p id="failedLinks" class="text-2xl font-bold text-red-500"></p>
+          </div>
+        </div>
+        
+        <!-- 服务器地址批量修改 -->
+        <div class="bg-gray-50 p-6 rounded-lg mb-6">
+          <h3 class="font-semibold text-gray-700 mb-4 flex items-center">
+            <i class="fa fa-edit text-primary mr-2"></i>批量修改服务器地址
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="newAddress" class="block text-sm font-medium text-gray-700 mb-1">新服务器地址:</label>
+              <input 
+                type="text" 
+                id="newAddress" 
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                placeholder="请输入新的服务器地址">
+            </div>
+            <div>
+              <label for="applyTo" class="block text-sm font-medium text-gray-700 mb-1">应用范围:</label>
+              <select id="applyTo" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200">
+                <option value="all">所有链接</option>
+                <option value="selected">选中的链接</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex justify-end">
+            <button id="batchUpdateBtn" class="bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center">
+              <i class="fa fa-refresh mr-2"></i>批量更新
+            </button>
+          </div>
+        </div>
+        
+        <!-- 解析结果列表 -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-primary focus:ring-primary">
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">序号</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">别名</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">服务器地址</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">端口</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTable" class="bg-white divide-y divide-gray-200">
+              <!-- 结果将通过JavaScript动态填充 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 详细信息区域 -->
+      <div id="detailsSection" class="hidden">
+        <!-- 详细信息将通过JavaScript动态填充 -->
+      </div>
+
+      <!-- 生成的新链接 -->
+      <div id="newLinkSection" class="hidden bg-white rounded-xl shadow-md p-6 mb-8 card-hover">
+        <h2 class="text-xl font-bold text-dark mb-4 flex items-center">
+          <i class="fa fa-link text-primary mr-2"></i>新生成的VMess链接
+        </h2>
+        
+        <div class="flex justify-between mb-3">
+          <p class="text-sm text-gray-600">已修改 <span id="modifiedCount" class="font-medium">0</span> 个链接</p>
+          <div class="flex space-x-2">
+            <button id="copyAllBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-1 rounded-md transition-colors duration-200 flex items-center text-sm">
+              <i class="fa fa-copy mr-1"></i>复制全部
+            </button>
+            <button id="downloadBtn" class="bg-secondary hover:bg-secondary/90 text-white px-4 py-1 rounded-md transition-colors duration-200 flex items-center text-sm">
+              <i class="fa fa-download mr-1"></i>下载文件
+            </button>
+          </div>
+        </div>
+        
+        <div class="relative">
+          <textarea 
+            id="newVmessLinks" 
+            class="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 resize-none"
+            readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-6">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p class="text-gray-400">© 2025 VMess链接解析与批量修改工具. 保留所有权利.</p>
+        </div>
+        <div class="flex space-x-4">
+          <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200">
+            <i class="fa fa-github text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200">
+            <i class="fa fa-twitter text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200">
+            <i class="fa fa-envelope text-xl"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 脚本 -->
+  <script>
+    // DOM元素
+    const vmessInput = document.getElementById('vmessInput');
+    const parseBtn = document.getElementById('parseBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusText = document.getElementById('statusText');
+    const resultsTabs = document.getElementById('resultsTabs');
+    const summaryTab = document.getElementById('summaryTab');
+    const detailsTab = document.getElementById('detailsTab');
+    const summarySection = document.getElementById('summarySection');
+    const detailsSection = document.getElementById('detailsSection');
+    const totalLinks = document.getElementById('totalLinks');
+    const successLinks = document.getElementById('successLinks');
+    const failedLinks = document.getElementById('failedLinks');
+    const summaryTable = document.getElementById('summaryTable');
+    const selectAll = document.getElementById('selectAll');
+    const newAddress = document.getElementById('newAddress');
+    const applyTo = document.getElementById('applyTo');
+    const batchUpdateBtn = document.getElementById('batchUpdateBtn');
+    const newLinkSection = document.getElementById('newLinkSection');
+    const newVmessLinks = document.getElementById('newVmessLinks');
+    const modifiedCount = document.getElementById('modifiedCount');
+    const copyAllBtn = document.getElementById('copyAllBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    
+    // 存储解析后的配置
+    let parsedConfigs = [];
+    let selectedLinks = [];
+    
+    // 示例VMess链接（多条）
+    const exampleVmessLinks = `vmess://eyAidiI6ICIyIiwgInBzIjogInZtLXdzLXdhbGwtNjRjYmNmNDQ5ZC1tZ3JueiIsICJhZGQiOiAiNDcuMjUxLjEyOS40IiwgInBvcnQiOiAiODg4MCIsICJpZCI6ICIyMGJiNmU0MC04NWIxLTRkNmQtOGQ3YS01ZmEyMTBmYzYwNGUiLCAiYWlkIjogIjAiLCAic2N5IjogImF1dG8iLCAibmV0IjogIndzIiwgInR5cGUiOiAibm9uZSIsICJob3N0IjogInd3dy5iaW5nLmNvbSIsICJwYXRoIjogIi8yMGJiNmU0MC04NWIxLTRkNmQtOGQ3YS01ZmEyMTBmYzYwNGUtdm0/ZWQ9MjA0OCIsICJ0bHMiOiAiIn0K
+vmess://eyJ2IjoiMiIsInBzIjoiV09STEtWQ04tMTIzNDU2IiwiYWRkIjoiNjQuMTkyLjI0OC4yMSIsInBvcnQiOiI0NDMiLCJpZCI6IjU0MTIzNDU2LTc4OWEtYmNkZS0wMTIzLTQ1Njc4OWFiY2RlIiwiYWlkIjoiMCIsInNjeSI6ImF1dG8iLCJuZXQiOiJ3cyIsInR5cGUiOiJub25lIiwiaG9zdCI6Ind3dy5iYWlkdS5jb20iLCJwYXRoIjoiLyIsInRscyI6InRscyJ9`;
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      // 设置示例文本
+      vmessInput.value = exampleVmessLinks;
+      
+      // 绑定事件处理程序
+      parseBtn.addEventListener('click', parseVmessLinks);
+      clearBtn.addEventListener('click', clearInput);
+      pasteBtn.addEventListener('click', pasteFromClipboard);
+      summaryTab.addEventListener('click', showSummaryTab);
+      detailsTab.addEventListener('click', showDetailsTab);
+      selectAll.addEventListener('change', toggleSelectAll);
+      batchUpdateBtn.addEventListener('click', batchUpdateAddresses);
+      copyAllBtn.addEventListener('click', copyAllLinks);
+      downloadBtn.addEventListener('click', downloadLinks);
+      
+      // 添加动画效果
+      animateElements();
+    });
+    
+    // 解析多条VMess链接
+    function parseVmessLinks() {
+      const input = vmessInput.value.trim();
+      
+      if (!input) {
+        showStatus('错误', '请输入VMess链接', 'red');
+        return;
+      }
+      
+      // 分割输入文本为多行
+      const lines = input.split('\n').filter(line => line.trim() !== '');
+      
+      if (lines.length === 0) {
+        showStatus('错误', '未找到有效的VMess链接', 'red');
+        return;
+      }
+      
+      // 重置解析结果
+      parsedConfigs = [];
+      let successCount = 0;
+      let failedCount = 0;
+      
+      // 显示处理中状态
+      showStatus('处理中', `正在解析 ${lines.length} 条链接...`, 'yellow');
+      
+      // 模拟处理延迟，提升用户体验
+      setTimeout(() => {
+        // 逐条解析链接
+        lines.forEach((line, index) => {
+          try {
+            // 提取vmess://后面的Base64部分
+            const vmessRegex = /^vmess:\/\//i;
+            if (!vmessRegex.test(line)) {
+              throw new Error('不是有效的VMess链接');
+            }
+            
+            const base64Part = line.replace(vmessRegex, '');
+            let decodedJson;
+            
+            // 处理可能的Base64填充问题
+            try {
+              // 尝试直接解码
+              decodedJson = atob(base64Part);
+            } catch (e) {
+              // 添加缺失的填充字符并重试
+              const paddedBase64 = base64Part.padEnd(base64Part.length + (4 - base64Part.length % 4) % 4, '=');
+              decodedJson = atob(paddedBase64);
+            }
+            
+            // 解析JSON
+            const config = JSON.parse(decodedJson);
+            
+            // 添加解析结果
+            parsedConfigs.push({
+              index,
+              line,
+              config,
+              success: true,
+              error: null
+            });
+            
+            successCount++;
+          } catch (error) {
+            // 添加解析失败结果
+            parsedConfigs.push({
+              index,
+              line,
+              config: null,
+              success: false,
+              error: error.message
+            });
+            
+            failedCount++;
+          }
+        });
+        
+        // 显示解析结果
+        displaySummaryResults();
+        
+        // 更新状态
+        if (successCount === lines.length) {
+          showStatus('成功', `所有 ${successCount} 条链接解析成功`, 'green');
+        } else if (failedCount === lines.length) {
+          showStatus('错误', `所有 ${failedCount} 条链接解析失败`, 'red');
+        } else {
+          showStatus('部分成功', `解析完成: ${successCount} 条成功, ${failedCount} 条失败`, 'yellow');
+        }
+        
+        // 显示结果区域
+        resultsTabs.classList.remove('hidden');
+        summarySection.classList.remove('hidden');
+        detailsSection.classList.add('hidden');
+        newLinkSection.classList.add('hidden');
+        
+        // 重置选择状态
+        selectedLinks = [];
+        selectAll.checked = false;
+        
+        // 添加动画效果
+        animateResults();
+        
+      }, 500); // 500ms延迟，模拟处理时间
+    }
+    
+    // 显示状态信息
+    function showStatus(title, message, color) {
+      statusIndicator.classList.remove('hidden');
+      
+      // 设置状态图标和文本
+      statusText.textContent = `${title}: ${message}`;
+      
+      // 设置状态图标的颜色和图标
+      statusIcon.className = 'w-6 h-6 rounded-full flex items-center justify-center mr-2';
+      
+      if (color === 'green') {
+        statusIcon.classList.add('bg-green-500');
+        statusIcon.innerHTML = '<i class="fa fa-check text-white"></i>';
+      } else if (color === 'red') {
+        statusIcon.classList.add('bg-red-500');
+        statusIcon.innerHTML = '<i class="fa fa-times text-white"></i>';
+      } else if (color === 'yellow') {
+        statusIcon.classList.add('bg-yellow-500');
+        statusIcon.innerHTML = '<i class="fa fa-exclamation text-white"></i>';
+      }
+      
+      // 添加动画效果
+      statusIndicator.classList.add('animate-pulse');
+      setTimeout(() => {
+        statusIndicator.classList.remove('animate-pulse');
+      }, 1000);
+    }
+    
+    // 显示汇总结果
+    function displaySummaryResults() {
+      // 更新统计信息
+      totalLinks.textContent = parsedConfigs.length;
+      successLinks.textContent = parsedConfigs.filter(item => item.success).length;
+      failedLinks.textContent = parsedConfigs.filter(item => !item.success).length;
+      
+      // 清空现有表格
+      summaryTable.innerHTML = '';
+      
+      // 填充表格
+      parsedConfigs.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 transition-colors duration-150';
+        
+        // 复选框单元格
+        const checkboxCell = document.createElement('td');
+        checkboxCell.className = 'px-6 py-4 whitespace-nowrap';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'link-checkbox rounded border-gray-300 text-primary focus:ring-primary';
+        checkbox.dataset.index = index;
+        checkbox.disabled = !item.success;
+        checkboxCell.appendChild(checkbox);
+        
+        // 序号单元格
+        const indexCell = document.createElement('td');
+        indexCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+        indexCell.textContent = index + 1;
+        
+        // 别名单元格
+        const psCell = document.createElement('td');
+        psCell.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
+        if (item.success) {
+          psCell.textContent = item.config.ps || '未命名';
+        } else {
+          psCell.textContent = '解析失败';
+          psCell.className += ' text-red-500';
+        }
+        
+        // 服务器地址单元格
+        const addressCell = document.createElement('td');
+        addressCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-600';
+        if (item.success) {
+          addressCell.textContent = item.config.add || '未知';
+        } else {
+          addressCell.textContent = 'N/A';
+        }
+        
+        // 端口单元格
+        const portCell = document.createElement('td');
+        portCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-600';
+        if (item.success) {
+          portCell.textContent = item.config.port || '未知';
+        } else {
+          portCell.textContent = 'N/A';
+        }
+        
+        // 状态单元格
+        const statusCell = document.createElement('td');
+        statusCell.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium';
+        if (item.success) {
+          statusCell.className += ' text-green-500';
+          statusCell.textContent = '成功';
+        } else {
+          statusCell.className += ' text-red-500';
+          statusCell.textContent = '失败';
+        }
+        
+        // 操作单元格
+        const actionCell = document.createElement('td');
+        actionCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+        if (item.success) {
+          const viewBtn = document.createElement('button');
+          viewBtn.className = 'text-primary hover:text-primary/80 transition-colors duration-200 mr-3';
+          viewBtn.innerHTML = '<i class="fa fa-eye mr-1"></i>查看';
+          viewBtn.addEventListener('click', () => showDetails(index));
+          actionCell.appendChild(viewBtn);
+          
+          const editBtn = document.createElement('button');
+          editBtn.className = 'text-secondary hover:text-secondary/80 transition-colors duration-200';
+          editBtn.innerHTML = '<i class="fa fa-edit mr-1"></i>编辑';
+          editBtn.addEventListener('click', () => editAddress(index));
+          actionCell.appendChild(editBtn);
+        } else {
+          const errorBtn = document.createElement('button');
+          errorBtn.className = 'text-red-500 hover:text-red-700 transition-colors duration-200';
+          errorBtn.innerHTML = '<i class="fa fa-exclamation-circle mr-1"></i>错误';
+          errorBtn.addEventListener('click', () => showError(index));
+          actionCell.appendChild(errorBtn);
+        }
+        
+        // 添加单元格到行
+        row.appendChild(checkboxCell);
+        row.appendChild(indexCell);
+        row.appendChild(psCell);
+        row.appendChild(addressCell);
+        row.appendChild(portCell);
+        row.appendChild(statusCell);
+        row.appendChild(actionCell);
+        
+        // 添加行到表格
+        summaryTable.appendChild(row);
+        
+        // 绑定复选框事件
+        checkbox.addEventListener('change', (e) => {
+          const linkIndex = parseInt(e.target.dataset.index);
+          if (e.target.checked) {
+            if (!selectedLinks.includes(linkIndex)) {
+              selectedLinks.push(linkIndex);
+            }
+          } else {
+            selectedLinks = selectedLinks.filter(idx => idx !== linkIndex);
+          }
+          updateSelectAllStatus();
+        });
+      });
+    }
+    
+    // 显示详细信息
+    function showDetails(index) {
+      const item = parsedConfigs[index];
+      if (!item || !item.success) return;
+      
+      // 清空详细信息区域
+      detailsSection.innerHTML = '';
+      
+      // 创建详细信息卡片
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-xl shadow-md p-6 mb-8 card-hover animate-fade-in';
+      
+      // 卡片标题
+      const title = document.createElement('h2');
+      title.className = 'text-xl font-bold text-dark mb-4 flex items-center';
+      title.innerHTML = `<i class="fa fa-info-circle text-primary mr-2"></i>链接详情 #${index + 1}: ${item.config.ps || '未命名'}`;
+      card.appendChild(title);
+      
+      // 创建配置信息表格
+      const table = document.createElement('table');
+      table.className = 'min-w-full divide-y divide-gray-200';
+      
+      // 表头
+      const thead = document.createElement('thead');
+      thead.className = 'bg-gray-50';
+      const headerRow = document.createElement('tr');
+      const keyHeader = document.createElement('th');
+      keyHeader.scope = 'col';
+      keyHeader.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+      keyHeader.textContent = '配置项';
+      const valueHeader = document.createElement('th');
+      valueHeader.scope = 'col';
+      valueHeader.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+      valueHeader.textContent = '值';
+      headerRow.appendChild(keyHeader);
+      headerRow.appendChild(valueHeader);
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      
+      // 表体
+      const tbody = document.createElement('tbody');
+      tbody.className = 'bg-white divide-y divide-gray-200';
+      
+      // 填充配置信息
+      for (const [key, value] of Object.entries(item.config)) {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 transition-colors duration-150';
+        
+        const keyCell = document.createElement('td');
+        keyCell.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
+        keyCell.textContent = key;
+        
+        const valueCell = document.createElement('td');
+        valueCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-600';
+        
+        // 格式化特殊值
+        if (key === 'id') {
+          // 格式化ID为UUID格式
+          const formattedId = formatUuid(value);
+          valueCell.textContent = formattedId;
+        } else if (typeof value === 'object' && value !== null) {
+          // 对象值显示为JSON字符串
+          valueCell.textContent = JSON.stringify(value, null, 2);
+        } else {
+          valueCell.textContent = value;
+        }
+        
+        row.appendChild(keyCell);
+        row.appendChild(valueCell);
+        tbody.appendChild(row);
+      }
+      
+      table.appendChild(tbody);
+      card.appendChild(table);
+      
+      // 添加编辑按钮
+      const editSection = document.createElement('div');
+      editSection.className = 'mt-6 flex justify-end';
+      
+      const backBtn = document.createElement('button');
+      backBtn.className = 'mr-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg transition-colors duration-200 flex items-center';
+      backBtn.innerHTML = '<i class="fa fa-arrow-left mr-2"></i>返回';
+      backBtn.addEventListener('click', showSummaryTab);
+      editSection.appendChild(backBtn);
+      
+      const editBtn = document.createElement('button');
+      editBtn.className = 'bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center';
+      editBtn.innerHTML = '<i class="fa fa-edit mr-2"></i>编辑地址';
+      editBtn.addEventListener('click', () => editAddress(index));
+      editSection.appendChild(editBtn);
+      
+      card.appendChild(editSection);
+      
+      // 添加卡片到详细信息区域
+      detailsSection.appendChild(card);
+      
+      // 显示详细信息选项卡
+      showDetailsTab();
+    }
+    
+    // 显示错误信息
+    function showError(index) {
+      const item = parsedConfigs[index];
+      if (!item || item.success) return;
+      
+      // 清空详细信息区域
+      detailsSection.innerHTML = '';
+      
+      // 创建错误信息卡片
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-xl shadow-md p-6 mb-8 card-hover animate-fade-in';
+      
+      // 卡片标题
+      const title = document.createElement('h2');
+      title.className = 'text-xl font-bold text-dark mb-4 flex items-center';
+      title.innerHTML = `<i class="fa fa-exclamation-triangle text-red-500 mr-2"></i>解析错误 #${index + 1}`;
+      card.appendChild(title);
+      
+      // 错误信息
+      const errorMsg = document.createElement('p');
+      errorMsg.className = 'text-red-600 mb-4';
+      errorMsg.textContent = `解析失败: ${item.error}`;
+      card.appendChild(errorMsg);
+      
+      // 原始链接
+      const originalLink = document.createElement('div');
+      originalLink.className = 'bg-gray-50 p-4 rounded-lg mb-4';
+      const linkLabel = document.createElement('p');
+      linkLabel.className = 'text-sm font-medium text-gray-700 mb-2';
+      linkLabel.textContent = '原始链接:';
+      originalLink.appendChild(linkLabel);
+      
+      const linkText = document.createElement('pre');
+      linkText.className = 'text-xs text-gray-600 break-all';
+      linkText.textContent = item.line;
+      originalLink.appendChild(linkText);
+      
+      card.appendChild(originalLink);
+      
+      // 添加返回按钮
+      const backSection = document.createElement('div');
+      backSection.className = 'mt-6 flex justify-end';
+      
+      const backBtn = document.createElement('button');
+      backBtn.className = 'bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center';
+      backBtn.innerHTML = '<i class="fa fa-arrow-left mr-2"></i>返回';
+      backBtn.addEventListener('click', showSummaryTab);
+      backSection.appendChild(backBtn);
+      
+      card.appendChild(backSection);
+      
+      // 添加卡片到详细信息区域
+      detailsSection.appendChild(card);
+      
+      // 显示详细信息选项卡
+      showDetailsTab();
+    }
+    
+    // 编辑单个链接的服务器地址
+    function editAddress(index) {
+      const item = parsedConfigs[index];
+      if (!item || !item.success) return;
+      
+      // 清空详细信息区域
+      detailsSection.innerHTML = '';
+      
+      // 创建编辑表单卡片
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-xl shadow-md p-6 mb-8 card-hover animate-fade-in';
+      
+      // 卡片标题
+      const title = document.createElement('h2');
+      title.className = 'text-xl font-bold text-dark mb-4 flex items-center';
+      title.innerHTML = `<i class="fa fa-edit text-primary mr-2"></i>编辑服务器地址 #${index + 1}: ${item.config.ps || '未命名'}`;
+      card.appendChild(title);
+      
+      // 创建编辑表单
+      const form = document.createElement('div');
+      
+      // 当前地址
+      const currentAddress = document.createElement('div');
+      currentAddress.className = 'mb-4';
+      const currentLabel = document.createElement('label');
+      currentLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+      currentLabel.textContent = '当前服务器地址:';
+      currentAddress.appendChild(currentLabel);
+      
+      const currentValue = document.createElement('div');
+      currentValue.className = 'bg-gray-50 p-3 rounded-lg text-sm text-gray-700';
+      currentValue.textContent = item.config.add || '未知';
+      currentAddress.appendChild(currentValue);
+      
+      form.appendChild(currentAddress);
+      
+      // 新地址
+      const newAddressDiv = document.createElement('div');
+      newAddressDiv.className = 'mb-6';
+      const newLabel = document.createElement('label');
+      newLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+      newLabel.textContent = '新服务器地址:';
+      newAddressDiv.appendChild(newLabel);
+      
+      const newInput = document.createElement('input');
+      newInput.type = 'text';
+      newInput.className = 'w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200';
+      newInput.value = item.config.add || '';
+      newAddressDiv.appendChild(newInput);
+      
+      form.appendChild(newAddressDiv);
+      
+      card.appendChild(form);
+      
+      // 添加按钮
+      const buttonSection = document.createElement('div');
+      buttonSection.className = 'mt-6 flex justify-end';
+      
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'mr-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg transition-colors duration-200 flex items-center';
+      cancelBtn.innerHTML = '<i class="fa fa-times mr-2"></i>取消';
+      cancelBtn.addEventListener('click', showSummaryTab);
+      buttonSection.appendChild(cancelBtn);
+      
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center';
+      saveBtn.innerHTML = '<i class="fa fa-save mr-2"></i>保存';
+      saveBtn.addEventListener('click', () => {
+        const newAddr = newInput.value.trim();
+        if (!newAddr) {
+          showStatus('错误', '服务器地址不能为空', 'red');
+          return;
+        }
+        
+        // 更新配置
+        item.config.add = newAddr;
+        
+        // 返回汇总页面
+        showSummaryTab();
+        
+        // 显示成功消息
+        showStatus('成功', '服务器地址已更新', 'green');
+        
+        // 更新表格
+        displaySummaryResults();
+      });
+      buttonSection.appendChild(saveBtn);
+      
+      card.appendChild(buttonSection);
+      
+      // 添加卡片到详细信息区域
+      detailsSection.appendChild(card);
+      
+      // 显示详细信息选项卡
+      showDetailsTab();
+    }
+    
+    // 批量更新服务器地址
+    function batchUpdateAddresses() {
+      const newAddr = newAddress.value.trim();
+      
+      if (!newAddr) {
+        showStatus('错误', '请输入新的服务器地址', 'red');
+        return;
+      }
+      
+      const scope = applyTo.value;
+      let updatedCount = 0;
+      
+      // 根据应用范围更新地址
+      if (scope === 'all') {
+        // 更新所有链接
+        parsedConfigs.forEach(item => {
+          if (item.success) {
+            item.config.add = newAddr;
+            updatedCount++;
+          }
+        });
+      } else {
+        // 只更新选中的链接
+        selectedLinks.forEach(index => {
+          const item = parsedConfigs[index];
+          if (item && item.success) {
+            item.config.add = newAddr;
+            updatedCount++;
+          }
+        });
+      }
+      
+      if (updatedCount === 0) {
+        showStatus('提示', '没有链接被更新', 'yellow');
+        return;
+      }
+      
+      // 显示成功消息
+      showStatus('成功', `已更新 ${updatedCount} 个链接的服务器地址`, 'green');
+      
+      // 更新表格
+      displaySummaryResults();
+      
+      // 生成新链接
+      generateNewLinks();
+    }
+    
+    // 生成新链接
+    function generateNewLinks() {
+      const modifiedConfigs = parsedConfigs.filter(item => item.success);
+      
+      if (modifiedConfigs.length === 0) {
+        showStatus('错误', '没有有效的链接可生成', 'red');
+        return;
+      }
+      
+      // 生成新链接
+      const newLinks = modifiedConfigs.map(item => {
+        try {
+          // 将配置对象转换为JSON字符串
+          const jsonString = JSON.stringify(item.config);
+          
+          // 对JSON字符串进行Base64编码
+          const base64String = btoa(jsonString);
+          
+          // 组合成完整的VMess链接
+          return `vmess://${base64String}`;
+        } catch (error) {
+          console.error('生成链接错误:', error);
+          return null;
+        }
+      }).filter(link => link !== null);
+      
+      // 更新显示
+      newVmessLinks.value = newLinks.join('\n');
+      modifiedCount.textContent = newLinks.length;
+      
+      // 显示新链接区域
+      newLinkSection.classList.remove('hidden');
+      
+      // 添加动画效果
+      newLinkSection.classList.add('animate-fade-in');
+    }
+    
+    // 复制所有链接
+    async function copyAllLinks() {
+      try {
+        await navigator.clipboard.writeText(newVmessLinks.value);
+        showStatus('成功', '所有链接已复制到剪贴板', 'green');
+        
+        // 添加复制成功动画
+        copyAllBtn.innerHTML = '<i class="fa fa-check mr-1"></i>已复制';
+        setTimeout(() => {
+          copyAllBtn.innerHTML = '<i class="fa fa-copy mr-1"></i>复制全部';
+        }, 2000);
+      } catch (error) {
+        showStatus('错误', '无法复制链接', 'red');
+        console.error('复制错误:', error);
+      }
+    }
+    
+    // 下载链接文件
+    function downloadLinks() {
+      const content = newVmessLinks.value;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement('a');
+      const fileName = `vmess_links_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
+      
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      
+      // 释放URL对象
+      URL.revokeObjectURL(link.href);
+    }
+    
+    // 显示汇总选项卡
+    function showSummaryTab() {
+      summaryTab.classList.add('border-primary', 'text-primary');
+      summaryTab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+      
+      detailsTab.classList.remove('border-primary', 'text-primary');
+      detailsTab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+      
+      summarySection.classList.remove('hidden');
+      detailsSection.classList.add('hidden');
+    }
+    
+    // 显示详细信息选项卡
+    function showDetailsTab() {
+      detailsTab.classList.add('border-primary', 'text-primary');
+      detailsTab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+      
+      summaryTab.classList.remove('border-primary', 'text-primary');
+      summaryTab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+      
+      summarySection.classList.add('hidden');
+      detailsSection.classList.remove('hidden');
+    }
+    
+    // 切换全选状态
+    function toggleSelectAll() {
+      const checkboxes = document.querySelectorAll('.link-checkbox');
+      const isChecked = selectAll.checked;
+      
+      checkboxes.forEach(checkbox => {
+        if (!checkbox.disabled) {
+          checkbox.checked = isChecked;
+          
+          const linkIndex = parseInt(checkbox.dataset.index);
+          if (isChecked && !selectedLinks.includes(linkIndex)) {
+            selectedLinks.push(linkIndex);
+          } else if (!isChecked) {
+            selectedLinks = selectedLinks.filter(idx => idx !== linkIndex);
+          }
+        }
+      });
+    }
+    
+    // 更新全选框状态
+    function updateSelectAllStatus() {
+      const checkboxes = document.querySelectorAll('.link-checkbox:enabled');
+      const checkedBoxes = document.querySelectorAll('.link-checkbox:enabled:checked');
+      
+      selectAll.checked = checkboxes.length > 0 && checkboxes.length === checkedBoxes.length;
+    }
+    
+    // 清空输入
+    function clearInput() {
+      vmessInput.value = '';
+      resultsTabs.classList.add('hidden');
+      summarySection.classList.add('hidden');
+      detailsSection.classList.add('hidden');
+      newLinkSection.classList.add('hidden');
+      showStatus('信息', '输入已清空', 'yellow');
+    }
+    
+    // 从剪贴板粘贴
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        vmessInput.value = text;
+        showStatus('成功', '已从剪贴板粘贴', 'green');
+      } catch (error) {
+        showStatus('错误', '无法访问剪贴板', 'red');
+        console.error('剪贴板错误:', error);
+      }
+    }
+    
+    // 格式化UUID
+    function formatUuid(id) {
+      if (!id) return '';
+      // 移除可能的连字符
+      const cleanId = id.replace(/-/g, '');
+      // 格式化为UUID形式
+      if (cleanId.length === 32) {
+        return `${cleanId.substring(0, 8)}-${cleanId.substring(8, 12)}-${cleanId.substring(12, 16)}-${cleanId.substring(16, 20)}-${cleanId.substring(20)}`;
+      }
+      return id;
+    }
+    
+    // 添加元素动画
+    function animateElements() {
+      // 为按钮添加悬停动画
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(button => {
+        button.addEventListener('mouseenter', () => {
+          button.classList.add('scale-105');
+        });
+        button.addEventListener('mouseleave', () => {
+          button.classList.remove('scale-105');
+        });
+      });
+    }
+    
+    // 结果区域动画
+    function animateResults() {
+      // 为结果区域添加淡入动画
+      summarySection.classList.add('animate-fade-in');
+      
+      // 为表格行添加交错进入动画
+      const rows = summaryTable.querySelectorAll('tr');
+      rows.forEach((row, index) => {
+        setTimeout(() => {
+          row.classList.add('opacity-100');
+          row.classList.remove('opacity-0', 'translate-y-4');
+        }, 50 * index);
+      });
+    }
+  </script>
+</body>
+</html>
