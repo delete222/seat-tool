@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司机绩效统计仪表盘</title>
+    <!-- 引入ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        dark: '#1D2129',
+                        'light-gray': '#F2F3F5'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .hover-lift {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .hover-lift:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            }
+            .editable-cell {
+                transition: all 0.2s ease;
+            }
+            .editable-cell:focus {
+                outline: 2px solid #165DFF;
+                border-radius: 4px;
+                background-color: rgba(22, 93, 255, 0.05);
+            }
+            .dragging {
+                opacity: 0.5;
+                background-color: rgba(22, 93, 255, 0.1);
+            }
+            .drag-over {
+                border-top: 2px solid #165DFF;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter text-dark">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- 页面标题 -->
+        <header class="mb-8">
+            <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-2">司机绩效统计分析</h1>
+            <p class="text-gray-500">司机有效工时、加班工时及出车公里数统计（可拖拽排序）</p>
+        </header>
+        
+        <!-- 数据概览卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 card-shadow hover-lift">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 font-medium">总有效工时</h3>
+                    <span class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <i class="fa fa-clock-o"></i>
+                    </span>
+                </div>
+                <p id="total-work-hours" class="text-3xl font-bold mb-1">3017小时</p>
+                <p class="text-gray-500 text-sm">杭州: 2028小时 | 北京: 989小时</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 card-shadow hover-lift">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 font-medium">总加班工时</h3>
+                    <span class="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center text-warning">
+                        <i class="fa fa-bolt"></i>
+                    </span>
+                </div>
+                <p id="total-overtime" class="text-3xl font-bold mb-1">1548小时</p>
+                <p class="text-gray-500 text-sm">杭州: 1027小时 | 北京: 521小时</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 card-shadow hover-lift">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 font-medium">总出车公里数</h3>
+                    <span class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                        <i class="fa fa-car"></i>
+                    </span>
+                </div>
+                <p id="total-km" class="text-3xl font-bold mb-1">32986公里</p>
+                <p class="text-gray-500 text-sm">杭州: 21681公里 | 北京: 11305公里</p>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 card-shadow hover-lift">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-gray-500 font-medium">司机总数</h3>
+                    <span class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <i class="fa fa-users"></i>
+                    </span>
+                </div>
+                <p id="driver-count" class="text-3xl font-bold mb-1">24人</p>
+                <p class="text-gray-500 text-sm">杭州: 16人 | 北京: 8人</p>
+            </div>
+        </div>
+        
+        <!-- 主要图表区域 -->
+        <div class="bg-white rounded-xl p-6 card-shadow mb-8">
+            <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                <h2 class="text-xl font-bold">司机工时与出车公里数</h2>
+                <div class="flex flex-wrap gap-2">
+                    <button id="btn-all" class="px-3 py-1 text-sm bg-primary text-white rounded-md">全部司机</button>
+                    <button id="btn-hangzhou" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">杭州司机</button>
+                    <button id="btn-beijing" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">北京司机</button>
+                </div>
+            </div>
+            <div id="main-chart" class="w-full h-[500px]"></div>
+        </div>
+        
+        <!-- 可编辑数据表格（放在页面底部） -->
+        <div class="bg-white rounded-xl p-6 card-shadow mb-8 overflow-x-auto">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                <h2 class="text-xl font-bold">司机详细数据（可拖拽排序，点击编辑）</h2>
+                <div>
+                    <button id="add-driver" class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition flex items-center gap-2">
+                        <i class="fa fa-plus"></i> 添加司机
+                    </button>
+                </div>
+            </div>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                            <i class="fa fa-bars text-gray-400" title="拖拽排序"></i>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">司机姓名</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">所属地区</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">有效工时(小时)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">加班工时(小时)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">出车公里数</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="driver-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- 数据将通过JavaScript动态生成 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="text-center text-gray-500 text-sm py-4">
+            <p>© 2025 司机绩效管理系统 | 数据更新时间: 2025-06-30</p>
+        </footer>
+    </div>
+
+    <script>
+        // 初始化图表
+        const mainChart = echarts.init(document.getElementById('main-chart'));
+        
+        // 原始数据 - 包含所有司机信息，并添加唯一ID
+        let driverData = [
+            { id: 1, name: '生捷', region: '杭州', work: 178.0, overtime: 89.5, km: 1798 },
+            { id: 2, name: '王志杰', region: '杭州', work: 113.0, overtime: 79.0, km: 944 },
+            { id: 3, name: '魏智成', region: '杭州', work: 64.5, overtime: 26.0, km: 834 },
+            { id: 4, name: '方林', region: '杭州', work: 128.0, overtime: 64, km: 1755 },
+            { id: 5, name: '沈国春', region: '杭州', work: 138.5, overtime: 84.5, km: 1448 },
+            { id: 6, name: '赵骏', region: '杭州', work: 118.0, overtime: 20.0, km: 1082 },
+            { id: 7, name: '葛文军', region: '杭州', work: 104.5, overtime: 51, km: 1199 },
+            { id: 8, name: '金迪峰', region: '杭州', work: 110.0, overtime: 56, km: 1094 },
+            { id: 9, name: '吴海平', region: '杭州', work: 176.0, overtime: 83, km: 1955 },
+            { id: 10, name: '单宁', region: '杭州', work: 107.5, overtime: 52.5, km: 1152 },
+            { id: 11, name: '廖建平', region: '杭州', work: 142.0, overtime: 87, km: 1542 },
+            { id: 12, name: '刘军军', region: '杭州', work: 112.0, overtime: 45.5, km: 1106 },
+            { id: 13, name: '张再建', region: '杭州', work: 147.0, overtime: 106.5, km: 1135 },
+            { id: 14, name: '陈骏', region: '杭州', work: 161.0, overtime: 60, km: 1972 },
+            { id: 15, name: '邱靖锋', region: '杭州', work: 103.0, overtime: 50, km: 1491 },
+            { id: 16, name: '朱振豪', region: '杭州', work: 125.0, overtime: 72, km: 1174 },
+            { id: 17, name: '曾相伟', region: '北京', work: 147.0, overtime: 80.5, km: 1832 },
+            { id: 18, name: '周广春', region: '北京', work: 109.0, overtime: 49.0, km: 1229 },
+            { id: 19, name: '霍文华', region: '北京', work: 116.0, overtime: 63.0, km: 1801 },
+            { id: 20, name: '董笑名', region: '北京', work: 161.0, overtime: 73.5, km: 1510 },
+            { id: 21, name: '王增', region: '北京', work: 116.5, overtime: 60.5, km: 1254 },
+            { id: 22, name: '贺晨', region: '北京', work: 111.0, overtime: 61.5, km: 1169 },
+            { id: 23, name: '董军龙', region: '北京', work: 109.0, overtime: 71.5, km: 1119 },
+            { id: 24, name: '闫斌', region: '北京', work: 119.0, overtime: 61.0, km: 1391 }
+        ];
+        
+        // 当前拖拽的元素ID和索引
+        let draggedItemId = null;
+        let draggedIndex = -1;
+        
+        // 筛选杭州司机
+        const getHangzhouDrivers = () => {
+            return driverData.filter(driver => driver.region === '杭州');
+        };
+        
+        // 筛选北京司机
+        const getBeijingDrivers = () => {
+            return driverData.filter(driver => driver.region === '北京');
+        };
+        
+        // 更新主图表数据 - 按当前顺序展示
+        const updateMainChart = (data) => {
+            // 配置主图表 - 有效工时和加班工时为柱状图，出车公里数为折线图
+            const mainOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    borderColor: '#eee',
+                    borderWidth: 1,
+                    textStyle: { color: '#333' },
+                    formatter: function(params) {
+                        let res = `<div class="font-semibold">${params[0].name}</div>`;
+                        params.forEach(item => {
+                            res += `<div>${item.seriesName}: ${item.value}${
+                                item.seriesName.includes('工时') ? '小时' : '公里'
+                            }</div>`;
+                        });
+                        return res;
+                    }
+                },
+                legend: {
+                    data: ['有效工时', '加班工时', '出车公里数'],
+                    top: 0,
+                    textStyle: { color: '#666' }
+                },
+                grid: {
+                    left: '3%',
+                    right: '5%',
+                    bottom: '8%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.map(item => item.name),
+                    axisLine: { lineStyle: { color: '#eee' } },
+                    axisLabel: {
+                        color: '#666',
+                        rotate: 45,
+                        interval: 0
+                    },
+                    axisTick: { show: false }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '工时 (小时)',
+                        nameTextStyle: { color: '#666' },
+                        axisLine: { show: false },
+                        axisLabel: { color: '#666' },
+                        splitLine: { lineStyle: { color: '#f2f2f2' } },
+                        max: value => Math.ceil(value.max * 1.2)
+                    },
+                    {
+                        type: 'value',
+                        name: '公里数',
+                        nameTextStyle: { color: '#666' },
+                        axisLine: { show: false },
+                        axisLabel: { color: '#666' },
+                        splitLine: { show: false },
+                        max: value => Math.ceil(value.max * 1.2)
+                    }
+                ],
+                series: [
+                    {
+                        name: '有效工时',
+                        type: 'bar',
+                        data: data.map(item => item.work),
+                        barWidth: '30%',
+                        itemStyle: {
+                            color: '#165DFF',
+                            borderRadius: [4, 4, 0, 0]
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: '#333',
+                            fontSize: 12
+                        }
+                    },
+                    {
+                        name: '加班工时',
+                        type: 'bar',
+                        data: data.map(item => item.overtime),
+                        barWidth: '30%',
+                        itemStyle: {
+                            color: '#FF7D00',
+                            borderRadius: [4, 4, 0, 0]
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: '#333',
+                            fontSize: 12
+                        }
+                    },
+                    {
+                        name: '出车公里数',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: data.map(item => item.km),
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        lineStyle: {
+                            color: '#36CFC9',
+                            width: 3
+                        },
+                        itemStyle: {
+                            color: '#36CFC9',
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            color: '#36CFC9',
+                            fontSize: 12
+                        }
+                    }
+                ],
+                animationDuration: 1000,
+                animationEasing: 'cubicOut'
+            };
+            
+            mainChart.setOption(mainOption);
+        };
+        
+        // 渲染表格数据（可编辑、可拖拽）
+        const renderTable = (data) => {
+            const tableBody = document.getElementById('driver-table-body');
+            tableBody.innerHTML = '';
+            
+            // 清空拖拽相关变量
+            draggedItemId = null;
+            draggedIndex = -1;
+            
+            data.forEach((driver, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition';
+                row.draggable = true;
+                row.dataset.id = driver.id;
+                row.dataset.index = index;
+                
+                // 拖拽手柄单元格
+                const dragHandleCell = document.createElement('td');
+                dragHandleCell.className = 'px-6 py-4 whitespace-nowrap cursor-move';
+                dragHandleCell.innerHTML = '<i class="fa fa-bars text-gray-400"></i>';
+                row.appendChild(dragHandleCell);
+                
+                // 排名单元格
+                const rankCell = document.createElement('td');
+                rankCell.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium';
+                rankCell.textContent = index + 1;
+                row.appendChild(rankCell);
+                
+                // 司机姓名单元格（可编辑）
+                const nameCell = document.createElement('td');
+                nameCell.className = 'px-6 py-4 whitespace-nowrap';
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'editable-cell text-sm font-medium text-gray-900';
+                nameSpan.contentEditable = true;
+                nameSpan.textContent = driver.name;
+                nameSpan.addEventListener('blur', (e) => {
+                    driver.name = e.target.textContent;
+                    updateMainChart(currentDisplayData);
+                    updateSummaryStats();
+                });
+                nameCell.appendChild(nameSpan);
+                row.appendChild(nameCell);
+                
+                // 所属地区单元格（可编辑）
+                const regionCell = document.createElement('td');
+                regionCell.className = 'px-6 py-4 whitespace-nowrap';
+                const regionSpan = document.createElement('span');
+                regionSpan.className = 'editable-cell text-sm text-gray-500';
+                regionSpan.contentEditable = true;
+                regionSpan.textContent = driver.region;
+                regionSpan.addEventListener('blur', (e) => {
+                    const newRegion = e.target.textContent.trim();
+                    if (newRegion === '杭州' || newRegion === '北京') {
+                        driver.region = newRegion;
+                        updateMainChart(currentDisplayData);
+                        updateSummaryStats();
+                    } else {
+                        // 恢复原始值
+                        e.target.textContent = driver.region;
+                    }
+                });
+                regionCell.appendChild(regionSpan);
+                row.appendChild(regionCell);
+                
+                // 有效工时单元格（可编辑）
+                const workCell = document.createElement('td');
+                workCell.className = 'px-6 py-4 whitespace-nowrap';
+                const workSpan = document.createElement('span');
+                workSpan.className = 'editable-cell text-sm text-gray-500';
+                workSpan.contentEditable = true;
+                workSpan.textContent = driver.work;
+                workSpan.addEventListener('blur', (e) => {
+                    // 验证输入是否为数字
+                    const value = parseFloat(e.target.textContent);
+                    if (!isNaN(value) && value >= 0) {
+                        driver.work = value;
+                        renderTable(currentDisplayData);
+                        updateMainChart(currentDisplayData);
+                        updateSummaryStats();
+                    } else {
+                        // 恢复原始值
+                        e.target.textContent = driver.work;
+                    }
+                });
+                workCell.appendChild(workSpan);
+                row.appendChild(workCell);
+                
+                // 加班工时单元格（可编辑）
+                const overtimeCell = document.createElement('td');
+                overtimeCell.className = 'px-6 py-4 whitespace-nowrap';
+                const overtimeSpan = document.createElement('span');
+                overtimeSpan.className = 'editable-cell text-sm text-gray-500';
+                overtimeSpan.contentEditable = true;
+                overtimeSpan.textContent = driver.overtime;
+                overtimeSpan.addEventListener('blur', (e) => {
+                    // 验证输入是否为数字
+                    const value = parseFloat(e.target.textContent);
+                    if (!isNaN(value) && value >= 0) {
+                        driver.overtime = value;
+                        renderTable(currentDisplayData);
+                        updateMainChart(currentDisplayData);
+                        updateSummaryStats();
+                    } else {
+                        // 恢复原始值
+                        e.target.textContent = driver.overtime;
+                    }
+                });
+                overtimeCell.appendChild(overtimeSpan);
+                row.appendChild(overtimeCell);
+                
+                // 公里数单元格（可编辑）
+                const kmCell = document.createElement('td');
+                kmCell.className = 'px-6 py-4 whitespace-nowrap';
+                const kmSpan = document.createElement('span');
+                kmSpan.className = 'editable-cell text-sm text-gray-500';
+                kmSpan.contentEditable = true;
+                kmSpan.textContent = driver.km;
+                kmSpan.addEventListener('blur', (e) => {
+                    // 验证输入是否为数字
+                    const value = parseFloat(e.target.textContent);
+                    if (!isNaN(value) && value >= 0) {
+                        driver.km = value;
+                        renderTable(currentDisplayData);
+                        updateMainChart(currentDisplayData);
+                        updateSummaryStats();
+                    } else {
+                        // 恢复原始值
+                        e.target.textContent = driver.km;
+                    }
+                });
+                kmCell.appendChild(kmSpan);
+                row.appendChild(kmCell);
+                
+                // 操作按钮
+                const actionCell = document.createElement('td');
+                actionCell.className = 'px-6 py-4 whitespace-nowrap text-right text-sm font-medium';
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'text-danger hover:text-danger/80 transition';
+                deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm(`确定要删除 ${driver.name} 的数据吗？`)) {
+                        // 从原始数据中删除 - 使用唯一ID确保准确性
+                        const indexToRemove = driverData.findIndex(d => d.id === driver.id);
+                        if (indexToRemove !== -1) {
+                            driverData.splice(indexToRemove, 1);
+                        }
+                        
+                        // 根据当前显示模式重新渲染
+                        if (currentDisplayMode === 'all') {
+                            showAll();
+                        } else if (currentDisplayMode === 'hangzhou') {
+                            showHangzhou();
+                        } else {
+                            showBeijing();
+                        }
+                        
+                        updateSummaryStats();
+                    }
+                });
+                actionCell.appendChild(deleteBtn);
+                row.appendChild(actionCell);
+                
+                // 绑定拖拽事件
+                row.addEventListener('dragstart', handleDragStart);
+                row.addEventListener('dragover', handleDragOver);
+                row.addEventListener('dragenter', handleDragEnter);
+                row.addEventListener('dragleave', handleDragLeave);
+                row.addEventListener('drop', handleDrop);
+                row.addEventListener('dragend', handleDragEnd);
+                
+                tableBody.appendChild(row);
+            });
+        };
+        
+        // 拖拽事件处理函数
+        function handleDragStart(e) {
+            draggedItemId = parseInt(this.dataset.id);
+            draggedIndex = parseInt(this.dataset.index);
+            this.classList.add('dragging');
+            
+            // 设置拖拽数据
+            e.dataTransfer.setData('text/plain', draggedItemId);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault(); // 允许放置
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+        
+        function handleDragEnter(e) {
+            if (this.dataset.id !== draggedItemId.toString()) {
+                this.classList.add('drag-over');
+            }
+        }
+        
+        function handleDragLeave() {
+            this.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            e.stopPropagation(); // 阻止事件冒泡
+            
+            if (draggedItemId !== parseInt(this.dataset.id)) {
+                const dropIndex = parseInt(this.dataset.index);
+                
+                // 从当前显示的数据中移除并插入到新位置
+                const draggedItem = currentDisplayData.splice(draggedIndex, 1)[0];
+                currentDisplayData.splice(dropIndex, 0, draggedItem);
+                
+                // 更新原始数据顺序以保持一致性
+                updateOriginalDataOrder(currentDisplayData);
+                
+                // 重新渲染表格和图表
+                renderTable(currentDisplayData);
+                updateMainChart(currentDisplayData);
+            }
+            
+            this.classList.remove('drag-over');
+            return false;
+        }
+        
+        function handleDragEnd() {
+            // 移除所有拖拽相关的类
+            document.querySelectorAll('#driver-table-body tr').forEach(row => {
+                row.classList.remove('dragging', 'drag-over');
+            });
+        }
+        
+        // 根据当前显示数据的顺序更新原始数据顺序
+        function updateOriginalDataOrder(sortedData) {
+            // 创建ID到索引的映射
+            const idToIndex = {};
+            sortedData.forEach((item, index) => {
+                idToIndex[item.id] = index;
+            });
+            
+            // 按新顺序排序原始数据
+            driverData.sort((a, b) => {
+                return idToIndex[a.id] - idToIndex[b.id];
+            });
+        }
+        
+        // 更新统计摘要
+        const updateSummaryStats = () => {
+            const hangzhouDrivers = getHangzhouDrivers();
+            const beijingDrivers = getBeijingDrivers();
+            
+            // 计算杭州总计
+            const hangzhouWork = hangzhouDrivers.reduce((sum, driver) => sum + driver.work, 0);
+            const hangzhouOvertime = hangzhouDrivers.reduce((sum, driver) => sum + driver.overtime, 0);
+            const hangzhouKm = hangzhouDrivers.reduce((sum, driver) => sum + driver.km, 0);
+            
+            // 计算北京总计
+            const beijingWork = beijingDrivers.reduce((sum, driver) => sum + driver.work, 0);
+            const beijingOvertime = beijingDrivers.reduce((sum, driver) => sum + driver.overtime, 0);
+            const beijingKm = beijingDrivers.reduce((sum, driver) => sum + driver.km, 0);
+            
+            // 计算总计
+            const totalWork = hangzhouWork + beijingWork;
+            const totalOvertime = hangzhouOvertime + beijingOvertime;
+            const totalKm = hangzhouKm + beijingKm;
+            
+            // 更新界面
+            document.getElementById('total-work-hours').textContent = totalWork.toFixed(1) + '小时';
+            document.getElementById('total-overtime').textContent = totalOvertime.toFixed(1) + '小时';
+            document.getElementById('total-km').textContent = totalKm.toLocaleString() + '公里';
+            document.getElementById('driver-count').textContent = driverData.length + '人';
+            
+            // 更新小计文本
+            document.querySelector('#total-work-hours').nextElementSibling.textContent = 
+                `杭州: ${hangzhouWork.toFixed(1)}小时 | 北京: ${beijingWork.toFixed(1)}小时`;
+            document.querySelector('#total-overtime').nextElementSibling.textContent = 
+                `杭州: ${hangzhouOvertime.toFixed(1)}小时 | 北京: ${beijingOvertime.toFixed(1)}小时`;
+            document.querySelector('#total-km').nextElementSibling.textContent = 
+                `杭州: ${hangzhouKm.toLocaleString()}公里 | 北京: ${beijingKm.toLocaleString()}公里`;
+            document.querySelector('#driver-count').nextElementSibling.textContent = 
+                `杭州: ${hangzhouDrivers.length}人 | 北京: ${beijingDrivers.length}人`;
+        };
+        
+        // 当前显示模式和数据
+        let currentDisplayMode = 'all';
+        let currentDisplayData = [];
+        
+        // 显示所有司机
+        const showAll = () => {
+            currentDisplayMode = 'all';
+            currentDisplayData = [...driverData];
+            renderTable(currentDisplayData);
+            updateMainChart(currentDisplayData);
+            updateButtonStates('btn-all');
+        };
+        
+        // 显示杭州司机
+        const showHangzhou = () => {
+            currentDisplayMode = 'hangzhou';
+            currentDisplayData = getHangzhouDrivers();
+            renderTable(currentDisplayData);
+            updateMainChart(currentDisplayData);
+            updateButtonStates('btn-hangzhou');
+        };
+        
+        // 显示北京司机
+        const showBeijing = () => {
+            currentDisplayMode = 'beijing';
+            currentDisplayData = getBeijingDrivers();
+            renderTable(currentDisplayData);
+            updateMainChart(currentDisplayData);
+            updateButtonStates('btn-beijing');
+        };
+        
+        // 更新按钮状态
+        const updateButtonStates = (activeId) => {
+            const buttons = ['btn-all', 'btn-hangzhou', 'btn-beijing'];
+            buttons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (id === activeId) {
+                    btn.classList.remove('bg-gray-200', 'text-gray-700');
+                    btn.classList.add('bg-primary', 'text-white');
+                } else {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                }
+            });
+        };
+        
+        // 添加新司机
+        const addNewDriver = () => {
+            // 生成新的唯一ID
+            const newId = driverData.length > 0 
+                ? Math.max(...driverData.map(d => d.id)) + 1 
+                : 1;
+                
+            const newDriver = {
+                id: newId,
+                name: '新司机',
+                region: '杭州',
+                work: 0,
+                overtime: 0,
+                km: 0
+            };
+            driverData.push(newDriver);
+            showAll(); // 添加后显示全部
+        };
+        
+        // 初始化页面
+        showAll();
+        updateSummaryStats();
+        
+        // 绑定按钮事件
+        document.getElementById('btn-all').addEventListener('click', showAll);
+        document.getElementById('btn-hangzhou').addEventListener('click', showHangzhou);
+        document.getElementById('btn-beijing').addEventListener('click', showBeijing);
+        document.getElementById('add-driver').addEventListener('click', addNewDriver);
+        
+        // 响应窗口大小变化
+        window.addEventListener('resize', () => {
+            mainChart.resize();
+        });
+    </script>
+</body>
+</html>
+    
