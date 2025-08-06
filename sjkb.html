@@ -70,7 +70,7 @@
         <!-- 页面标题 -->
         <header class="mb-8">
             <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-dark mb-2">司机绩效统计分析</h1>
-            <p class="text-gray-500">司机有效工时、加班工时及出车公里数统计（可拖拽排序）</p>
+            <p class="text-gray-500"></p>
         </header>
         
         <!-- 数据概览卡片 -->
@@ -166,7 +166,7 @@
         
         <!-- 页脚 -->
         <footer class="text-center text-gray-500 text-sm py-4">
-            <p>© 2025 司机绩效管理系统 | 数据更新时间: 2025-06-30</p>
+            <p>数据更新时间: 2025-08-06</p>
         </footer>
     </div>
 
@@ -175,32 +175,33 @@
         const mainChart = echarts.init(document.getElementById('main-chart'));
         
         // 原始数据 - 包含所有司机信息，并添加唯一ID
-        let driverData = [
-            { id: 1, name: '生捷', region: '杭州', work: 178.0, overtime: 89.5, km: 1798 },
-            { id: 2, name: '王志杰', region: '杭州', work: 113.0, overtime: 79.0, km: 944 },
-            { id: 3, name: '魏智成', region: '杭州', work: 64.5, overtime: 26.0, km: 834 },
-            { id: 4, name: '方林', region: '杭州', work: 128.0, overtime: 64, km: 1755 },
-            { id: 5, name: '沈国春', region: '杭州', work: 138.5, overtime: 84.5, km: 1448 },
-            { id: 6, name: '赵骏', region: '杭州', work: 118.0, overtime: 20.0, km: 1082 },
-            { id: 7, name: '葛文军', region: '杭州', work: 104.5, overtime: 51, km: 1199 },
-            { id: 8, name: '金迪峰', region: '杭州', work: 110.0, overtime: 56, km: 1094 },
-            { id: 9, name: '吴海平', region: '杭州', work: 176.0, overtime: 83, km: 1955 },
-            { id: 10, name: '单宁', region: '杭州', work: 107.5, overtime: 52.5, km: 1152 },
-            { id: 11, name: '廖建平', region: '杭州', work: 142.0, overtime: 87, km: 1542 },
-            { id: 12, name: '刘军军', region: '杭州', work: 112.0, overtime: 45.5, km: 1106 },
-            { id: 13, name: '张再建', region: '杭州', work: 147.0, overtime: 106.5, km: 1135 },
-            { id: 14, name: '陈骏', region: '杭州', work: 161.0, overtime: 60, km: 1972 },
-            { id: 15, name: '邱靖锋', region: '杭州', work: 103.0, overtime: 50, km: 1491 },
-            { id: 16, name: '朱振豪', region: '杭州', work: 125.0, overtime: 72, km: 1174 },
-            { id: 17, name: '曾相伟', region: '北京', work: 147.0, overtime: 80.5, km: 1832 },
-            { id: 18, name: '周广春', region: '北京', work: 109.0, overtime: 49.0, km: 1229 },
-            { id: 19, name: '霍文华', region: '北京', work: 116.0, overtime: 63.0, km: 1801 },
-            { id: 20, name: '董笑名', region: '北京', work: 161.0, overtime: 73.5, km: 1510 },
-            { id: 21, name: '王增', region: '北京', work: 116.5, overtime: 60.5, km: 1254 },
-            { id: 22, name: '贺晨', region: '北京', work: 111.0, overtime: 61.5, km: 1169 },
-            { id: 23, name: '董军龙', region: '北京', work: 109.0, overtime: 71.5, km: 1119 },
-            { id: 24, name: '闫斌', region: '北京', work: 119.0, overtime: 61.0, km: 1391 }
-        ];
+let driverData = [
+    { id: 1, name: '生捷', region: '杭州', work: 137.5, overtime: 63, km: 995 },
+    { id: 2, name: '王志杰', region: '杭州', work: 178.5, overtime: 102, km: 1707 },
+    { id: 3, name: '魏智成', region: '杭州', work: 143.5, overtime: 79.5, km: 1422 },
+    { id: 4, name: '方林', region: '杭州', work: 143, overtime: 72.5, km: 1814 },
+    { id: 5, name: '沈国春', region: '杭州', work: 140.5, overtime: 91, km: 962 },
+    { id: 6, name: '赵骏', region: '杭州', work: 206.5, overtime: 58.5, km: 1206 },
+    { id: 7, name: '葛文军', region: '杭州', work: 122, overtime: 71, km: 1489 },
+    { id: 8, name: '金迪峰', region: '杭州', work: 137, overtime: 74, km: 1802 },
+    { id: 9, name: '吴海平', region: '杭州', work: 128.5, overtime: 75, km: 1447 },
+    { id: 10, name: '单宁', region: '杭州', work: 178, overtime: 84, km: 1966 },
+    { id: 11, name: '廖建平', region: '杭州', work: 131, overtime: 74.5, km: 1302 },
+    { id: 12, name: '刘军军', region: '杭州', work: 123.5, overtime: 69.5, km: 1355 },
+    { id: 13, name: '张再建', region: '杭州', work: 156.5, overtime: 93, km: 1169 },
+    { id: 14, name: '陈骏', region: '杭州', work: 126, overtime: 54.5, km: 2062 },
+    { id: 15, name: '邱靖锋', region: '杭州', work: 147, overtime: 64.5, km: 2001 },
+    { id: 16, name: '朱振豪', region: '杭州', work: 118, overtime: 74, km: 1103 },
+    { id: 17, name: '曾相伟', region: '北京', work: 186.5, overtime: 104, km: 1364 },
+    { id: 18, name: '周广春', region: '北京', work: 152.5, overtime: 84.5, km: 1457 },
+    { id: 19, name: '霍文华', region: '北京', work: 180, overtime: 92.5, km: 1829 },
+    { id: 20, name: '董笑名', region: '北京', work: 151.5, overtime: 81.5, km: 1424 },
+    { id: 21, name: '王增', region: '北京', work: 116.5, overtime: 87, km: 1924 },
+    { id: 22, name: '贺晨', region: '北京', work: 154, overtime: 77, km: 2189 },
+    { id: 23, name: '董军龙', region: '北京', work: 197, overtime: 105, km: 1960 },
+    { id: 24, name: '闫斌', region: '北京', work: 145, overtime: 71, km: 1670 }
+];
+
         
         // 当前拖拽的元素ID和索引
         let draggedItemId = null;
