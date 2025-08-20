@@ -14,7 +14,8 @@
             primary: '#3B82F6',
             secondary: '#10B981',
             dark: '#1E293B',
-            light: '#F8FAFC'
+            light: '#F8FAFC',
+            accent: '#8B5CF6' // 新增紫色作为预设模式的标识色
           },
           fontFamily: {
             sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -84,7 +85,7 @@
           <i class="fa fa-info-circle text-primary mr-2"></i>工具介绍
         </h2>
         <p class="text-gray-700 leading-relaxed">
-          这个工具可以帮助你批量解析VMess协议的链接，并修改服务器地址（add字段）。只需复制包含多个vmess://链接的文本，粘贴到下方输入框，点击解析按钮，然后在生成的结果中修改服务器地址，最后点击"生成新链接"按钮即可批量生成修改后的链接。
+          这个工具可以帮助你批量解析VMess协议的链接，并修改服务器地址（add字段）。支持手动修改和预设模式，预设模式可根据端口号一键修改为预设的服务器地址。只需复制包含多个vmess://链接的文本，粘贴到下方输入框，点击解析按钮即可开始使用。
         </p>
       </div>
 
@@ -178,6 +179,16 @@
                 <option value="all">所有链接</option>
                 <option value="selected">选中的链接</option>
               </select>
+            </div>
+          </div>
+          
+          <!-- 新增预设模式按钮 -->
+          <div class="mb-4">
+            <button id="presetModeBtn" class="bg-accent hover:bg-accent/90 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center mb-2">
+              <i class="fa fa-magic mr-2"></i>应用预设模式
+            </button>
+            <div class="text-xs text-gray-500 mt-1 ml-8">
+              预设模式将根据端口号自动匹配服务器地址（443→cdn.2020111.xyz，8443→home.23337788.xyz等）
             </div>
           </div>
           
@@ -289,6 +300,7 @@
     const newAddress = document.getElementById('newAddress');
     const applyTo = document.getElementById('applyTo');
     const batchUpdateBtn = document.getElementById('batchUpdateBtn');
+    const presetModeBtn = document.getElementById('presetModeBtn'); // 新增预设模式按钮
     const newLinkSection = document.getElementById('newLinkSection');
     const newVmessLinks = document.getElementById('newVmessLinks');
     const modifiedCount = document.getElementById('modifiedCount');
@@ -298,6 +310,28 @@
     // 存储解析后的配置
     let parsedConfigs = [];
     let selectedLinks = [];
+    
+    // 预设模式的端口-地址映射表
+const portAddressMap = {
+  // 分配给 cdn.2020111.xyz（5个端口：3个HTTP + 2个HTTPS）
+  "80": "cdn.2020111.xyz",       // HTTP
+  "8880": "cdn.2020111.xyz",     // HTTP
+  "2052": "cdn.2020111.xyz",     // HTTP
+  "443": "cdn.2020111.xyz",      // HTTPS
+  "2096": "cdn.2020111.xyz",     // HTTPS
+
+  // 分配给 home.23337788.xyz（4个端口：2个HTTP + 2个HTTPS）
+  "8080": "home.23337788.xyz",   // HTTP
+  "2082": "home.23337788.xyz",   // HTTP
+  "2053": "home.23337788.xyz",   // HTTPS
+  "8443": "home.23337788.xyz",   // HTTPS
+
+  // 分配给 www.visa.com（4个端口：2个HTTP + 2个HTTPS）
+  "2086": "www.visa.com",        // HTTP
+  "2095": "www.visa.com",        // HTTP
+  "2083": "www.visa.com",        // HTTPS
+  "2087": "www.visa.com"         // HTTPS
+};
     
     // 示例VMess链接（多条）
     const exampleVmessLinks = `vmess://eyAidiI6ICIyIiwgInBzIjogInZtLXdzLXdhbGwtNjRjYmNmNDQ5ZC1tZ3JueiIsICJhZGQiOiAiNDcuMjUxLjEyOS40IiwgInBvcnQiOiAiODg4MCIsICJpZCI6ICIyMGJiNmU0MC04NWIxLTRkNmQtOGQ3YS01ZmEyMTBmYzYwNGUiLCAiYWlkIjogIjAiLCAic2N5IjogImF1dG8iLCAibmV0IjogIndzIiwgInR5cGUiOiAibm9uZSIsICJob3N0IjogInd3dy5iaW5nLmNvbSIsICJwYXRoIjogIi8yMGJiNmU0MC04NWIxLTRkNmQtOGQ3YS01ZmEyMTBmYzYwNGUtdm0/ZWQ9MjA0OCIsICJ0bHMiOiAiIn0K
@@ -318,6 +352,7 @@ vmess://eyJ2IjoiMiIsInBzIjoiV09STEtWQ04tMTIzNDU2IiwiYWRkIjoiNjQuMTkyLjI0OC4yMSIs
       batchUpdateBtn.addEventListener('click', batchUpdateAddresses);
       copyAllBtn.addEventListener('click', copyAllLinks);
       downloadBtn.addEventListener('click', downloadLinks);
+      presetModeBtn.addEventListener('click', applyPresetMode); // 绑定预设模式按钮事件
       
       // 添加动画效果
       animateElements();
@@ -427,6 +462,59 @@ vmess://eyJ2IjoiMiIsInBzIjoiV09STEtWQ04tMTIzNDU2IiwiYWRkIjoiNjQuMTkyLjI0OC4yMSIs
       }, 500); // 500ms延迟，模拟处理时间
     }
     
+    // 应用预设模式
+    function applyPresetMode() {
+      if (parsedConfigs.length === 0) {
+        showStatus('错误', '请先解析VMess链接', 'red');
+        return;
+      }
+      
+      const scope = applyTo.value;
+      let updatedCount = 0;
+      
+      // 根据应用范围和端口号更新地址
+      if (scope === 'all') {
+        // 更新所有链接
+        parsedConfigs.forEach(item => {
+          if (item.success && item.config.port) {
+            const port = item.config.port.toString();
+            // 检查端口是否在预设映射表中
+            if (portAddressMap.hasOwnProperty(port)) {
+              item.config.add = portAddressMap[port];
+              updatedCount++;
+            }
+          }
+        });
+      } else {
+        // 只更新选中的链接
+        selectedLinks.forEach(index => {
+          const item = parsedConfigs[index];
+          if (item && item.success && item.config.port) {
+            const port = item.config.port.toString();
+            // 检查端口是否在预设映射表中
+            if (portAddressMap.hasOwnProperty(port)) {
+              item.config.add = portAddressMap[port];
+              updatedCount++;
+            }
+          }
+        });
+      }
+      
+      if (updatedCount === 0) {
+        showStatus('提示', '没有匹配预设端口的链接被更新', 'yellow');
+        return;
+      }
+      
+      // 显示成功消息
+      showStatus('成功', `已根据预设模式更新 ${updatedCount} 个链接的服务器地址`, 'green');
+      
+      // 更新表格
+      displaySummaryResults();
+      
+      // 生成新链接
+      generateNewLinks();
+    }
+    
     // 显示状态信息
     function showStatus(title, message, color) {
       statusIndicator.classList.remove('hidden');
@@ -446,6 +534,9 @@ vmess://eyJ2IjoiMiIsInBzIjoiV09STEtWQ04tMTIzNDU2IiwiYWRkIjoiNjQuMTkyLjI0OC4yMSIs
       } else if (color === 'yellow') {
         statusIcon.classList.add('bg-yellow-500');
         statusIcon.innerHTML = '<i class="fa fa-exclamation text-white"></i>';
+      } else if (color === 'purple') {
+        statusIcon.classList.add('bg-accent');
+        statusIcon.innerHTML = '<i class="fa fa-magic text-white"></i>';
       }
       
       // 添加动画效果
@@ -509,6 +600,11 @@ vmess://eyJ2IjoiMiIsInBzIjoiV09STEtWQ04tMTIzNDU2IiwiYWRkIjoiNjQuMTkyLjI0OC4yMSIs
         portCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-600';
         if (item.success) {
           portCell.textContent = item.config.port || '未知';
+          // 如果端口在预设映射表中，添加特殊标记
+          if (item.config.port && portAddressMap.hasOwnProperty(item.config.port.toString())) {
+            portCell.className += ' font-medium';
+            portCell.innerHTML += ' <span class="text-xs text-accent">(预设)</span>';
+          }
         } else {
           portCell.textContent = 'N/A';
         }
@@ -634,6 +730,10 @@ vmess://eyJ2IjoiMiIsInBzIjoiV09STEtWQ04tMTIzNDU2IiwiYWRkIjoiNjQuMTkyLjI0OC4yMSIs
           // 格式化ID为UUID格式
           const formattedId = formatUuid(value);
           valueCell.textContent = formattedId;
+        } else if (key === 'port' && portAddressMap.hasOwnProperty(value.toString())) {
+          // 如果是预设端口，显示预设信息
+          valueCell.textContent = value;
+          valueCell.innerHTML += ` <span class="text-xs text-accent">(预设地址: ${portAddressMap[value.toString()]})</span>`;
         } else if (typeof value === 'object' && value !== null) {
           // 对象值显示为JSON字符串
           valueCell.textContent = JSON.stringify(value, null, 2);
@@ -767,6 +867,28 @@ vmess://eyJ2IjoiMiIsInBzIjoiV09STEtWQ04tMTIzNDU2IiwiYWRkIjoiNjQuMTkyLjI0OC4yMSIs
       currentAddress.appendChild(currentValue);
       
       form.appendChild(currentAddress);
+      
+      // 端口信息和预设地址（如果有）
+      if (item.config.port) {
+        const portInfo = document.createElement('div');
+        portInfo.className = 'mb-4';
+        const portLabel = document.createElement('label');
+        portLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+        portLabel.textContent = '端口信息:';
+        portInfo.appendChild(portLabel);
+        
+        const portValue = document.createElement('div');
+        portValue.className = 'bg-gray-50 p-3 rounded-lg text-sm text-gray-700';
+        portValue.textContent = `端口: ${item.config.port}`;
+        
+        // 如果是预设端口，显示预设地址
+        if (portAddressMap.hasOwnProperty(item.config.port.toString())) {
+          portValue.innerHTML += `<br>预设地址: <span class="text-accent">${portAddressMap[item.config.port.toString()]}</span>`;
+        }
+        
+        portInfo.appendChild(portValue);
+        form.appendChild(portInfo);
+      }
       
       // 新地址
       const newAddressDiv = document.createElement('div');
