@@ -1,0 +1,342 @@
+import React, { useState, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
+import { MessageSquare, Star, TrendingUp, Award, Grid3X3, ArrowUpRight } from 'lucide-react';
+
+// 原始数据 - 已更新姓名
+const RAW_DATA = [
+  { id: "1", q1: 5, q2: 3, q3: 3, q4: 4, q5: 2, q6: 3, q7: 2, q8: 3, q9: "", q10: "没有互动就是照本宣科", guide: "程贺南" },
+  { id: "2", q1: 4, q2: 4, q3: 4, q4: 4, q5: 4, q6: 3, q7: 4, q8: 4, q9: "", q10: "", guide: "程贺南" },
+  { id: "3", q1: 4, q2: 3, q3: 4, q4: 3, q5: 3, q6: 2, q7: 4, q8: 4, q9: "", q10: "", guide: "程贺南" },
+  { id: "4", q1: 4, q2: 4, q3: 4, q4: 4, q5: 3, q6: 3, q7: 3, q8: 4, q9: "讲解词很熟悉", q10: "增加个人理解与客户互动", guide: "程贺南" },
+  { id: "5", q1: 5, q2: 5, q3: 4, q4: 5, q5: 4, q6: 5, q7: 5, q8: 5, q9: "", q10: "", guide: "程贺南" },
+  { id: "6", q1: 5, q2: 3, q3: 4, q4: 4, q5: 2, q6: 5, q7: 3, q8: 3, q9: "数据介绍的多，内容饱满扎实", q10: "避免照本宣科，介绍内容自信些，有点紧张。", guide: "程贺南" },
+  { id: "7", q1: 4, q2: 3, q3: 3, q4: 4, q5: 3, q6: 4, q7: 3, q8: 3, q9: "基础讲解词背的很熟悉", q10: "语音语调和讲解礼仪", guide: "程贺南" },
+  { id: "8", q1: 5, q2: 5, q3: 5, q4: 5, q5: 4, q6: 5, q7: 5, q8: 5, q9: "语音语速语调非常专业", q10: "", guide: "寇佳伟" },
+  { id: "9", q1: 4, q2: 5, q3: 5, q4: 4, q5: 5, q6: 4, q7: 5, q8: 5, q9: "", q10: "鞋没换", guide: "寇佳伟" },
+  { id: "10", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "", q10: "", guide: "寇佳伟" },
+  { id: "11", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 4, q8: 5, q9: "商务礼仪极佳", q10: "对公司背景和展陈持续了解", guide: "寇佳伟" },
+  { id: "12", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "", q10: "", guide: "寇佳伟" },
+  { id: "13", q1: 4, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "音色和语气很好，一些过度和指引很好", q10: "专业名词", guide: "寇佳伟" },
+  { id: "14", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "", q10: "", guide: "张羽" },
+  { id: "15", q1: 5, q2: 4, q3: 5, q4: 4, q5: 4, q6: 5, q7: 4, q8: 4, q9: "", q10: "", guide: "张羽" },
+  { id: "16", q1: 3, q2: 4, q3: 4, q4: 3, q5: 3, q6: 4, q7: 3, q8: 4, q9: "整体体态很好", q10: "语音语速语调有待提高", guide: "张羽" },
+  { id: "17", q1: 5, q2: 5, q3: 5, q4: 4, q5: 5, q6: 5, q7: 4, q8: 5, q9: "", q10: "", guide: "张羽" },
+  { id: "18", q1: 5, q2: 4, q3: 5, q4: 4, q5: 3, q6: 5, q7: 4, q8: 5, q9: "状态好，声音甜美，表法达自然", q10: "可以专业一点", guide: "张羽" },
+  { id: "19", q1: 5, q2: 4, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "对产品有自己的理解，比如百度伐谋，以智取胜", q10: "有些小紧张", guide: "张羽" },
+  { id: "20", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "", q10: "", guide: "孔德馨" },
+  { id: "21", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "和客户有交流和互动，用通俗易懂的话介绍，很好", q10: "", guide: "孔德馨" },
+  { id: "22", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "太厉害啦！游刃有余！🤩", q10: "", guide: "孔德馨" },
+  { id: "23", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "", q10: "", guide: "孔德馨" },
+  { id: "24", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "完美", q10: "太完美", guide: "孔德馨" },
+  { id: "25", q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5, q7: 5, q8: 5, q9: "知识面广 游刃有余", q10: "", guide: "孔德馨" },
+];
+
+const QUESTIONS = {
+  q1: "专业知识",
+  q2: "表达能力",
+  q3: "服务态度",
+  q4: "讲解节奏",
+  q5: "实用趣味",
+  q6: "仪容仪表",
+  q7: "互动性",
+  q8: "整体满意度"
+};
+
+const Card = ({ title, value, subtext, icon: Icon, colorClass }) => (
+  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-start justify-between">
+    <div>
+      <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
+      <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
+      {subtext && <p className="text-slate-400 text-xs mt-2">{subtext}</p>}
+    </div>
+    <div className={`p-3 rounded-lg ${colorClass}`}>
+      <Icon size={24} className="text-white" />
+    </div>
+  </div>
+);
+
+// 热力图颜色计算函数
+const getScoreColor = (score) => {
+  if (score >= 4.8) return 'bg-emerald-500 text-white border-emerald-600'; // 卓越
+  if (score >= 4.5) return 'bg-emerald-400 text-white border-emerald-500'; // 优秀
+  if (score >= 4.0) return 'bg-emerald-300 text-emerald-900 border-emerald-400'; // 良好
+  if (score >= 3.5) return 'bg-amber-200 text-amber-900 border-amber-300'; // 中等
+  if (score >= 3.0) return 'bg-amber-300 text-amber-900 border-amber-400'; // 及格
+  return 'bg-red-400 text-white border-red-500'; // 警示
+};
+
+export default function App() {
+  const [selectedGuide, setSelectedGuide] = useState("ALL");
+
+  // 数据处理逻辑
+  const stats = useMemo(() => {
+    const guideStats = {};
+    let totalScore = 0;
+    let count = 0;
+
+    RAW_DATA.forEach(row => {
+      if (!guideStats[row.guide]) {
+        guideStats[row.guide] = {
+          name: row.guide,
+          count: 0,
+          total: 0,
+          scores: { q1:0, q2:0, q3:0, q4:0, q5:0, q6:0, q7:0, q8:0 },
+          comments: []
+        };
+      }
+      
+      const guide = guideStats[row.guide];
+      guide.count += 1;
+      
+      // 累加各项分数
+      Object.keys(QUESTIONS).forEach(key => {
+        guide.scores[key] += row[key];
+      });
+
+      // 整体均分计算
+      const rowAvg = Object.keys(QUESTIONS).reduce((acc, key) => acc + row[key], 0) / 8;
+      guide.total += rowAvg;
+
+      // 收集评论
+      if (row.q9 || row.q10) {
+        guide.comments.push({
+          pos: row.q9,
+          neg: row.q10,
+          id: row.id
+        });
+      }
+
+      totalScore += rowAvg;
+      count++;
+    });
+
+    // 计算平均值
+    const guides = Object.values(guideStats).map(g => {
+      const avgs = {};
+      Object.keys(g.scores).forEach(k => {
+        avgs[k] = parseFloat((g.scores[k] / g.count).toFixed(2));
+      });
+      return {
+        ...g,
+        avgScores: avgs,
+        finalScore: parseFloat((g.total / g.count).toFixed(2))
+      };
+    });
+
+    return {
+      guides,
+      overallAvg: count > 0 ? (totalScore / count).toFixed(2) : 0,
+      totalReviews: count
+    };
+  }, []);
+
+  // 图表数据准备
+  const barData = stats.guides.map(g => ({
+    name: g.name,
+    score: g.finalScore,
+    count: g.count
+  })).sort((a, b) => b.score - a.score);
+
+  const filteredComments = selectedGuide === "ALL" 
+    ? stats.guides.flatMap(g => g.comments.map(c => ({...c, guide: g.name}))) 
+    : stats.guides.find(g => g.name === selectedGuide)?.comments.map(c => ({...c, guide: selectedGuide})) || [];
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">讲解服务质量分析看板</h1>
+            <p className="text-slate-500 mt-1">基于 {stats.totalReviews} 份有效问卷生成的实时统计</p>
+          </div>
+          <div className="flex gap-2">
+            <select 
+              className="px-4 py-2 border border-slate-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedGuide}
+              onChange={(e) => setSelectedGuide(e.target.value)}
+            >
+              <option value="ALL">全部讲解员</option>
+              {stats.guides.map(g => <option key={g.name} value={g.name}>{g.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card 
+            title="整体平均满意度" 
+            value={stats.overallAvg} 
+            subtext="满分 5.0" 
+            icon={Star} 
+            colorClass="bg-blue-500" 
+          />
+          <Card 
+            title="总参评次数" 
+            value={stats.totalReviews} 
+            subtext="涵盖4位讲解员" 
+            icon={MessageSquare} 
+            colorClass="bg-indigo-500" 
+          />
+          <Card 
+            title="最佳表现" 
+            value={barData[0]?.name} 
+            subtext={`得分: ${barData[0]?.score}`} 
+            icon={Award} 
+            colorClass="bg-amber-500" 
+          />
+           <Card 
+            title="主要待提升点" 
+            value="趣味性与互动" 
+            subtext="全员均分最低项" 
+            icon={TrendingUp} 
+            colorClass="bg-emerald-500" 
+          />
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Heatmap (Replaced Bar Chart) */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Grid3X3 size={20} className="text-blue-500"/> 
+              各维度能力得分矩阵 (热力图)
+            </h2>
+            <div className="flex-1 overflow-x-auto flex items-center">
+              <div className="min-w-[600px] w-full">
+                {/* Heatmap Header */}
+                <div className="grid grid-cols-9 gap-2 mb-2">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-end p-2">讲解员</div>
+                  {Object.values(QUESTIONS).map(q => (
+                    <div key={q} className="text-xs font-bold text-slate-500 text-center bg-slate-50 rounded p-2 flex items-center justify-center h-full">
+                      {q.replace("能力", "").replace("讲解", "").replace("整体", "")}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Heatmap Rows */}
+                {stats.guides.map(guide => (
+                  <div key={guide.name} className="grid grid-cols-9 gap-2 mb-2 items-stretch group">
+                    <div className="text-sm font-semibold text-slate-700 flex items-center p-2 bg-slate-50 rounded-lg group-hover:bg-slate-100 transition-colors">
+                      {guide.name}
+                    </div>
+                    {Object.keys(QUESTIONS).map(key => {
+                      const score = guide.avgScores[key];
+                      return (
+                        <div 
+                          key={key} 
+                          className={`
+                            h-12 flex flex-col items-center justify-center rounded-lg border-b-2 transition-all 
+                            hover:scale-105 cursor-default shadow-sm
+                            ${getScoreColor(score)}
+                          `}
+                          title={`${guide.name} - ${QUESTIONS[key]}: ${score}`}
+                        >
+                          <span className="text-sm font-bold">{score.toFixed(1)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Legend */}
+            <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-500 justify-end items-center">
+              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-emerald-500 rounded"></div> 卓越 (4.8+)</div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-emerald-400 rounded"></div> 优秀 (4.5+)</div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-emerald-300 rounded"></div> 良好 (4.0+)</div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-amber-200 rounded"></div> 中等 (3.5+)</div>
+              <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-400 rounded"></div> 需改进 (&lt;3.5)</div>
+            </div>
+          </div>
+
+          {/* Ranking Bar Chart (Simplified) */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Award size={20} className="text-amber-500"/> 
+              综合评分排名
+            </h2>
+            <div className="flex-1 w-full min-h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9"/>
+                  <XAxis type="number" domain={[0, 5]} hide/>
+                  <YAxis dataKey="name" type="category" width={60} tick={{fill: '#475569', fontWeight: 600, fontSize: 13}} axisLine={false} tickLine={false}/>
+                  <RechartsTooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                  />
+                  <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={36}>
+                    {
+                      barData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={index === 0 ? '#10b981' : index === barData.length - 1 ? '#ef4444' : '#6366f1'} />
+                      ))
+                    }
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Feedback Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <MessageSquare size={20} className="text-indigo-500"/>
+              具体评价与建议 ({filteredComments.length}条)
+            </h2>
+            <div className="text-xs text-slate-400 flex items-center gap-1">
+               <ArrowUpRight size={14}/> 仅显示有文字反馈的记录
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-slate-500 font-medium">
+                <tr>
+                  <th className="px-6 py-4 w-32">讲解员</th>
+                  <th className="px-6 py-4 w-1/2">值得肯定的地方 (Q9)</th>
+                  <th className="px-6 py-4 w-1/2">改进建议 (Q10)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredComments.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-700 align-top">
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        item.guide === '孔德馨' ? 'bg-emerald-100 text-emerald-700' :
+                        item.guide === '寇佳伟' ? 'bg-purple-100 text-purple-700' :
+                        item.guide === '张羽' ? 'bg-blue-100 text-blue-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {item.guide}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 align-top">
+                      {item.pos ? (
+                        <div className="flex items-start gap-2 bg-emerald-50/50 p-2 rounded">
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                          <span className="leading-relaxed">{item.pos}</span>
+                        </div>
+                      ) : <span className="text-slate-300 italic pl-2">无评论</span>}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 align-top">
+                      {item.neg ? (
+                        <div className="flex items-start gap-2 bg-amber-50/50 p-2 rounded">
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                          <span className="leading-relaxed">{item.neg}</span>
+                        </div>
+                      ) : <span className="text-slate-300 italic pl-2">无建议</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
