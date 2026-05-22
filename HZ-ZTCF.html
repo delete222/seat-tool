@@ -1,259 +1,324 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
-<script>LA.init({id:"3KE4WAeb0ZUqWfc3",ck:"3KE4WAeb0ZUqWfc3",autoTrack:true,hashMode:true})</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>杭州展厅拆分及时间排序</title>
-    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #F7F9FB;
-            margin: 0;
-            padding: 20px;
-            color: #333333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        h1 {
-            text-align: center;
-            color: #333333;
-            margin-bottom: 20px;
-        }
-        h2 {
-            margin-top: 20px;
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        th, td {
-            border: 1px solid #000000;
-            padding: 8px 6px;
-            text-align: center;
-        }
-        th {
-            background-color: #4A90E2;
-            color: #ffffff;
-        }
-        textarea {
-            width: 100%;
-            height: 150px;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #cccccc;
-            box-sizing: border-box;
-            resize: vertical;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            background-color: #4A90E2;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-        button:hover {
-            background-color: #357ABD;
-        }
-        button:focus {
-            outline: none;
-        }
-        #form {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #report {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            flex: 1;
-        }
-        .version-info {
-            text-align: center;
-            font-size: 1.6vmin;
-            color: #888;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 10px 0;
-            width: 100%;
+        body { font-family: Arial, sans-serif; background-color: #F7F9FB; margin: 0; padding: 20px; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        h2 { margin-top: 20px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+        th, td { border: 1px solid #000; padding: 8px 6px; text-align: center; }
+        th { background-color: #4A90E2; color: #fff; }
+        textarea { width: 100%; height: 150px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; resize: vertical; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; background-color: #4A90E2; color: white; font-size: 14px; cursor: pointer; transition: background-color 0.3s; margin: 4px; }
+        button:hover { background-color: #357ABD; }
+        button:focus { outline: none; }
+        #form { text-align: center; margin-bottom: 20px; }
+        #report { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex: 1; overflow-x: auto; }
+        .version-info { text-align: center; font-size: 1.6vmin; color: #888; background-color: rgba(255,255,255,0.8); padding: 10px 0; width: 100%; }
+        .line-count { font-size: 12px; color: #888; margin-top: 4px; }
+        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+        .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .toast { padding: 10px 20px; border-radius: 6px; color: #fff; font-size: 14px; animation: toastIn 0.3s ease; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+        .toast-success { background-color: #52c41a; }
+        .toast-error { background-color: #f5222d; }
+        .toast-warning { background-color: #fa8c16; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .version-toggle { text-align: center; margin-bottom: 10px; }
+        .version-toggle button { background-color: #888; }
+        .version-toggle button.active { background-color: #4A90E2; }
+        #old-version-frame { width: 100%; border: none; display: none; flex: 1; min-height: 90vh; }
+        @media (max-width: 768px) {
+            table { font-size: 12px; }
+            .btn-group { gap: 4px; }
         }
     </style>
 </head>
 <body>
+    <div class="version-toggle">
+        <button id="btn-new-ver" class="active">新版</button>
+        <button id="btn-old-ver">旧版</button>
+    </div>
+    <div id="new-version">
     <h1>杭州展厅拆分及时间排序工具</h1>
+    <div class="toast-container" id="toast-container"></div>
     <form id="form">
         <div>
             <label for="hangzhou"></label>
             <textarea id="hangzhou" placeholder="请输入杭州客户数据"></textarea>
+            <div class="line-count" id="hangzhou-count"></div>
         </div>
-        <div>
-            <button type="button" onclick="generateReport()">生成报告</button>
-            <button type="button" onclick="copyToClipboard('杭州展厅')">一键复制杭州展厅</button>
-            <button type="button" onclick="copyToClipboard('未来工厂')">一键复制未来工厂</button>
-            <button type="button" onclick="copyToClipboard('其它接待')">一键复制其它接待</button>
-            <button type="button" onclick="copyHangzhouAndOthers()">一键复制杭州展厅+其它接待</button>
+        <div class="btn-group">
+            <button type="button" id="btn-generate">生成报告</button>
+            <button type="button" id="btn-copy-hz">一键复制杭州展厅</button>
+            <button type="button" id="btn-copy-wl">一键复制未来工厂</button>
+            <button type="button" id="btn-copy-qt">一键复制其它接待</button>
+            <button type="button" id="btn-copy-hz-qt">一键复制杭州展厅+其它接待</button>
+            <button type="button" id="btn-clear">清空</button>
         </div>
     </form>
     <div id="report"></div>
-    <div class="version-info">  </div>
     <div class="version-info">© Steve  本工具总访问量 <span id="busuanzi_value_page_pv"></span> 次</div>
-
+    </div>
+    <iframe id="old-version-frame"></iframe>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+    <script>LA.init({id:"3KE4WAeb0ZUqWfc3",ck:"3KE4WAeb0ZUqWfc3",autoTrack:true,hashMode:true})</script>
     <script>
-        function parseData(data, sortField, stats, isOther = false) {
-            let lines = data.split('\n').filter(line => line.trim() !== '');
-            let parsedData = [];
+    (function() {
+        'use strict';
+        var STORAGE_KEY = 'hz_ztcf_data';
+        var HEADERS = ['日期','客户单位','行业','陪同领导','人数','级别','办事处陪同人','时间','总体行程','讲解','接待','特殊需求'];
 
-            lines.forEach(line => {
-                let fields = line.split('\t');
+        function debounce(fn, delay) {
+            var timer;
+            return function() { clearTimeout(timer); timer = setTimeout(fn, delay); };
+        }
+        function showToast(message, type) {
+            var container = document.getElementById('toast-container');
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + (type || 'success');
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+        }
+        function updateLineCount() {
+            var text = document.getElementById('hangzhou').value;
+            var lines = text.split('\n').filter(function(l) { return l.split('\t').length >= 13; });
+            document.getElementById('hangzhou-count').textContent = lines.length ? '已输入 ' + lines.length + ' 条有效数据' : '';
+        }
+        function parseData(data, sortField, stats) {
+            var lines = data.split('\n').filter(function(line) { return line.trim() !== ''; });
+            var parsedData = [];
+            lines.forEach(function(line) {
+                var fields = line.split('\t');
                 if (fields.length >= 13) {
-                    let entry = {
-                        日期: fields[0],
-                        客户单位: fields[1],
-                        行业: fields[2],
-                        陪同领导: fields[3],
-                        人数: fields[4],
-                        级别: fields[5],
-                        办事处陪同人: fields[6],
-                        时间: '/',
-                        总体行程: fields[12] || '',
-                        讲解: '',
-                        接待: fields[9] || '',
-                        特殊需求: ''
+                    var entry = {
+                        日期: fields[0], 客户单位: fields[1], 行业: fields[2],
+                        陪同领导: fields[3], 人数: fields[4], 级别: fields[5],
+                        办事处陪同人: fields[6], 时间: '/', 总体行程: fields[12] || '',
+                        讲解: '', 接待: fields[9] || '', 特殊需求: ''
                     };
-
-                    let receptionPlaces = fields[7].split('/');
-                    let receptionTimes = fields[8].split('/').map(time => time.replace(/：/g, ':')); // 将中文冒号替换为英文冒号
-
-                    let sortFieldIndex = receptionPlaces.indexOf(sortField);
-                    if (sortFieldIndex !== -1 && sortField !== '其它接待') {
-                        entry['时间'] = receptionTimes[sortFieldIndex] || '/';
+                    var receptionPlaces = fields[7].split('/');
+                    var receptionTimes = fields[8].split('/').map(function(t) { return t.replace(/：/g, ':'); });
+                    var idx = receptionPlaces.indexOf(sortField);
+                    if (idx !== -1 && sortField !== '其它接待') {
+                        entry['时间'] = receptionTimes[idx] || '/';
                         stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
                         parsedData.push(entry);
                     }
-
-                    if (sortField === '其它接待' && !receptionPlaces.includes('杭州展厅') && !receptionPlaces.includes('未来工厂')) {
+                    if (sortField === '其它接待' && receptionPlaces.indexOf('杭州展厅') === -1 && receptionPlaces.indexOf('未来工厂') === -1) {
                         parsedData.push(entry);
                         stats[entry['日期']] = (stats[entry['日期']] || 0) + 1;
                     }
                 }
             });
-
-            parsedData.sort((a, b) => {
-                let dateComparison = a['日期'].localeCompare(b['日期'], 'zh-CN', { numeric: true });
-                if (dateComparison !== 0) return dateComparison;
-                return a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true });
+            parsedData.sort(function(a, b) {
+                var dc = a['日期'].localeCompare(b['日期'], 'zh-CN', { numeric: true });
+                return dc !== 0 ? dc : a['时间'].localeCompare(b['时间'], 'zh-CN', { numeric: true });
             });
-
             return parsedData;
         }
-
         function generateTableHeader() {
-            let headRow = document.createElement('tr');
-            ['日期', '客户单位', '行业', '陪同领导', '人数', '级别', '办事处陪同人', '时间', '总体行程', '讲解', '接待', '特殊需求'].forEach(header => {
-                let th = document.createElement('th');
+            var headRow = document.createElement('tr');
+            HEADERS.forEach(function(header) {
+                var th = document.createElement('th');
                 th.textContent = header;
                 headRow.appendChild(th);
             });
             return headRow;
         }
-
         function generateReport() {
-            let hangzhouData = document.getElementById('hangzhou').value;
-
-            let hangzhouStats = {};
-            let futureFactoryStats = {};
-            let otherStats = {};
-
-            let parsedHangzhouData1 = parseData(hangzhouData, '杭州展厅', hangzhouStats);
-            let parsedHangzhouData2 = parseData(hangzhouData, '未来工厂', futureFactoryStats);
-            let parsedOtherData = parseData(hangzhouData, '其它接待', otherStats, true);
-
-            let reportDiv = document.getElementById('report');
+            var data = document.getElementById('hangzhou').value;
+            if (!data.trim()) { showToast('请先粘贴客户数据', 'error'); return; }
+            var hzStats = {}, wlStats = {}, qtStats = {};
+            var hzData = parseData(data, '杭州展厅', hzStats);
+            var wlData = parseData(data, '未来工厂', wlStats);
+            var qtData = parseData(data, '其它接待', qtStats);
+            var reportDiv = document.getElementById('report');
             reportDiv.innerHTML = '';
-
-            let statsSummary = `统计：`;
-            let allDates = Array.from(new Set([...Object.keys(hangzhouStats), ...Object.keys(futureFactoryStats), ...Object.keys(otherStats)]));
-
-            allDates.sort().forEach(date => {
-                const hangzhouCount = hangzhouStats[date] || 0;
-                const futureFactoryCount = futureFactoryStats[date] || 0;
-                const otherCount = otherStats[date] || 0;
-                statsSummary += `${date}：杭州展厅 ${hangzhouCount} 批，未来工厂 ${futureFactoryCount} 批，其它接待 ${otherCount} 批; `;
+            var allDates = Object.keys(Object.assign({}, hzStats, wlStats, qtStats)).sort();
+            var summary = '统计：';
+            allDates.forEach(function(date) {
+                summary += date + '：杭州展厅 ' + (hzStats[date]||0) + ' 批，未来工厂 ' + (wlStats[date]||0) + ' 批，其它接待 ' + (qtStats[date]||0) + ' 批; ';
             });
-
-            let statsTitle = document.createElement('h3');
-            statsTitle.textContent = statsSummary.trim();
-            reportDiv.appendChild(statsTitle);
-
-            [['杭州展厅', parsedHangzhouData1], ['未来工厂', parsedHangzhouData2], ['其它接待', parsedOtherData]].forEach(([titleText, data]) => {
-                let title = document.createElement('h2');
-                title.textContent = titleText;
+            var h3 = document.createElement('h3');
+            h3.textContent = summary.trim();
+            reportDiv.appendChild(h3);
+            [['杭州展厅', hzData], ['未来工厂', wlData], ['其它接待', qtData]].forEach(function(pair) {
+                var title = document.createElement('h2');
+                title.textContent = pair[0];
                 reportDiv.appendChild(title);
-
-                let table = document.createElement('table');
-                let tbody = document.createElement('tbody');
+                var table = document.createElement('table');
+                var tbody = document.createElement('tbody');
                 tbody.appendChild(generateTableHeader());
-
-                data.forEach(entry => {
-                    let row = document.createElement('tr');
-                    Object.keys(entry).forEach(key => {
-                        let td = document.createElement('td');
+                pair[1].forEach(function(entry) {
+                    var row = document.createElement('tr');
+                    Object.keys(entry).forEach(function(key) {
+                        var td = document.createElement('td');
                         td.textContent = entry[key] || '';
                         row.appendChild(td);
                     });
                     tbody.appendChild(row);
                 });
-
                 table.appendChild(tbody);
                 reportDiv.appendChild(table);
             });
+            showToast('报告生成成功');
+        }
+        function copyData(sortField) {
+            var data = document.getElementById('hangzhou').value;
+            if (!data.trim()) { showToast('请先粘贴客户数据', 'error'); return; }
+            var stats = {};
+            var parsed = parseData(data, sortField, stats);
+            if (!parsed.length) { showToast('没有' + sortField + '的数据', 'warning'); return; }
+            var rows = parsed.map(function(e) { return Object.values(e).join('\t'); }).join('\n');
+            navigator.clipboard.writeText(rows).then(function() {
+                showToast('已复制' + sortField + '数据');
+            }, function() { showToast('复制失败', 'error'); });
+        }
+        function copyHzAndOthers() {
+            var data = document.getElementById('hangzhou').value;
+            if (!data.trim()) { showToast('请先粘贴客户数据', 'error'); return; }
+            var s1 = {}, s2 = {};
+            var d1 = parseData(data, '杭州展厅', s1);
+            var d2 = parseData(data, '其它接待', s2);
+            var combined = d1.concat(d2);
+            if (!combined.length) { showToast('没有相关数据', 'warning'); return; }
+            var rows = combined.map(function(e) { return Object.values(e).join('\t'); }).join('\n');
+            navigator.clipboard.writeText(rows).then(function() {
+                showToast('已复制杭州展厅+其它接待数据');
+            }, function() { showToast('复制失败', 'error'); });
+        }
+        function clearAll() {
+            document.getElementById('hangzhou').value = '';
+            document.getElementById('report').innerHTML = '';
+            localStorage.removeItem(STORAGE_KEY);
+            updateLineCount();
+            showToast('已清空');
         }
 
-        function copyToClipboard(sortField) {
-            const sourceData = document.getElementById('hangzhou').value;
-            const stats = {};
-            const parsedData = parseData(sourceData, sortField, stats);
+        var textarea = document.getElementById('hangzhou');
+        textarea.value = localStorage.getItem(STORAGE_KEY) || '';
+        updateLineCount();
+        var save = debounce(function() { localStorage.setItem(STORAGE_KEY, textarea.value); }, 500);
+        textarea.addEventListener('input', function() { save(); updateLineCount(); });
 
-            const rows = parsedData.map(entry => Object.values(entry).join('\t')).join('\n');
+        document.getElementById('btn-generate').addEventListener('click', generateReport);
+        document.getElementById('btn-copy-hz').addEventListener('click', function() { copyData('杭州展厅'); });
+        document.getElementById('btn-copy-wl').addEventListener('click', function() { copyData('未来工厂'); });
+        document.getElementById('btn-copy-qt').addEventListener('click', function() { copyData('其它接待'); });
+        document.getElementById('btn-copy-hz-qt').addEventListener('click', copyHzAndOthers);
+        document.getElementById('btn-clear').addEventListener('click', clearAll);
+    })();
+    </script>
+    <script>
+    (function() {
+        var oldHtml = ['<!DOCTYPE html><html lang="zh-CN">',
+'<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"><\/script>',
+'<script>LA.init({id:"3KE4WAeb0ZUqWfc3",ck:"3KE4WAeb0ZUqWfc3",autoTrack:true,hashMode:true})<\/script>',
+'<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">',
+'<title>杭州展厅拆分及时间排序<\/title>',
+'<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"><\/script>',
+'<style>',
+'body{font-family:Arial,sans-serif;background-color:#F7F9FB;margin:0;padding:20px;color:#333333;display:flex;flex-direction:column;min-height:100vh}',
+'h1{text-align:center;color:#333333;margin-bottom:20px}',
+'h2{margin-top:20px;text-align:center}',
+'table{width:100%;border-collapse:collapse;margin-bottom:20px;background-color:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.1);border-radius:8px;overflow:hidden}',
+'th,td{border:1px solid #000000;padding:8px 6px;text-align:center}',
+'th{background-color:#4A90E2;color:#ffffff}',
+'textarea{width:100%;height:150px;padding:10px;border-radius:4px;border:1px solid #cccccc;box-sizing:border-box;resize:vertical}',
+'button{padding:10px 20px;border:none;border-radius:4px;background-color:#4A90E2;color:white;font-size:14px;cursor:pointer;transition:background-color 0.3s;margin-right:10px;margin-bottom:10px}',
+'button:hover{background-color:#357ABD}',
+'button:focus{outline:none}',
+'#form{text-align:center;margin-bottom:20px}',
+'#report{background-color:#ffffff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex:1}',
+'.version-info{text-align:center;font-size:1.6vmin;color:#888;background-color:rgba(255,255,255,0.8);padding:10px 0;width:100%}',
+'<\/style><\/head><body>',
+'<h1>杭州展厅拆分及时间排序工具<\/h1>',
+'<form id="form"><div>',
+'<label for="hangzhou"><\/label>',
+'<textarea id="hangzhou" placeholder="请输入杭州客户数据"><\/textarea>',
+'<\/div><div>',
+'<button type="button" onclick="generateReport()">生成报告<\/button>',
+'<button type="button" onclick="copyToClipboard(\'杭州展厅\')">一键复制杭州展厅<\/button>',
+'<button type="button" onclick="copyToClipboard(\'未来工厂\')">一键复制未来工厂<\/button>',
+'<button type="button" onclick="copyToClipboard(\'其它接待\')">一键复制其它接待<\/button>',
+'<button type="button" onclick="copyHangzhouAndOthers()">一键复制杭州展厅+其它接待<\/button>',
+'<\/div><\/form>',
+'<div id="report"><\/div>',
+'<div class="version-info">  <\/div>',
+'<div class="version-info">© Steve  本工具总访问量 <span id="busuanzi_value_page_pv"><\/span> 次<\/div>',
+'<script>',
+'function parseData(data,sortField,stats,isOther){',
+'isOther=isOther||false;',
+'var lines=data.split("\\n").filter(function(line){return line.trim()!=="";});',
+'var parsedData=[];',
+'lines.forEach(function(line){var fields=line.split("\\t");',
+'if(fields.length>=13){var entry={日期:fields[0],客户单位:fields[1],行业:fields[2],陪同领导:fields[3],人数:fields[4],级别:fields[5],办事处陪同人:fields[6],时间:"/",总体行程:fields[12]||"",讲解:"",接待:fields[9]||"",特殊需求:""};',
+'var receptionPlaces=fields[7].split("/");',
+'var receptionTimes=fields[8].split("/").map(function(time){return time.replace(/：/g,":");});',
+'var sortFieldIndex=receptionPlaces.indexOf(sortField);',
+'if(sortFieldIndex!==-1&&sortField!=="其它接待"){entry["时间"]=receptionTimes[sortFieldIndex]||"/";stats[entry["日期"]]=(stats[entry["日期"]]||0)+1;parsedData.push(entry);}',
+'if(sortField==="其它接待"&&receptionPlaces.indexOf("杭州展厅")===-1&&receptionPlaces.indexOf("未来工厂")===-1){parsedData.push(entry);stats[entry["日期"]]=(stats[entry["日期"]]||0)+1;}}});',
+'parsedData.sort(function(a,b){var dateComparison=a["日期"].localeCompare(b["日期"],"zh-CN",{numeric:true});if(dateComparison!==0)return dateComparison;return a["时间"].localeCompare(b["时间"],"zh-CN",{numeric:true});});',
+'return parsedData;}',
+'function generateTableHeader(){var headRow=document.createElement("tr");',
+'["日期","客户单位","行业","陪同领导","人数","级别","办事处陪同人","时间","总体行程","讲解","接待","特殊需求"].forEach(function(header){var th=document.createElement("th");th.textContent=header;headRow.appendChild(th);});return headRow;}',
+'function generateReport(){var hangzhouData=document.getElementById("hangzhou").value;',
+'var hangzhouStats={};var futureFactoryStats={};var otherStats={};',
+'var parsedHangzhouData1=parseData(hangzhouData,"杭州展厅",hangzhouStats);',
+'var parsedHangzhouData2=parseData(hangzhouData,"未来工厂",futureFactoryStats);',
+'var parsedOtherData=parseData(hangzhouData,"其它接待",otherStats,true);',
+'var reportDiv=document.getElementById("report");reportDiv.innerHTML="";',
+'var statsSummary="统计：";',
+'var allDates=Array.from(new Set([].concat(Object.keys(hangzhouStats),Object.keys(futureFactoryStats),Object.keys(otherStats))));',
+'allDates.sort().forEach(function(date){var hc=hangzhouStats[date]||0;var fc=futureFactoryStats[date]||0;var oc=otherStats[date]||0;',
+'statsSummary+=date+"：杭州展厅 "+hc+" 批，未来工厂 "+fc+" 批，其它接待 "+oc+" 批; ";});',
+'var statsTitle=document.createElement("h3");statsTitle.textContent=statsSummary.trim();reportDiv.appendChild(statsTitle);',
+'[["杭州展厅",parsedHangzhouData1],["未来工厂",parsedHangzhouData2],["其它接待",parsedOtherData]].forEach(function(pair){',
+'var title=document.createElement("h2");title.textContent=pair[0];reportDiv.appendChild(title);',
+'var table=document.createElement("table");var tbody=document.createElement("tbody");',
+'tbody.appendChild(generateTableHeader());',
+'pair[1].forEach(function(entry){var row=document.createElement("tr");',
+'Object.keys(entry).forEach(function(key){var td=document.createElement("td");td.textContent=entry[key]||"";row.appendChild(td);});',
+'tbody.appendChild(row);});table.appendChild(tbody);reportDiv.appendChild(table);});}',
+'function copyToClipboard(sortField){var sourceData=document.getElementById("hangzhou").value;var stats={};',
+'var parsedData=parseData(sourceData,sortField,stats);',
+'var rows=parsedData.map(function(entry){return Object.values(entry).join("\\t");}).join("\\n");',
+'navigator.clipboard.writeText(rows).then(function(){alert("已复制"+sortField+"数据到剪贴板");},function(){alert("复制失败");});}',
+'function copyHangzhouAndOthers(){var sourceData=document.getElementById("hangzhou").value;',
+'var hangzhouStats={};var otherStats={};',
+'var parsedHangzhouData=parseData(sourceData,"杭州展厅",hangzhouStats);',
+'var parsedOtherData=parseData(sourceData,"其它接待",otherStats,true);',
+'var combinedData=[].concat(parsedHangzhouData,parsedOtherData);',
+'var rows=combinedData.map(function(entry){return Object.values(entry).join("\\t");}).join("\\n");',
+'navigator.clipboard.writeText(rows).then(function(){alert("已复制杭州展厅+其它接待数据到剪贴板");},function(){alert("复制失败");});}',
+'<\/script><\/body><\/html>'].join('\n');
 
-            navigator.clipboard.writeText(rows).then(() => {
-                alert(`已复制${sortField}数据到剪贴板`);
-            }, () => {
-                alert('复制失败');
-            });
-        }
+        var frame = document.getElementById('old-version-frame');
+        var newVer = document.getElementById('new-version');
+        var btnNew = document.getElementById('btn-new-ver');
+        var btnOld = document.getElementById('btn-old-ver');
+        var blobUrl = null;
 
-        function copyHangzhouAndOthers() {
-            const sourceData = document.getElementById('hangzhou').value;
-
-            const hangzhouStats = {};
-            const otherStats = {};
-            const parsedHangzhouData = parseData(sourceData, '杭州展厅', hangzhouStats);
-            const parsedOtherData = parseData(sourceData, '其它接待', otherStats, true);
-
-            const combinedData = [...parsedHangzhouData, ...parsedOtherData];
-            const rows = combinedData.map(entry => Object.values(entry).join('\t')).join('\n');
-
-            navigator.clipboard.writeText(rows).then(() => {
-                alert('已复制杭州展厅+其它接待数据到剪贴板');
-            }, () => {
-                alert('复制失败');
-            });
-        }
+        btnOld.addEventListener('click', function() {
+            if (!blobUrl) blobUrl = URL.createObjectURL(new Blob([oldHtml], {type: 'text/html'}));
+            frame.src = blobUrl;
+            frame.style.display = 'block';
+            newVer.style.display = 'none';
+            btnOld.classList.add('active');
+            btnNew.classList.remove('active');
+        });
+        btnNew.addEventListener('click', function() {
+            frame.style.display = 'none';
+            newVer.style.display = 'block';
+            btnNew.classList.add('active');
+            btnOld.classList.remove('active');
+        });
+    })();
     </script>
 </body>
 </html>
