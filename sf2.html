@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>顺丰围板箱 V6｜猫砂盆旋转90°对比</title>
+<style>
+:root{
+  --bg:#f4f6f8;--panel:#fff;--text:#172033;--muted:#667085;--border:#dfe3e8;
+  --cat:#f59e0b;--box:#3b82f6;--plastic:#14b8a6;--rod:#374151;--gap:#22c55e;--risk:#ef4444;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.app{display:grid;grid-template-columns:380px 1fr;min-height:100vh}
+.panel{background:#fff;border-right:1px solid var(--border);padding:20px;overflow:auto}
+.viewer{position:relative;min-height:760px}
+canvas{display:block;width:100%;height:100%}
+h1{font-size:22px;margin:0 0 6px}
+h2{font-size:16px;margin:20px 0 10px}
+p{color:var(--muted);margin:6px 0}
+select,button{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
+button{cursor:pointer;font-weight:700}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.metric{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 0;border-bottom:1px solid #eef1f4}
+.metric strong{font-size:15px}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#ecfdf3;color:#067647;font-size:12px;font-weight:700}
+.badge.bad{background:#fff1f2;color:#9f1239}
+.note,.warn{padding:11px;border-radius:10px;font-size:13px;margin-top:14px}
+.note{background:#ecfdf3;border:1px solid #abefc6;color:#067647}
+.warn{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}
+.legend{display:grid;gap:7px;margin-top:12px}
+.legend div{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+.sw{width:13px;height:13px;border-radius:3px}
+.overlay{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;max-width:320px}
+.viewbar{position:absolute;left:14px;bottom:14px;display:flex;gap:8px;flex-wrap:wrap}
+.viewbar button{width:auto;background:rgba(255,255,255,.95);padding:8px 11px}
+@media(max-width:900px){.app{grid-template-columns:1fr}.panel{border-right:0;border-bottom:1px solid var(--border)}.viewer{min-height:560px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="panel">
+  <h1>V6｜猫砂盆旋转90°对比</h1>
+  <p>按估算净尺寸 <strong>114 × 94 × 100 cm</strong>。</p>
+  <span id="badge" class="badge">推荐：旋转90°</span>
+
+  <h2>切换布局</h2>
+  <select id="mode">
+    <option value="rotated" selected>推荐：猫砂盆旋转90°</option>
+    <option value="original">对比：猫砂盆未旋转</option>
+  </select>
+
+  <h2>猫砂盆方向</h2>
+  <div class="metric"><span>猫砂盆底面</span><strong>78 × 53.2 cm</strong></div>
+  <div class="metric"><span>旋转后占地</span><strong>53.2 × 78 cm</strong></div>
+  <div class="metric"><span>高度</span><strong>61.2 cm</strong></div>
+
+  <h2>推荐版空间余量</h2>
+  <div class="metric"><span>右侧给纸箱的宽度</span><strong>60.8 cm</strong></div>
+  <div class="metric"><span>纸箱实际占宽</span><strong>50 cm</strong></div>
+  <div class="metric"><span>横向余量</span><strong>10.8 cm</strong></div>
+  <div class="metric"><span>纵向余量</span><strong>14 cm</strong></div>
+  <div class="metric"><span>纸箱顶部余量</span><strong>20 cm</strong></div>
+
+  <div id="desc" class="note">
+    “旋转90°”只是把猫砂盆在地面上转个方向，不是侧放。它仍然正常站立，只是让53.2cm这一边沿114cm方向，78cm这一边沿94cm方向。
+  </div>
+
+  <div id="risk" class="warn" style="display:none">
+    未旋转时，猫砂盆53.2cm纵深 + 后排纸箱40cm = 93.2cm，只剩0.8cm，尺寸误差风险很高。
+  </div>
+
+  <h2>当前推荐装法</h2>
+  <div class="metric"><span>50×40×40纸箱</span><strong>4个，右侧2×2叠放</strong></div>
+  <div class="metric"><span>塑料箱</span><strong>1个，猫砂盆顶部</strong></div>
+  <div class="metric"><span>另一塑料箱</span><strong>单独寄</strong></div>
+  <div class="metric"><span>戴森杆</span><strong>后方14cm长缝</strong></div>
+
+  <div class="legend">
+    <div><span class="sw" style="background:var(--cat)"></span>小佩 Ultra</div>
+    <div><span class="sw" style="background:var(--box)"></span>50×40×40纸箱</div>
+    <div><span class="sw" style="background:var(--plastic)"></span>鞋塑料箱</div>
+    <div><span class="sw" style="background:var(--rod)"></span>戴森杆</div>
+    <div><span class="sw" style="background:var(--gap)"></span>剩余可填充空间</div>
+  </div>
+
+  <div class="row">
+    <button id="reset">重置视角</button>
+    <button id="explode">展开查看</button>
+  </div>
+</aside>
+
+<main class="viewer" id="viewer">
+  <div class="overlay">
+    建议先点<strong>俯视</strong>，最容易看懂“旋转90°”。<br>
+    橙色猫砂盆始终正常站立，只是底面方向发生变化。
+  </div>
+  <div class="viewbar">
+    <button data-view="top">俯视</button>
+    <button data-view="iso">3D</button>
+    <button data-view="front">正视</button>
+    <button data-view="side">侧视</button>
+  </div>
+</main>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/+esm';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js/+esm';
+
+const viewer=document.getElementById('viewer');
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0xf4f6f8);
+const camera=new THREE.PerspectiveCamera(42,1,.1,2000); camera.position.set(57,225,47);
+const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; viewer.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.target.set(57,48,47);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x9ca3af,1.65));
+const dl=new THREE.DirectionalLight(0xffffff,1.3);dl.position.set(130,180,110);scene.add(dl);
+const grid=new THREE.GridHelper(170,17,0x94a3b8,0xd1d5db);grid.position.set(57,0,47);scene.add(grid);
+
+const world=new THREE.Group();scene.add(world);
+const nodes=[];let exploded=false;let mode='rotated';
+
+function mat(color,opacity=1){return new THREE.MeshStandardMaterial({color,transparent:opacity<1,opacity,roughness:.55,metalness:.04,depthWrite:opacity>.2});}
+function cube(w,h,d,color,opacity=1){
+  const g=new THREE.BoxGeometry(w,h,d),m=new THREE.Mesh(g,mat(color,opacity));
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x475467})));return m;
+}
+function label(text){
+  const c=document.createElement('canvas');c.width=640;c.height=140;const x=c.getContext('2d');
+  x.fillStyle='rgba(255,255,255,.94)';x.roundRect(8,8,624,124,16);x.fill();
+  x.fillStyle='#172033';x.font='bold 34px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText(text,320,70);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));s.scale.set(42,9.2,1);return s;
+}
+function addItem(name,x,y,z,w,d,h,color,opacity=1,explode=[0,0,0]){
+  const mesh=cube(w,h,d,color,opacity);mesh.position.set(x+w/2,z+h/2,y+d/2);world.add(mesh);
+  const tag=label(name);tag.position.set(x+w/2,z+h+4,y+d/2);world.add(tag);
+  nodes.push({mesh,tag,base:mesh.position.clone(),explode:new THREE.Vector3(...explode)});
+}
+function addRod(x,y,z,length){
+  const mesh=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,length,24),mat(0x374151));
+  mesh.rotation.z=Math.PI/2;mesh.position.set(x,z,y);world.add(mesh);
+  const tag=label('戴森 V8 杆');tag.position.set(x,z+8,y);world.add(tag);
+  nodes.push({mesh,tag,base:mesh.position.clone(),explode:new THREE.Vector3(0,-8,0)});
+}
+function clear(){while(world.children.length)world.remove(world.children[0]);nodes.length=0;}
+function addShell(){
+  const shell=cube(114,100,94,0x94a3b8,.08);shell.position.set(57,50,47);world.add(shell);
+  const floor=cube(114,1,94,0xcbd5e1,.35);floor.position.set(57,.5,47);world.add(floor);
+}
+function addGap(name,x,y,z,w,d,h){
+  addItem(name,x,y,z,w,d,h,0x22c55e,.10,[0,0,0]);
+}
+
+function buildRotated(){
+  addShell();
+
+  // Cat rotated on floor: X=53.2, Y=78
+  addItem('小佩 Ultra（已旋转90°）',0,0,0,53.2,78,61.2,0xf59e0b,.84,[-10,0,-8]);
+
+  // 4 cartons on the right: one column, 2 deep x 2 high
+  addItem('纸箱 1',54,0,0,50,40,40,0x3b82f6,.84,[10,0,-8]);
+  addItem('纸箱 2',54,40,0,50,40,40,0x3b82f6,.84,[10,0,10]);
+  addItem('纸箱 3',54,0,40,50,40,40,0x2563eb,.76,[10,16,-8]);
+  addItem('纸箱 4',54,40,40,50,40,40,0x2563eb,.76,[10,16,10]);
+
+  // One light plastic shoe bin on cat top
+  addItem('鞋塑料箱',4,6,61.2,45,44,30,0x14b8a6,.82,[-10,18,-8]);
+
+  // Dyson rod in rear 14cm strip
+  addRod(37,86,5,74);
+
+  // Remaining spaces
+  addGap('右侧约10cm余量',104,0,0,10,80,100);
+  addGap('后方约14cm长缝',0,80,0,114,14,100);
+  addGap('纸箱顶部约20cm',54,0,80,50,80,20);
+}
+
+function buildOriginal(){
+  addShell();
+
+  // Cat unrotated: X=78, Y=53.2
+  addItem('小佩 Ultra（未旋转）',0,0,0,78,53.2,61.2,0xf59e0b,.84,[-12,0,-8]);
+
+  // cartons behind, 2 x 2
+  addItem('纸箱 1',0,53.2,0,50,40,40,0x3b82f6,.84,[-12,0,10]);
+  addItem('纸箱 2',50,53.2,0,50,40,40,0x3b82f6,.84,[12,0,10]);
+  addItem('纸箱 3',0,53.2,40,50,40,40,0x2563eb,.76,[-12,16,10]);
+  addItem('纸箱 4',50,53.2,40,50,40,40,0x2563eb,.76,[12,16,10]);
+
+  // risk strip 0.8
+  addItem('仅余0.8cm',0,93.2,0,114,0.8,100,0xef4444,.28,[0,0,0]);
+}
+
+function rebuild(){
+  clear(); exploded=false; document.getElementById('explode').textContent='展开查看';
+  if(mode==='rotated')buildRotated(); else buildOriginal();
+
+  const badge=document.getElementById('badge');
+  const risk=document.getElementById('risk');
+  const desc=document.getElementById('desc');
+  if(mode==='rotated'){
+    badge.textContent='推荐：旋转90°'; badge.className='badge';
+    risk.style.display='none';
+    desc.textContent='“旋转90°”只是把猫砂盆在地面上转个方向，不是侧放。它仍然正常站立，只是让53.2cm这一边沿114cm方向，78cm这一边沿94cm方向。';
+  }else{
+    badge.textContent='不推荐：未旋转'; badge.className='badge bad';
+    risk.style.display='block';
+    desc.textContent='未旋转时，猫砂盆78cm长边沿114cm方向，53.2cm短边沿94cm方向，后排纸箱只能挤在它后面。';
+  }
+}
+document.getElementById('mode').addEventListener('change',e=>{mode=e.target.value;rebuild();});
+
+function setExploded(on){
+  exploded=on;
+  nodes.forEach(n=>{
+    const p=n.base.clone();if(on)p.add(n.explode);n.mesh.position.copy(p);n.tag.position.set(p.x,p.y+12,p.z);
+  });
+  document.getElementById('explode').textContent=on?'恢复装箱':'展开查看';
+}
+document.getElementById('reset').addEventListener('click',()=>{camera.position.set(57,225,47);controls.target.set(57,48,47);controls.update();});
+document.getElementById('explode').addEventListener('click',()=>setExploded(!exploded));
+document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>{
+  const v=btn.dataset.view;
+  if(v==='top')camera.position.set(57,225,47);
+  if(v==='iso')camera.position.set(185,150,190);
+  if(v==='front')camera.position.set(57,50,210);
+  if(v==='side')camera.position.set(210,50,47);
+  controls.target.set(57,48,47);controls.update();
+}));
+function resize(){const w=viewer.clientWidth,h=viewer.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+addEventListener('resize',resize);resize();rebuild();
+(function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
+</script>
+</body>
+</html>
