@@ -1,476 +1,236 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f5f3ef">
-  <title>顺丰围板箱搬家装箱优化器</title>
-  <style>
-    :root {
-      --ink: #1d2328;
-      --muted: #6f767b;
-      --line: #d8d5cf;
-      --panel: #fbfaf7;
-      --canvas: #eef1ef;
-      --red: #d7352f;
-      --orange: #ed8a2e;
-      --blue: #3f78b7;
-      --teal: #2d9d9a;
-      --purple: #7457a8;
-      --green: #65a875;
-      --danger: #b8322f;
-      --warn: #a56a1f;
-      --ok: #2b7c55;
-      --radius: 8px;
-      --shadow: 0 12px 30px rgba(33, 38, 40, .08);
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; background: #f5f3ef; color: var(--ink); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
-    body { letter-spacing: 0; }
-    button, input, select { font: inherit; }
-    button { color: inherit; }
-    .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
-    .app-header { padding: 18px 22px 14px; border-bottom: 1px solid var(--line); background: rgba(251,250,247,.96); position: sticky; top: 0; z-index: 20; backdrop-filter: blur(10px); }
-    .header-main { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; max-width: 1660px; margin: 0 auto; }
-    .eyebrow { display:flex; align-items:center; gap:8px; color:var(--red); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; }
-    .brand-mark { width:10px; height:10px; border-radius:50%; background:var(--red); display:inline-block; box-shadow:0 0 0 4px rgba(215,53,47,.1); }
-    h1 { margin: 4px 0 0; font-size: clamp(21px, 2.2vw, 31px); line-height:1.12; letter-spacing:0; }
-    .subtitle { margin: 7px 0 0; color: var(--muted); max-width: 700px; }
-    .header-stats { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-    .stat-chip { border:1px solid var(--line); background:#fff; padding:8px 11px; min-width:108px; border-radius:6px; }
-    .stat-chip strong { display:block; font-size:16px; }
-    .stat-chip span { display:block; font-size:11px; color:var(--muted); margin-top:1px; }
-    .alert-bar { max-width:1660px; margin: 14px auto 0; border-left:4px solid var(--warn); background:#fff5df; padding:9px 12px; color:#6e4a1d; }
-    .app-grid { width:100%; max-width:1660px; margin:0 auto; flex:0 0 auto; display:grid; grid-template-columns: 320px minmax(420px,1fr) 340px; grid-template-rows:minmax(0,1fr); height:clamp(520px, calc(100vh - 170px), 820px); min-height:0; overflow:hidden; }
-    .panel { border-right:1px solid var(--line); min-width:0; min-height:0; overflow:auto; }
-    .panel:last-child { border-right:0; border-left:1px solid var(--line); }
-    .panel-inner { padding:18px 18px 24px; }
-    .panel-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
-    .panel-title h2 { margin:0; font-size:15px; }
-    .section-label { color:var(--muted); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin:20px 0 8px; }
-    .recommendation { border:1px solid #c8d8cd; background:#f1f8f2; border-radius:var(--radius); padding:14px; }
-    .recommendation .reco-kicker { color:var(--ok); font-size:11px; font-weight:800; letter-spacing:.07em; }
-    .recommendation h3 { margin:4px 0 5px; font-size:18px; line-height:1.2; }
-    .recommendation p { margin:0; color:#425449; font-size:13px; }
-    .reco-list { margin:10px 0 0; padding:0; list-style:none; display:grid; gap:6px; color:#41534a; font-size:12px; }
-    .reco-list li { display:flex; gap:7px; align-items:flex-start; }
-    .reco-list li::before { content:"✓"; color:var(--ok); font-weight:800; }
-    .field { margin: 0 0 13px; }
-    .field-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
-    .field-head label { font-weight:650; }
-    .field-value { color:var(--red); font-variant-numeric: tabular-nums; font-weight:750; }
-    input[type="range"] { width:100%; accent-color: var(--red); }
-    .range-scale { display:flex; justify-content:space-between; color:var(--muted); font-size:11px; margin-top:2px; }
-    select { width:100%; border:1px solid var(--line); background:#fff; border-radius:5px; padding:8px 9px; color:var(--ink); }
-    .segmented { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
-    .segmented.two { grid-template-columns:repeat(2,1fr); }
-    .segmented button, .view-btn { border:1px solid var(--line); background:#fff; border-radius:5px; padding:7px 5px; cursor:pointer; font-size:12px; }
-    .segmented button[aria-pressed="true"], .view-btn[aria-pressed="true"] { border-color:var(--ink); background:var(--ink); color:#fff; }
-    .check-row { display:flex; align-items:center; gap:8px; padding:5px 0; color:#343a3e; }
-    .check-row input { width:16px; height:16px; accent-color:var(--red); }
-    .helper { color:var(--muted); font-size:12px; margin:5px 0 0; }
-    .scene-panel { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--canvas); }
-    .scene-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; background:rgba(251,250,247,.82); border-bottom:1px solid var(--line); }
-    .toolbar-group { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
-    .toolbar-label { color:var(--muted); font-size:12px; margin-right:3px; }
-    .view-btn { min-width:50px; padding:6px 8px; }
-    .view-btn.expand { min-width:auto; border-color:var(--ink); }
-    .scene-wrap { position:relative; flex:1; min-height:0; overflow:hidden; background: radial-gradient(circle at 50% 38%, #fbfcfb 0%, #e7ebe8 68%, #dbe0dd 100%); }
-    #scene { position:absolute; inset:0; }
-    #scene canvas { display:block; width:100%; height:100%; }
-    #labels { position:absolute; inset:0; pointer-events:none; }
-    .scene-legend { position:absolute; left:14px; bottom:13px; display:flex; flex-wrap:wrap; gap:8px 12px; max-width:calc(100% - 28px); background:rgba(251,250,247,.86); border:1px solid rgba(216,213,207,.9); padding:7px 9px; border-radius:6px; font-size:11px; }
-    .legend-item { display:flex; align-items:center; gap:5px; white-space:nowrap; }
-    .swatch { width:10px; height:10px; border-radius:2px; display:inline-block; border:1px solid rgba(0,0,0,.12); }
-    .scene-tip { position:absolute; right:14px; top:13px; padding:7px 9px; font-size:11px; color:#46504e; background:rgba(251,250,247,.8); border:1px solid rgba(216,213,207,.9); border-radius:5px; }
-    .selection-bar { min-height:52px; padding:10px 16px; border-top:1px solid var(--line); background:#fbfaf7; font-size:12px; color:#4d5559; }
-    .selection-bar strong { color:var(--ink); }
-    .audit-panel { background:#fbfaf7; overflow:auto; }
-    .audit-status { display:flex; align-items:center; gap:8px; font-weight:750; padding:10px 12px; border-radius:6px; margin-bottom:14px; }
-    .audit-status.ok { color:#226342; background:#eaf5ed; border:1px solid #c6dfcc; }
-    .audit-status.bad { color:#8f2928; background:#fff0ee; border:1px solid #efc3bf; }
-    .audit-status.warn { color:#81531c; background:#fff6e5; border:1px solid #ead6ad; }
-    .dot { width:9px; height:9px; border-radius:50%; background:currentColor; flex:none; }
-    .metric-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
-    .metric { border:1px solid var(--line); background:#fff; border-radius:6px; padding:9px 10px; min-height:68px; }
-    .metric .metric-label { color:var(--muted); font-size:11px; }
-    .metric strong { display:block; margin-top:2px; font-size:17px; font-variant-numeric:tabular-nums; }
-    .metric small { color:var(--muted); font-size:10px; }
-    .audit-list { padding:0; margin:0; list-style:none; display:grid; gap:7px; }
-    .audit-list li { border-left:3px solid var(--line); padding:7px 9px; background:#fff; font-size:12px; }
-    .audit-list li.danger { border-left-color:var(--danger); background:#fff5f3; color:#7f2a28; }
-    .audit-list li.warn { border-left-color:var(--warn); background:#fff8eb; color:#725020; }
-    .audit-list li.good { border-left-color:var(--ok); background:#f3faf4; color:#2f5f45; }
-    .candidate-table { width:100%; border-collapse:collapse; font-size:11px; }
-    .candidate-table th, .candidate-table td { padding:7px 4px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
-    .candidate-table th { color:var(--muted); font-weight:650; }
-    .candidate-table .pass { color:var(--ok); font-weight:750; }
-    .candidate-table .note { color:var(--warn); }
-    .callout { border-left:3px solid var(--red); padding:9px 10px; background:#fff6f5; color:#6e302e; font-size:12px; }
-    .footer { max-width:1660px; width:100%; margin:0 auto; border-top:1px solid var(--line); padding:12px 22px 18px; color:var(--muted); font-size:11px; }
-    .label-tag { color:#fff; background:rgba(28,34,38,.82); border-radius:4px; padding:3px 5px; white-space:nowrap; font-size:11px; box-shadow:0 2px 7px rgba(0,0,0,.14); }
-    .label-tag.label-hidden { display:none !important; }
-    .label-tag.conflict { background:rgba(172,36,34,.9); }
-    .label-tag.soft { background:rgba(43,124,85,.84); }
-    .scene-panel.expanded { position:fixed; inset:0; z-index:100; min-height:100vh; }
-    .scene-panel.expanded .scene-wrap { min-height:0; }
-    @media (max-width: 1180px) {
-      .app-grid { grid-template-columns: 290px minmax(360px,1fr) 300px; }
-      .header-stats { display:none; }
-    }
-    @media (max-width: 860px) {
-      .app-header { position:static; padding:15px 14px 12px; }
-      .header-main { display:block; }
-      h1 { font-size:23px; }
-      .subtitle { font-size:12px; }
-      .alert-bar { margin:10px 14px 0; font-size:12px; }
-      .app-grid { display:flex; flex-direction:column; height:auto; min-height:0; }
-      .scene-panel { order:1; min-height:470px; }
-      .scene-wrap { min-height:390px; }
-      .control-panel { order:2; border-right:0; border-top:1px solid var(--line); }
-      .audit-panel { order:3; border-left:0; border-top:1px solid var(--line); }
-      .panel-inner { padding:16px 14px 20px; }
-      .scene-toolbar { align-items:flex-start; flex-direction:column; gap:8px; padding:10px 12px; }
-      .scene-tip { top:9px; right:9px; }
-      .scene-legend { left:9px; bottom:9px; }
-      .footer { padding:12px 14px 18px; }
-    }
-    @media (max-width: 420px) {
-      .scene-panel { min-height:430px; }
-      .scene-wrap { min-height:350px; }
-      .view-btn { min-width:45px; padding:6px 6px; }
-      .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>顺丰围板箱 V6｜猫砂盆旋转90°对比</title>
+<style>
+:root{
+  --bg:#f4f6f8;--panel:#fff;--text:#172033;--muted:#667085;--border:#dfe3e8;
+  --cat:#f59e0b;--box:#3b82f6;--plastic:#14b8a6;--rod:#374151;--gap:#22c55e;--risk:#ef4444;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.app{display:grid;grid-template-columns:380px 1fr;min-height:100vh}
+.panel{background:#fff;border-right:1px solid var(--border);padding:20px;overflow:auto}
+.viewer{position:relative;min-height:760px}
+canvas{display:block;width:100%;height:100%}
+h1{font-size:22px;margin:0 0 6px}
+h2{font-size:16px;margin:20px 0 10px}
+p{color:var(--muted);margin:6px 0}
+select,button{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
+button{cursor:pointer;font-weight:700}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.metric{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 0;border-bottom:1px solid #eef1f4}
+.metric strong{font-size:15px}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#ecfdf3;color:#067647;font-size:12px;font-weight:700}
+.badge.bad{background:#fff1f2;color:#9f1239}
+.note,.warn{padding:11px;border-radius:10px;font-size:13px;margin-top:14px}
+.note{background:#ecfdf3;border:1px solid #abefc6;color:#067647}
+.warn{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}
+.legend{display:grid;gap:7px;margin-top:12px}
+.legend div{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+.sw{width:13px;height:13px;border-radius:3px}
+.overlay{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;max-width:320px}
+.viewbar{position:absolute;left:14px;bottom:14px;display:flex;gap:8px;flex-wrap:wrap}
+.viewbar button{width:auto;background:rgba(255,255,255,.95);padding:8px 11px}
+@media(max-width:900px){.app{grid-template-columns:1fr}.panel{border-right:0;border-bottom:1px solid var(--border)}.viewer{min-height:560px}}
+</style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="app-header">
-      <div class="header-main">
-        <div>
-          <div class="eyebrow"><span class="brand-mark"></span>搬家装箱工具 · SF 围板箱</div>
-          <h1>顺丰围板箱搬家装箱优化器</h1>
-          <p class="subtitle">按真实厘米尺寸检查刚性物体的边界、重叠、承重与剩余填缝空间，给快递员一眼可读的装箱结论。</p>
-        </div>
-        <div class="header-stats">
-          <div class="stat-chip"><strong>120 × 100 × 100</strong><span>内部净尺寸假设 · cm</span></div>
-          <div class="stat-chip"><strong>1.20 m³</strong><span>理论总容积</span></div>
-          <div class="stat-chip"><strong>78 cm</strong><span>猫砂盆默认长度</span></div>
-        </div>
-      </div>
-      <div class="alert-bar"><strong>尺寸确认：</strong>模型按内部净尺寸 120 × 100 × 100 cm 计算。卡扣、圆角、围板厚度和内部凸起未计入；实际装箱前必须向顺丰确认这是“内部净尺寸”还是“外部尺寸”，并现场复核有效内腔。</div>
-    </header>
+<div class="app">
+<aside class="panel">
+  <h1>V6｜猫砂盆旋转90°对比</h1>
+  <p>按估算净尺寸 <strong>114 × 94 × 100 cm</strong>。</p>
+  <span id="badge" class="badge">推荐：旋转90°</span>
 
-    <main class="app-grid">
-      <aside class="panel control-panel">
-        <div class="panel-inner">
-          <div class="panel-title"><h2>布局与参数</h2><span id="presetBadge" class="field-value">最大利用率</span></div>
-          <div class="recommendation" id="recommendationBox"></div>
+  <h2>切换布局</h2>
+  <select id="mode">
+    <option value="rotated" selected>推荐：猫砂盆旋转90°</option>
+    <option value="original">对比：猫砂盆未旋转</option>
+  </select>
 
-          <div class="section-label">版本</div>
-          <div class="field">
-            <select id="presetSelect" aria-label="推荐版本">
-              <option value="max">版本 1 · 最大利用率</option>
-              <option value="stable">版本 2 · 稳妥运输</option>
-            </select>
-          </div>
+  <h2>猫砂盆方向</h2>
+  <div class="metric"><span>猫砂盆底面</span><strong>78 × 53.2 cm</strong></div>
+  <div class="metric"><span>旋转后占地</span><strong>53.2 × 78 cm</strong></div>
+  <div class="metric"><span>高度</span><strong>61.2 cm</strong></div>
 
-          <div class="section-label">猫砂盆</div>
-          <div class="field">
-            <div class="field-head"><label for="catLength">小佩 Purobot Ultra 长度</label><span class="field-value"><span id="catLengthValue">78</span> cm</span></div>
-            <input id="catLength" type="range" min="75" max="82" step="0.1" value="78">
-            <div class="range-scale"><span>75</span><span>默认 78</span><span>82</span></div>
-          </div>
+  <h2>推荐版空间余量</h2>
+  <div class="metric"><span>右侧给纸箱的宽度</span><strong>60.8 cm</strong></div>
+  <div class="metric"><span>纸箱实际占宽</span><strong>50 cm</strong></div>
+  <div class="metric"><span>横向余量</span><strong>10.8 cm</strong></div>
+  <div class="metric"><span>纵向余量</span><strong>14 cm</strong></div>
+  <div class="metric"><span>纸箱顶部余量</span><strong>20 cm</strong></div>
 
-          <div class="section-label">塑料收纳箱</div>
-          <div class="field">
-            <div class="field-head"><label>姿态</label><span class="field-value" id="plasticPoseValue">侧立 A</span></div>
-            <div class="segmented" id="plasticPoseGroup" role="group" aria-label="塑料箱姿态">
-              <button type="button" data-pose="normal" aria-pressed="false">正常</button>
-              <button type="button" data-pose="sideA" aria-pressed="true">侧立 A</button>
-              <button type="button" data-pose="sideB" aria-pressed="false">侧立 B</button>
-            </div>
-          </div>
-          <label class="check-row"><input id="stackPlastic" type="checkbox" checked> 两个塑料箱叠放</label>
-
-          <div class="section-label">可选与显示</div>
-          <label class="check-row"><input id="showOld" type="checkbox" checked> 显示旧纸箱 70 × 40 × 32</label>
-          <label class="check-row"><input id="showSoft" type="checkbox" checked> 显示压缩袋 / 软物填充区</label>
-          <label class="check-row"><input id="showFrame" type="checkbox" checked> 显示围板箱外框</label>
-          <label class="check-row"><input id="showLabels" type="checkbox" checked> 显示中文标签</label>
-
-          <div class="section-label">保护执行</div>
-          <p class="helper">猫砂盆四周建议留软物缓冲；旧箱放顶部时，先铺 1 cm 硬纸板或软垫分散受力。压缩袋必须在快递员到场前完成真空，裸袋不要碰尖角、纸箱切口或金属件。</p>
-          <div class="callout" style="margin-top:12px"><strong>现场顺序：</strong>先放下层纸箱 → 固定塑料箱 → 放猫砂盆与均压垫 → 旧箱和轻软物最后放 → 扎好戴森延长杆并贴标签。</div>
-        </div>
-      </aside>
-
-      <section class="scene-panel" id="scenePanel">
-        <div class="scene-toolbar">
-          <div class="toolbar-group"><span class="toolbar-label">视角</span>
-            <button class="view-btn" data-view="3d" aria-pressed="true">3D</button>
-            <button class="view-btn" data-view="top" aria-pressed="false">俯视</button>
-            <button class="view-btn" data-view="front" aria-pressed="false">正视</button>
-            <button class="view-btn" data-view="side" aria-pressed="false">侧视</button>
-            <button class="view-btn" data-view="reset" aria-pressed="false">重置</button>
-          </div>
-          <button class="view-btn expand" id="expandBtn">展开查看</button>
-        </div>
-        <div class="scene-wrap" id="sceneWrap">
-          <div id="scene"></div><div id="labels"></div>
-          <div class="scene-tip">拖动旋转 · 滚轮缩放 · 右键平移</div>
-          <div class="scene-legend">
-            <span class="legend-item"><i class="swatch" style="background:var(--orange)"></i>小佩 Ultra</span>
-            <span class="legend-item"><i class="swatch" style="background:var(--blue)"></i>标准纸箱 ×4</span>
-            <span class="legend-item"><i class="swatch" style="background:var(--teal)"></i>塑料箱 ×2</span>
-            <span class="legend-item"><i class="swatch" style="background:var(--purple)"></i>旧纸箱</span>
-            <span class="legend-item"><i class="swatch" style="background:var(--green);opacity:.65"></i>软物填充区</span>
-            <span class="legend-item"><i class="swatch" style="background:#4b5258"></i>戴森杆</span>
-          </div>
-        </div>
-        <div class="selection-bar" id="selectionBar">点击任一物体查看尺寸、坐标与承重说明。</div>
-      </section>
-
-      <aside class="panel audit-panel">
-        <div class="panel-inner">
-          <div class="panel-title"><h2>实时校验</h2><span id="auditTime" class="helper"></span></div>
-          <div id="auditStatus" class="audit-status ok"><span class="dot"></span><span>布局成立</span></div>
-          <div class="metric-grid">
-            <div class="metric"><div class="metric-label">刚性物体重叠</div><strong id="metricOverlap">0</strong><small>处</small></div>
-            <div class="metric"><div class="metric-label">边界超出</div><strong id="metricOut">0</strong><small>处</small></div>
-            <div class="metric"><div class="metric-label">最小外壁余量</div><strong id="metricMargin">0</strong><small>cm · 不计地面</small></div>
-            <div class="metric"><div class="metric-label">刚性占用</div><strong id="metricVolume">0%</strong><small id="metricVolumeSub">0 L / 1,200 L</small></div>
-            <div class="metric"><div class="metric-label">剩余理论容积</div><strong id="metricRemaining">0 L</strong><small>软物可填缝</small></div>
-            <div class="metric"><div class="metric-label">悬空 / 支撑</div><strong id="metricSupport">0</strong><small>项需复核</small></div>
-          </div>
-
-          <div class="section-label">问题与执行提醒</div>
-          <ul id="auditList" class="audit-list"></ul>
-
-          <div class="section-label">候选方案比较</div>
-          <table class="candidate-table">
-            <thead><tr><th>方案</th><th>刚性几何</th><th>结论</th></tr></thead>
-            <tbody>
-              <tr><td>A 正常塑料箱</td><td class="pass">可成立</td><td>纸箱 L 形分区；塑料箱高 60</td></tr>
-              <tr><td>B 侧立叠放</td><td class="pass">可成立</td><td>默认最规整；塔高 88～90</td></tr>
-              <tr><td>C 旧箱置顶</td><td class="pass">可成立</td><td>加 1 cm 均压垫后顶高 94.2</td></tr>
-              <tr><td>D 纸箱组合</td><td class="note">需双层</td><td>4 个 50 cm 箱双层=100，顶余量为 0</td></tr>
-            </tbody>
-          </table>
-          <div class="section-label">给快递员的简化说明</div>
-          <div id="courierNote" class="callout"></div>
-        </div>
-      </aside>
-    </main>
-    <footer class="footer">理论模型仅校验 AABB 刚性包络，不代表纸箱内装载重量或围板箱承载许可。到场后请以顺丰实际箱体、卡扣、凸起和封箱方式为准；任何红色冲突都不是渲染问题，而是布局几何不成立。</footer>
+  <div id="desc" class="note">
+    “旋转90°”只是把猫砂盆在地面上转个方向，不是侧放。它仍然正常站立，只是让53.2cm这一边沿114cm方向，78cm这一边沿94cm方向。
   </div>
 
-  <script>
-  (function () {
-    'use strict';
-    const BIN = { x: 120, y: 100, z: 100 };
-    const CAT_W = 53.2, CAT_H = 61.2;
-    const CARTON = { x: 60, y: 40, z: 50 };
-    const POSES = {
-      normal: { label: '正常', dims: { x:45, y:44, z:30 }, stackH:60 },
-      sideA: { label: '侧立 A', dims: { x:30, y:44, z:45 }, stackH:90 },
-      sideB: { label: '侧立 B', dims: { x:30, y:45, z:44 }, stackH:88 }
-    };
-    const COLORS = { cat:0xed8a2e, carton:0x3f78b7, plastic:0x2d9d9a, old:0x7457a8, soft:0x65a875, rod:0x4b5258, pad:0xc29c56, conflict:0xc43c35 };
-    const state = { preset:'max', catLength:78, pose:'sideA', stacked:true, showOld:true, showSoft:true, showFrame:true, showLabels:true, view:'3d' };
-    let scene, camera, renderer, labelRenderer, controls, raycaster, pointer, worldGroup, frameGroup, lastItems = [], selectedId = null;
-    const $ = (id) => document.getElementById(id);
-    const fmt = (n, d=1) => Number(n).toFixed(d).replace(/\.0+$/, '');
-    const dimsText = (d) => `${fmt(d.x)} × ${fmt(d.y)} × ${fmt(d.z)} cm`;
-    const nameText = { cat:'小佩 Purobot Ultra', carton:'标准纸箱', plastic:'塑料收纳箱', old:'旧纸箱', rod:'戴森延长杆', pad:'1 cm 均压垫' };
+  <div id="risk" class="warn" style="display:none">
+    未旋转时，猫砂盆53.2cm纵深 + 后排纸箱40cm = 93.2cm，只剩0.8cm，尺寸误差风险很高。
+  </div>
 
-    function initThree() {
-      if (!window.THREE || !THREE.OrbitControls || !THREE.CSS2DRenderer) {
-        $('scene').innerHTML = '<div style="padding:24px;color:#8f2928">Three.js CDN 未加载，几何校验仍可用；请联网后重新打开页面。</div>';
-        return;
-      }
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xe7ebe8);
-      worldGroup = new THREE.Group(); scene.add(worldGroup);
-      frameGroup = new THREE.Group(); scene.add(frameGroup);
-      const ambient = new THREE.HemisphereLight(0xffffff, 0x66706c, 1.35); scene.add(ambient);
-      const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(160,210,180); scene.add(key);
-      const fill = new THREE.DirectionalLight(0xf6d7ae, .45); fill.position.set(-120,100,-100); scene.add(fill);
-      renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true }); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setSize(10,10); renderer.outputEncoding = THREE.sRGBEncoding; $('scene').appendChild(renderer.domElement);
-      labelRenderer = new THREE.CSS2DRenderer(); labelRenderer.setSize(10,10); labelRenderer.domElement.id='label-layer'; labelRenderer.domElement.style.position='absolute'; labelRenderer.domElement.style.inset='0'; labelRenderer.domElement.style.pointerEvents='none'; $('labels').appendChild(labelRenderer.domElement);
-      camera = new THREE.PerspectiveCamera(34, 1, .1, 1000); camera.position.set(175,145,185);
-      controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.dampingFactor = .07; controls.target.set(60,50,50); controls.screenSpacePanning = true; controls.minDistance = 120; controls.maxDistance = 430;
-      raycaster = new THREE.Raycaster(); pointer = new THREE.Vector2();
-      renderer.domElement.addEventListener('pointerdown', onPointerDown);
-      window.addEventListener('resize', resizeScene);
-      if (window.ResizeObserver) new ResizeObserver(resizeScene).observe($('sceneWrap'));
-      resizeScene(); setTimeout(resizeScene, 120); animate();
-    }
-    function resizeScene() {
-      if (!renderer || !camera) return;
-      const el = $('sceneWrap'); const w = Math.max(10, el.clientWidth), h = Math.max(10, el.clientHeight);
-      camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w,h,true); labelRenderer.setSize(w,h);
-    }
-    function animate() { requestAnimationFrame(animate); if (controls) controls.update(); if (renderer) renderer.render(scene,camera); if (labelRenderer) labelRenderer.render(scene,camera); }
-    function clearGroup(group) { while(group && group.children.length) { const c=group.children.pop(); c.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material){ const mats=Array.isArray(o.material)?o.material:[o.material]; mats.forEach(m=>m.dispose()); }}); } }
-    function makeFrame() {
-      clearGroup(frameGroup); frameGroup.visible=state.showFrame;
-      const box = new THREE.BoxGeometry(BIN.x,BIN.z,BIN.y); const mat = new THREE.MeshBasicMaterial({ color:0x59625f, transparent:true, opacity:.045, side:THREE.DoubleSide, depthWrite:false });
-      const mesh = new THREE.Mesh(box,mat); mesh.position.set(BIN.x/2,BIN.z/2,BIN.y/2); frameGroup.add(mesh);
-      const edge = new THREE.EdgesGeometry(box); const line = new THREE.LineSegments(edge,new THREE.LineBasicMaterial({color:0x59625f,transparent:true,opacity:.72})); line.position.copy(mesh.position); frameGroup.add(line);
-      const floor = new THREE.GridHelper(120,12,0x8d9995,0xb8c1bd); floor.position.set(60,.05,50); floor.material.transparent=true; floor.material.opacity=.35; frameGroup.add(floor);
-    }
-    function aabbMesh(item, color, opacity=.78) {
-      const g = new THREE.BoxGeometry(item.dims.x,item.dims.z,item.dims.y);
-      const m = new THREE.MeshStandardMaterial({color, transparent:opacity<1, opacity, roughness:.76, metalness:.03, depthWrite:opacity>.5});
-      const mesh = new THREE.Mesh(g,m); mesh.position.set(item.pos.x+item.dims.x/2,item.pos.z+item.dims.z/2,item.pos.y+item.dims.y/2); mesh.userData.itemId=item.id; mesh.userData.baseColor=color; mesh.userData.isSoft=!!item.soft;
-      const e = new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x243038,transparent:true,opacity:item.soft?.42:.38})); mesh.add(e); return mesh;
-    }
-    function addLabel(item, mesh, conflict) {
-      const el=document.createElement('div'); el.className='label-tag'+(conflict?' conflict':'')+(item.soft?' soft':'')+((!state.showLabels || item.soft)?' label-hidden':''); el.textContent=item.label;
-      const label=new THREE.CSS2DObject(el); label.position.set(0,item.dims.z/2+2,0); mesh.add(label); item._labelEl=el;
-    }
-    function createRod(item, conflict) {
-      const r=1.5, g=new THREE.CylinderGeometry(r,r,item.dims.x,20); const m=new THREE.MeshStandardMaterial({color:conflict?COLORS.conflict:COLORS.rod,roughness:.5}); const mesh=new THREE.Mesh(g,m); mesh.rotation.z=Math.PI/2; mesh.position.set(item.pos.x+item.dims.x/2,item.pos.z+1.5,item.pos.y+1.5); mesh.userData.itemId=item.id; mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x1e252a,transparent:true,opacity:.35}))); return mesh;
-    }
-    function renderItems(items, result) {
-      clearGroup(worldGroup); lastItems=items;
-      makeFrame();
-      const conflictIds=new Set(result.conflicts.flatMap(c=>[c.a,c.b]).concat(result.outs.map(o=>o.id)));
-      items.forEach(item=>{
-        const conflict=conflictIds.has(item.id); let mesh=item.kind==='rod'?createRod(item,conflict):aabbMesh(item, conflict?COLORS.conflict:COLORS[item.kind], item.soft?.32:.78);
-        worldGroup.add(mesh); addLabel(item,mesh,conflict);
-      });
-      frameGroup.visible=state.showFrame;
-      if (selectedId) {
-        const found=worldGroup.children.find(m=>m.userData.itemId===selectedId); if(found) highlight(found,true);
-      }
-    }
-    function item(id, kind, label, x,y,z, dx,dy,dz, extra={}) { return {id,kind,label,pos:{x,y,z},dims:{x:dx,y:dy,z:dz},...extra}; }
-    function buildLayout() {
-      const L=state.catLength, pose=POSES[state.pose], items=[];
-      const cat=item('cat','cat','小佩 Ultra', state.preset==='max'?2:0, state.preset==='max'?2:0,0,L,CAT_W,CAT_H,{heavy:true,notes:'不可拆；顶部只承受轻物，四周留软物缓冲'}); items.push(cat);
-      if (state.pose==='normal') {
-        const pX=0,pY=55.2; items.push(item('plastic-1','plastic','塑料箱 1',pX,pY,0,45,44,30,{heavy:true,notes:'正常放置'}));
-        if (state.stacked) items.push(item('plastic-2','plastic','塑料箱 2',pX,pY,30,45,44,30,{heavy:true,notes:'正常放置；由塑料箱 1 支撑'}));
-        else items.push(item('plastic-2','plastic','塑料箱 2',47,55.2,0,45,44,30,{heavy:true,notes:'未叠放时与纸箱区发生冲突'}));
-        const cartons=[[80,0,0,40,60,50,'纸箱 1（L 形右侧）'],[80,0,50,40,60,50,'纸箱 3（L 形右侧上层）'],[47,60,0,60,40,50,'纸箱 2（L 形后侧）'],[47,60,50,60,40,50,'纸箱 4（L 形后侧上层）']];
-        cartons.forEach((c,i)=>items.push(item('carton-'+(i+1),'carton',c[6],c[0],c[1],c[2],c[3],c[4],c[5],{heavy:i%2===0,notes:i%2?'上层；仅在下层箱稳定时放入':'重物下层'})));
-      } else {
-        const pX=L+4,pY=2; items.push(item('plastic-1','plastic','塑料箱 1',pX,pY,0,pose.dims.x,pose.dims.y,pose.dims.z,{heavy:true,notes:pose.label}));
-        if (state.stacked) items.push(item('plastic-2','plastic','塑料箱 2',pX,pY,pose.dims.z,pose.dims.x,pose.dims.y,pose.dims.z,{heavy:true,notes:pose.label+'；需自粘扎带固定'}));
-        else items.push(item('plastic-2','plastic','塑料箱 2',pX,pY+pose.dims.y+2,0,pose.dims.x,pose.dims.y,pose.dims.z,{heavy:true,notes:'未叠放；会进入纸箱后排'}));
-        const cartons=[[0,58,0,60,40,50,'纸箱 1（后排左）'],[60,58,0,60,40,50,'纸箱 2（后排右）'],[0,58,50,60,40,50,'纸箱 3（后排左上层）'],[60,58,50,60,40,50,'纸箱 4（后排右上层）']];
-        cartons.forEach((c,i)=>items.push(item('carton-'+(i+1),'carton',c[6],c[0],c[1],c[2],c[3],c[4],c[5],{heavy:i<2,notes:i<2?'重物下层':'上层；封箱后轻拿'})));
-      }
-      const oldX=cat.pos.x+(L-70)/2, oldY=cat.pos.y+(CAT_W-40)/2, padZ=CAT_H;
-      if (state.showOld) {
-        items.push(item('pad','pad','1 cm 均压垫',oldX,oldY,padZ,70,40,1,{supportOnly:true,notes:'硬纸板或软垫；分散顶部受力'}));
-        items.push(item('old','old','旧纸箱 70×40×32',oldX,oldY,padZ+1,70,40,32,{heavy:false,notes:'仅装轻衣服、戴森配件和零碎物'}));
-      }
-      const rod = state.pose==='normal' ? item('rod','rod','戴森延长杆',2,50,62.2,74,3,3,{supportExempt:true,notes:'气泡膜/衣物包裹后贴边扎带固定'}) : item('rod','rod','戴森延长杆',2,54,62.2,74,3,3,{supportExempt:true,notes:'沿猫砂盆与后排缝隙；包裹后扎带固定'});
-      items.push(rod);
-      const soft=[];
-      if (state.showSoft) {
-        if (state.preset==='max' && state.showOld) {
-          soft.push(item('soft-side','soft','软物填缝 · 塑料箱右侧',112,2,2,8,52,86,{soft:true,notes:'不规则缝隙，不作刚性尺寸'}));
-          soft.push(item('soft-top','soft','软物填缝 · 塑料箱顶部',L+4,2,pose.stackH+2,pose.dims.x,pose.dims.y,Math.max(4,100-(pose.stackH+2)),{soft:true,notes:'轻衣物；不压猫砂盆'}));
-          soft.push(item('soft-old','soft','软物填缝 · 旧箱上方',oldX,oldY,94.2,70,40,5.8,{soft:true,notes:'压缩袋可变形薄层'}));
-        } else if (state.preset==='stable' && state.showOld) {
-          soft.push(item('soft-old','soft','软物填缝 · 旧箱上方',oldX,oldY,94.2,70,40,5.8,{soft:true,notes:'压缩袋可变形薄层'}));
-          soft.push(item('soft-gap','soft','软物填缝 · 后侧窄缝',0,53.2,0,45,2,58,{soft:true,notes:'衣物隔离层'}));
-        } else {
-          soft.push(item('soft-cat','soft','压缩袋 · 猫砂盆顶部',4,4,62.2,70,45,28,{soft:true,notes:'轻软衣物；先铺纸板'}));
-          soft.push(item('soft-plastic','soft','压缩袋 · 塑料箱上方',0,55.2,62,45,44,30,{soft:true,notes:'衣物与线材'}));
-          soft.push(item('soft-gap','soft','软物填缝 · 猫砂盆后侧',0,53.2,0,45,2,60,{soft:true,notes:'衣物隔离层'}));
-        }
-      }
-      return items.concat(soft);
-    }
-    function intersects(a,b) {
-      const e=.0001; return a.pos.x+ a.dims.x > b.pos.x+e && b.pos.x+b.dims.x > a.pos.x+e && a.pos.y+a.dims.y > b.pos.y+e && b.pos.y+b.dims.y > a.pos.y+e && a.pos.z+a.dims.z > b.pos.z+e && b.pos.z+b.dims.z > a.pos.z+e;
-    }
-    function overlapDepth(a,b) { return {x:Math.min(a.pos.x+a.dims.x,b.pos.x+b.dims.x)-Math.max(a.pos.x,b.pos.x),y:Math.min(a.pos.y+a.dims.y,b.pos.y+b.dims.y)-Math.max(a.pos.y,b.pos.y),z:Math.min(a.pos.z+a.dims.z,b.pos.z+b.dims.z)-Math.max(a.pos.z,b.pos.z)}; }
-    function validate(items) {
-      const rigid=items.filter(i=>!i.soft && !i.supportOnly), conflicts=[], outs=[];
-      rigid.forEach(a=>{
-        const over={x:Math.max(0,-a.pos.x)+Math.max(0,a.pos.x+a.dims.x-BIN.x),y:Math.max(0,-a.pos.y)+Math.max(0,a.pos.y+a.dims.y-BIN.y),z:Math.max(0,-a.pos.z)+Math.max(0,a.pos.z+a.dims.z-BIN.z)};
-        if (over.x||over.y||over.z) outs.push({id:a.id,item:a,over});
-      });
-      for(let i=0;i<rigid.length;i++) for(let j=0;j<i;j++) if(intersects(rigid[i],rigid[j])) conflicts.push({a:rigid[i].id,b:rigid[j].id,ia:rigid[i],ib:rigid[j],depth:overlapDepth(rigid[i],rigid[j])});
-      const supportIssues=[];
-      rigid.forEach(a=>{
-        if(a.pos.z<.01 || a.supportExempt) return;
-        const supporters=items.filter(b=>b.id!==a.id && !b.soft && b.pos.z+b.dims.z<=a.pos.z+.01 && Math.abs((b.pos.z+b.dims.z)-a.pos.z)<.02 && intersectsXY(a,b));
-        const ratio=xySupportRatio(a,supporters); if(ratio<.82) supportIssues.push({item:a,ratio});
-      });
-      const surfaces=[...rigid]; let margin=Infinity;
-      rigid.forEach(a=>{ margin=Math.min(margin,a.pos.x,BIN.x-(a.pos.x+a.dims.x),a.pos.y,BIN.y-(a.pos.y+a.dims.y),BIN.z-(a.pos.z+a.dims.z)); });
-      if(!isFinite(margin)) margin=0;
-      const volume=rigid.reduce((s,a)=>s+(a.kind==='rod'?Math.PI*1.5*1.5*74:a.dims.x*a.dims.y*a.dims.z),0);
-      return {rigid,conflicts,outs,supportIssues,margin,volume};
-    }
-    function intersectsXY(a,b){ return a.pos.x < b.pos.x+b.dims.x-.0001 && b.pos.x < a.pos.x+a.dims.x-.0001 && a.pos.y < b.pos.y+b.dims.y-.0001 && b.pos.y < a.pos.y+a.dims.y-.0001; }
-    function xySupportRatio(a,supporters){
-      if(!supporters.length) return 0;
-      const xs=[a.pos.x,a.pos.x+a.dims.x], ys=[a.pos.y,a.pos.y+a.dims.y]; supporters.forEach(b=>{xs.push(Math.max(a.pos.x,b.pos.x),Math.min(a.pos.x+a.dims.x,b.pos.x+b.dims.x));ys.push(Math.max(a.pos.y,b.pos.y),Math.min(a.pos.y+a.dims.y,b.pos.y+b.dims.y));});
-      const ux=[...new Set(xs.filter(n=>n>=a.pos.x&&n<=a.pos.x+a.dims.x))].sort((m,n)=>m-n), uy=[...new Set(ys.filter(n=>n>=a.pos.y&&n<=a.pos.y+a.dims.y))].sort((m,n)=>m-n); let area=0;
-      for(let i=0;i<ux.length-1;i++) for(let j=0;j<uy.length-1;j++){const cx=(ux[i]+ux[i+1])/2,cy=(uy[j]+uy[j+1])/2;if(supporters.some(b=>cx>=b.pos.x&&cx<=b.pos.x+b.dims.x&&cy>=b.pos.y&&cy<=b.pos.y+b.dims.y))area+=(ux[i+1]-ux[i])*(uy[j+1]-uy[j]);}
-      return area/(a.dims.x*a.dims.y);
-    }
-    function riskNotes(items,result){
-      const notes=[];
-      if (result.conflicts.length) result.conflicts.forEach(c=>{const d=c.depth; const axes=Object.entries(d).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]); notes.push({type:'danger',text:`${c.ia.label} 与 ${c.ib.label} 重叠：${axes.map(([k,v])=>`${k.toUpperCase()} ${fmt(v)} cm`).join('、')}`});});
-      result.outs.forEach(o=>{const parts=[]; if(o.over.x)parts.push(`X 超出 ${fmt(o.over.x)} cm`); if(o.over.y)parts.push(`Y 超出 ${fmt(o.over.y)} cm`); if(o.over.z)parts.push(`高度超过 ${fmt(o.over.z)} cm`); notes.push({type:'danger',text:`${o.item.label} ${parts.join('，')}`});});
-      result.supportIssues.forEach(s=>notes.push({type:'warn',text:`${s.item.label} 支撑面积约 ${Math.round(s.ratio*100)}%，存在悬空或局部承重风险`}));
-      if(state.pose!=='normal' && state.stacked) notes.push({type:'warn',text:`塑料箱侧立叠放总高 ${POSES[state.pose].stackH} cm，需自粘扎带固定；箱内只放衣物、线材和较轻硬物`});
-      if(state.showOld) notes.push({type:'warn',text:'旧箱位于猫砂盆顶部：必须加 1 cm 均压垫，只装轻衣服、戴森配件和零碎物，禁止点状重物'});
-      if(result.rigid.some(i=>i.id.startsWith('carton-')&&i.pos.z>0)) notes.push({type:'warn',text:'4 个标准纸箱按两层 50 cm 计算，总高正好 100 cm；顺丰有效内高不足 100 cm 时该布局不成立'});
-      if(!result.conflicts.length&&!result.outs.length) notes.push({type:'good',text:'刚性包络检查通过：物体没有重叠，也没有超出 120 × 100 × 100 cm 净边界'});
-      if(state.pose==='normal' && state.catLength>80) notes.push({type:'danger',text:`猫砂盆长度 ${fmt(state.catLength)} cm 会与右侧纸箱区相撞；正常姿态方案只适合长度 ≤ 80 cm`});
-      return notes;
-    }
-    function updateUI(items,result){
-      const notes=riskNotes(items,result); const bad=result.conflicts.length||result.outs.length; const support=result.supportIssues.length;
-      $('auditStatus').className='audit-status '+(bad?'bad':(support||state.pose!=='normal'?'warn':'ok'));
-      $('auditStatus').innerHTML=`<span class="dot"></span><span>${bad?'布局不成立':(support||state.pose!=='normal'?'几何成立 · 运输需复核':'布局成立')}</span>`;
-      $('metricOverlap').textContent=result.conflicts.length; $('metricOut').textContent=result.outs.length; $('metricMargin').textContent=fmt(result.margin,1);
-      const liters=result.volume/1000, pct=result.volume/(BIN.x*BIN.y*BIN.z)*100; $('metricVolume').textContent=fmt(pct,1)+'%'; $('metricVolumeSub').textContent=fmt(liters,1)+' L / 1,200 L'; $('metricRemaining').textContent=fmt(1200-liters,1)+' L'; $('metricSupport').textContent=support;
-      $('auditTime').textContent=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      $('auditList').innerHTML=notes.map(n=>`<li class="${n.type}">${n.text}</li>`).join('');
-      $('catLengthValue').textContent=fmt(state.catLength,1); $('plasticPoseValue').textContent=POSES[state.pose].label; $('presetBadge').textContent=state.preset==='max'?'最大利用率':'稳妥运输';
-      $('recommendationBox').innerHTML=state.preset==='max'?`<div class="reco-kicker">当前最佳布局</div><h3>B · 侧立塑料箱 + 后排纸箱</h3><p>把长边让给猫砂盆和塑料箱塔，四个纸箱在后侧分成两列双层，旧箱置于猫砂盆顶部。</p><ul class="reco-list"><li>猫砂盆与侧立箱保留约 2 cm 横向缝</li><li>旧箱加均压垫后顶高约 94.2 cm</li><li>剩余空间优先塞衣物与压缩袋</li></ul>`:`<div class="reco-kicker">当前稳妥布局</div><h3>A · 正常塑料箱 + L 形纸箱区</h3><p>塑料箱总高降为 60 cm，纸箱采用右侧与后侧两组承托，装卸顺序更直观。</p><ul class="reco-list"><li>猫砂盆与纸箱区留 2～6.8 cm 缝</li><li>默认不启用旧箱，顶部留给软物缓冲</li><li>正常塑料箱更适合承受搬运振动</li></ul>`;
-      $('courierNote').innerHTML=state.preset==='max'?`<strong>先装：</strong>后排下层纸箱。<br><strong>再装：</strong>猫砂盆、侧立塑料箱并用扎带固定。<br><strong>最后：</strong>1 cm 均压垫、旧箱、软衣物和戴森杆。<br><strong>复核：</strong>纸箱双层需要有效内高至少 100 cm。`:`<strong>先装：</strong>右侧纸箱下层和后侧纸箱下层。<br><strong>再装：</strong>正常塑料箱与猫砂盆，四周用衣物隔离。<br><strong>最后：</strong>上层纸箱、软物和戴森杆。<br><strong>复核：</strong>纸箱双层仍需有效内高至少 100 cm。`;
-      renderItems(items,result);
-    }
-    function setView(view){
-      state.view=view; document.querySelectorAll('.view-btn[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===view?'true':'false'));
-      if(!camera||!controls)return; const target=new THREE.Vector3(60,50,50);
-      if(view==='top') camera.position.set(60,255,50); else if(view==='front') camera.position.set(60,55,250); else if(view==='side') camera.position.set(260,55,50); else camera.position.set(175,145,185);
-      controls.target.copy(target); controls.update();
-    }
-    function highlight(mesh,on){
-      if(!mesh||!mesh.material)return; const base=mesh.userData.baseColor; mesh.material.emissive=new THREE.Color(on?0x5e3024:0x000000); mesh.material.emissiveIntensity=on?.4:0; mesh.material.color.set(on?0xf5c24b:base);
-    }
-    function onPointerDown(ev){
-      if(!renderer)return; const rect=renderer.domElement.getBoundingClientRect(); pointer.x=((ev.clientX-rect.left)/rect.width)*2-1; pointer.y=-((ev.clientY-rect.top)/rect.height)*2+1; raycaster.setFromCamera(pointer,camera); const hits=raycaster.intersectObjects(worldGroup.children,true); const hit=hits.find(h=>h.object.userData.itemId); if(!hit)return; selectedId=hit.object.userData.itemId; const it=lastItems.find(i=>i.id===selectedId); if(it) $('selectionBar').innerHTML=`<strong>${it.label}</strong> · ${dimsText(it.dims)} · 坐标 X ${fmt(it.pos.x)} / Y ${fmt(it.pos.y)} / Z ${fmt(it.pos.z)} cm · ${it.notes||''}`; worldGroup.children.forEach(m=>highlight(m,m.userData.itemId===selectedId));
-    }
-    function refresh(){ const items=buildLayout(), result=validate(items); updateUI(items,result); }
-    function bind(){
-      $('catLength').addEventListener('input',e=>{state.catLength=Number(e.target.value);refresh();});
-      $('presetSelect').addEventListener('change',e=>{state.preset=e.target.value; if(state.preset==='max'){state.pose='sideA';state.showOld=true;}else{state.pose='normal';state.showOld=false;} syncControls(); refresh();});
-      document.querySelectorAll('#plasticPoseGroup button').forEach(b=>b.addEventListener('click',()=>{state.pose=b.dataset.pose;syncControls();refresh();}));
-      $('stackPlastic').addEventListener('change',e=>{state.stacked=e.target.checked;refresh();});
-      ['showOld','showSoft','showFrame','showLabels'].forEach(id=>$(id).addEventListener('change',e=>{state[id]=e.target.checked;refresh();}));
-      document.querySelectorAll('.view-btn[data-view]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.view==='reset'){setView('3d');}else setView(b.dataset.view);}));
-      $('expandBtn').addEventListener('click',()=>{const p=$('scenePanel');p.classList.toggle('expanded');$('expandBtn').textContent=p.classList.contains('expanded')?'退出展开':'展开查看';setTimeout(resizeScene,80);});
-    }
-    function syncControls(){ $('presetSelect').value=state.preset; $('stackPlastic').checked=state.stacked; $('showOld').checked=state.showOld; document.querySelectorAll('#plasticPoseGroup button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pose===state.pose?'true':'false')); }
-    initThree(); bind(); syncControls(); refresh();
-  })();
-  </script>
+  <h2>当前推荐装法</h2>
+  <div class="metric"><span>50×40×40纸箱</span><strong>4个，右侧2×2叠放</strong></div>
+  <div class="metric"><span>塑料箱</span><strong>1个，猫砂盆顶部</strong></div>
+  <div class="metric"><span>另一塑料箱</span><strong>单独寄</strong></div>
+  <div class="metric"><span>戴森杆</span><strong>后方14cm长缝</strong></div>
+
+  <div class="legend">
+    <div><span class="sw" style="background:var(--cat)"></span>小佩 Ultra</div>
+    <div><span class="sw" style="background:var(--box)"></span>50×40×40纸箱</div>
+    <div><span class="sw" style="background:var(--plastic)"></span>鞋塑料箱</div>
+    <div><span class="sw" style="background:var(--rod)"></span>戴森杆</div>
+    <div><span class="sw" style="background:var(--gap)"></span>剩余可填充空间</div>
+  </div>
+
+  <div class="row">
+    <button id="reset">重置视角</button>
+    <button id="explode">展开查看</button>
+  </div>
+</aside>
+
+<main class="viewer" id="viewer">
+  <div class="overlay">
+    建议先点<strong>俯视</strong>，最容易看懂“旋转90°”。<br>
+    橙色猫砂盆始终正常站立，只是底面方向发生变化。
+  </div>
+  <div class="viewbar">
+    <button data-view="top">俯视</button>
+    <button data-view="iso">3D</button>
+    <button data-view="front">正视</button>
+    <button data-view="side">侧视</button>
+  </div>
+</main>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/+esm';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js/+esm';
+
+const viewer=document.getElementById('viewer');
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0xf4f6f8);
+const camera=new THREE.PerspectiveCamera(42,1,.1,2000); camera.position.set(57,225,47);
+const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; viewer.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.target.set(57,48,47);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x9ca3af,1.65));
+const dl=new THREE.DirectionalLight(0xffffff,1.3);dl.position.set(130,180,110);scene.add(dl);
+const grid=new THREE.GridHelper(170,17,0x94a3b8,0xd1d5db);grid.position.set(57,0,47);scene.add(grid);
+
+const world=new THREE.Group();scene.add(world);
+const nodes=[];let exploded=false;let mode='rotated';
+
+function mat(color,opacity=1){return new THREE.MeshStandardMaterial({color,transparent:opacity<1,opacity,roughness:.55,metalness:.04,depthWrite:opacity>.2});}
+function cube(w,h,d,color,opacity=1){
+  const g=new THREE.BoxGeometry(w,h,d),m=new THREE.Mesh(g,mat(color,opacity));
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x475467})));return m;
+}
+function label(text){
+  const c=document.createElement('canvas');c.width=640;c.height=140;const x=c.getContext('2d');
+  x.fillStyle='rgba(255,255,255,.94)';x.roundRect(8,8,624,124,16);x.fill();
+  x.fillStyle='#172033';x.font='bold 34px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText(text,320,70);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));s.scale.set(42,9.2,1);return s;
+}
+function addItem(name,x,y,z,w,d,h,color,opacity=1,explode=[0,0,0]){
+  const mesh=cube(w,h,d,color,opacity);mesh.position.set(x+w/2,z+h/2,y+d/2);world.add(mesh);
+  const tag=label(name);tag.position.set(x+w/2,z+h+4,y+d/2);world.add(tag);
+  nodes.push({mesh,tag,base:mesh.position.clone(),explode:new THREE.Vector3(...explode)});
+}
+function addRod(x,y,z,length){
+  const mesh=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,length,24),mat(0x374151));
+  mesh.rotation.z=Math.PI/2;mesh.position.set(x,z,y);world.add(mesh);
+  const tag=label('戴森 V8 杆');tag.position.set(x,z+8,y);world.add(tag);
+  nodes.push({mesh,tag,base:mesh.position.clone(),explode:new THREE.Vector3(0,-8,0)});
+}
+function clear(){while(world.children.length)world.remove(world.children[0]);nodes.length=0;}
+function addShell(){
+  const shell=cube(114,100,94,0x94a3b8,.08);shell.position.set(57,50,47);world.add(shell);
+  const floor=cube(114,1,94,0xcbd5e1,.35);floor.position.set(57,.5,47);world.add(floor);
+}
+function addGap(name,x,y,z,w,d,h){
+  addItem(name,x,y,z,w,d,h,0x22c55e,.10,[0,0,0]);
+}
+
+function buildRotated(){
+  addShell();
+
+  // Cat rotated on floor: X=53.2, Y=78
+  addItem('小佩 Ultra（已旋转90°）',0,0,0,53.2,78,61.2,0xf59e0b,.84,[-10,0,-8]);
+
+  // 4 cartons on the right: one column, 2 deep x 2 high
+  addItem('纸箱 1',54,0,0,50,40,40,0x3b82f6,.84,[10,0,-8]);
+  addItem('纸箱 2',54,40,0,50,40,40,0x3b82f6,.84,[10,0,10]);
+  addItem('纸箱 3',54,0,40,50,40,40,0x2563eb,.76,[10,16,-8]);
+  addItem('纸箱 4',54,40,40,50,40,40,0x2563eb,.76,[10,16,10]);
+
+  // One light plastic shoe bin on cat top
+  addItem('鞋塑料箱',4,6,61.2,45,44,30,0x14b8a6,.82,[-10,18,-8]);
+
+  // Dyson rod in rear 14cm strip
+  addRod(37,86,5,74);
+
+  // Remaining spaces
+  addGap('右侧约10cm余量',104,0,0,10,80,100);
+  addGap('后方约14cm长缝',0,80,0,114,14,100);
+  addGap('纸箱顶部约20cm',54,0,80,50,80,20);
+}
+
+function buildOriginal(){
+  addShell();
+
+  // Cat unrotated: X=78, Y=53.2
+  addItem('小佩 Ultra（未旋转）',0,0,0,78,53.2,61.2,0xf59e0b,.84,[-12,0,-8]);
+
+  // cartons behind, 2 x 2
+  addItem('纸箱 1',0,53.2,0,50,40,40,0x3b82f6,.84,[-12,0,10]);
+  addItem('纸箱 2',50,53.2,0,50,40,40,0x3b82f6,.84,[12,0,10]);
+  addItem('纸箱 3',0,53.2,40,50,40,40,0x2563eb,.76,[-12,16,10]);
+  addItem('纸箱 4',50,53.2,40,50,40,40,0x2563eb,.76,[12,16,10]);
+
+  // risk strip 0.8
+  addItem('仅余0.8cm',0,93.2,0,114,0.8,100,0xef4444,.28,[0,0,0]);
+}
+
+function rebuild(){
+  clear(); exploded=false; document.getElementById('explode').textContent='展开查看';
+  if(mode==='rotated')buildRotated(); else buildOriginal();
+
+  const badge=document.getElementById('badge');
+  const risk=document.getElementById('risk');
+  const desc=document.getElementById('desc');
+  if(mode==='rotated'){
+    badge.textContent='推荐：旋转90°'; badge.className='badge';
+    risk.style.display='none';
+    desc.textContent='“旋转90°”只是把猫砂盆在地面上转个方向，不是侧放。它仍然正常站立，只是让53.2cm这一边沿114cm方向，78cm这一边沿94cm方向。';
+  }else{
+    badge.textContent='不推荐：未旋转'; badge.className='badge bad';
+    risk.style.display='block';
+    desc.textContent='未旋转时，猫砂盆78cm长边沿114cm方向，53.2cm短边沿94cm方向，后排纸箱只能挤在它后面。';
+  }
+}
+document.getElementById('mode').addEventListener('change',e=>{mode=e.target.value;rebuild();});
+
+function setExploded(on){
+  exploded=on;
+  nodes.forEach(n=>{
+    const p=n.base.clone();if(on)p.add(n.explode);n.mesh.position.copy(p);n.tag.position.set(p.x,p.y+12,p.z);
+  });
+  document.getElementById('explode').textContent=on?'恢复装箱':'展开查看';
+}
+document.getElementById('reset').addEventListener('click',()=>{camera.position.set(57,225,47);controls.target.set(57,48,47);controls.update();});
+document.getElementById('explode').addEventListener('click',()=>setExploded(!exploded));
+document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>{
+  const v=btn.dataset.view;
+  if(v==='top')camera.position.set(57,225,47);
+  if(v==='iso')camera.position.set(185,150,190);
+  if(v==='front')camera.position.set(57,50,210);
+  if(v==='side')camera.position.set(210,50,47);
+  controls.target.set(57,48,47);controls.update();
+}));
+function resize(){const w=viewer.clientWidth,h=viewer.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+addEventListener('resize',resize);resize();rebuild();
+(function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);})();
+</script>
 </body>
 </html>
