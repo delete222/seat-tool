@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026金秋会 · 10月4日 One-page | 吉利汽车集团</title>
+<style>
+  /* v10 = V5 底子：企业蓝 hero + 浅色内容区；改时间轴、去条形码、加自行出发 */
+  :root{
+    --blue:#0A2551; --blue2:#006CB6; --gb:#5B6671; --tint:#A5C5E5;
+    --line:#E0E0E0; --txt:#333; --sub:#5B6671; --orange:#ED7D31;
+    --bg:#F5F7FA; --card:#fff; --b08:rgba(0,108,182,.08); --b15:rgba(0,108,182,.16);
+    --cn:"Microsoft YaHei","微软雅黑","PingFang SC",sans-serif;
+    --en:Arial,"Helvetica Neue",Helvetica,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--cn);background:var(--bg);color:var(--txt);line-height:1.7;font-size:14px}
+  .num{font-family:var(--en)}
+  .page{max-width:1040px;margin:0 auto;padding:0 20px 56px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;box-shadow:0 2px 10px rgba(10,37,81,.05)}
+
+  /* ============ HERO ============ */
+  .hero{background:linear-gradient(135deg,#081D40 0%,var(--blue) 55%,#0E3168 100%);color:#fff}
+  .hero-top{display:flex;align-items:center;justify-content:space-between;max-width:1040px;margin:0 auto;padding:18px 20px 0}
+  .hero-top svg{height:22px;display:block}
+  .hero-top svg path{fill:#fff}
+  .hero-top .conf{font-size:11px;letter-spacing:2px;color:var(--tint);border:1px solid rgba(165,197,229,.45);padding:3px 10px;border-radius:2px}
+  .hero-in{max-width:1040px;margin:0 auto;padding:34px 20px 46px;display:grid;grid-template-columns:1.02fr .98fr;gap:40px;align-items:center}
+  .hero-l .bar{width:52px;height:5px;background:var(--blue2);margin-bottom:16px}
+  .hero-l .kicker{font-family:var(--en);font-size:12px;letter-spacing:3px;color:var(--tint);margin-bottom:10px}
+  .hero-l h1{font-size:42px;letter-spacing:6px;font-weight:700;line-height:1.25}
+  .hero-l h1 small{display:block;font-family:var(--en);font-size:13px;letter-spacing:4px;font-weight:400;color:var(--tint);margin-top:8px}
+  .hero-l p.lead{margin-top:14px;font-size:14px;color:#dce8f5;max-width:420px}
+  .hero-l .chips{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+  .hero-l .chips span{background:rgba(255,255,255,.1);border:1px solid rgba(165,197,229,.4);border-radius:2px;padding:5px 12px;font-size:12.5px}
+  .hero-l .chips b{color:#FFD9B0;font-family:var(--en)}
+  @media(max-width:900px){.hero-in{grid-template-columns:1fr;gap:26px;padding:26px 20px 36px}.hero-l h1{font-size:32px;letter-spacing:4px}}
+
+  /* ============ 乘车凭证（无条形码） ============ */
+  .pass{background:var(--card);border-radius:8px;overflow:hidden;box-shadow:0 18px 50px rgba(4,18,40,.45);color:var(--txt)}
+  .pass .head{display:flex;align-items:center;gap:10px;background:var(--blue);padding:11px 16px}
+  .pass .head svg{height:14px}
+  .pass .head svg path{fill:#fff}
+  .pass .head .t{color:var(--tint);font-family:var(--en);font-size:10.5px;letter-spacing:3px}
+  .pass .head .no{margin-left:auto;color:#fff;font-family:var(--en);font-size:10.5px;letter-spacing:1px}
+  .pass .seg{display:flex;gap:6px;padding:12px 14px 0}
+  .pass .seg button{flex:1;border:1px solid var(--line);background:var(--bg);border-radius:3px;padding:9px;font-size:13.5px;font-weight:700;color:var(--gb);cursor:pointer;font-family:var(--cn);transition:.2s}
+  .pass .seg button.on{background:var(--blue2);border-color:var(--blue2);color:#fff;box-shadow:0 3px 10px rgba(0,108,182,.3)}
+  .route-row{display:flex;align-items:center;padding:8px 18px 14px;gap:8px}
+  .route-row .end{flex:1;min-width:0}
+  .route-row .code{font-family:var(--en);font-size:10.5px;letter-spacing:2px;color:var(--blue2);font-weight:700}
+  .route-row .city{font-size:15px;font-weight:700;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .route-row .time{font-family:var(--en);font-size:30px;font-weight:700;line-height:1.15;color:var(--blue)}
+  .route-row .time i{font-style:normal;font-size:10.5px;color:#fff;font-family:var(--cn);font-weight:700;margin-left:5px;background:var(--orange);border-radius:2px;padding:1px 6px;vertical-align:middle}
+  .route-row .note{font-size:11px;color:var(--sub)}
+  .route-row .end.r{text-align:right}
+  .route-row .mid{flex:0 0 84px;text-align:center;color:var(--blue2)}
+  .route-row .mid .bus{font-size:18px}
+  .route-row .mid .dash{border-top:2px dashed var(--tint);margin:3px 0}
+  .route-row .mid .dur{font-size:10.5px;color:var(--sub);font-family:var(--en)}
+  .perf{border-top:2px dashed var(--line);margin:0 14px}
+  .pass .grid{display:grid;grid-template-columns:1fr 1fr}
+  .pass .cell{padding:11px 18px;border-bottom:1px solid var(--line)}
+  .pass .cell:nth-child(odd){border-right:1px solid var(--line)}
+  .pass .cell:nth-last-child(-n+2){border-bottom:none}
+  .pass .cell .k{font-size:10px;letter-spacing:1.5px;color:var(--gb);font-family:var(--en)}
+  .pass .cell .v{font-size:13px;font-weight:700;color:var(--blue);margin-top:1px}
+  .pass .cell .v small{display:block;font-weight:400;color:var(--sub);font-size:11.5px}
+  .pass .stub{display:flex;align-items:center;gap:12px;padding:11px 18px;background:var(--b08);border-top:2px dashed var(--line);font-size:11.5px;color:var(--sub);line-height:1.6}
+  .pass .stub b{color:var(--blue2)}
+  .pass .stub .ic{flex:0 0 auto;font-size:16px}
+
+  /* ============ NAV（无角标logo） ============ */
+  nav{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-in{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:4px;padding:7px 16px}
+  .nav-links{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-links a{flex:0 0 auto;text-decoration:none;color:var(--gb);font-size:13px;font-weight:600;padding:6px 12px;border-radius:2px;letter-spacing:1px}
+  .nav-links a.on{background:var(--blue);color:#fff}
+  .searchbox{position:relative;flex:0 0 auto;display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:6px 10px;transition:.2s}
+  .searchbox:focus-within{border-color:var(--blue2);background:#fff;box-shadow:0 0 0 3px var(--b15)}
+  .searchbox input{border:none;outline:none;background:transparent;font-size:13px;width:150px;font-family:var(--cn);color:var(--txt)}
+  .searchbox .clr{border:none;background:transparent;color:var(--gb);cursor:pointer;display:none;font-size:12px;padding:0}
+  .sug{position:absolute;right:0;top:calc(100% + 6px);width:340px;max-width:86vw;background:#fff;border-radius:4px;box-shadow:0 14px 38px rgba(4,18,40,.3);overflow:hidden;display:none;border-top:3px solid var(--blue2);z-index:70}
+  .sug button{display:block;width:100%;text-align:left;border:none;background:transparent;padding:11px 14px;font-size:13px;color:var(--txt);cursor:pointer;border-bottom:1px solid var(--line);font-family:var(--cn)}
+  .sug button:last-child{border-bottom:none}
+  .sug button:hover{background:var(--b08)}
+  .sug button .q-ic{color:var(--blue2);margin-right:8px;font-family:var(--en);font-weight:700}
+  .sug .none{padding:12px 14px;font-size:12.5px;color:var(--sub)}
+  .anscard{display:none;margin:14px 0 0;background:#fff;border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:4px;padding:14px 16px;box-shadow:0 6px 20px rgba(10,37,81,.08)}
+  .anscard .a-q{font-weight:700;font-size:14px;color:var(--blue);display:flex;justify-content:space-between;gap:8px}
+  .anscard .a-q button{border:none;background:transparent;color:var(--gb);cursor:pointer;font-size:14px}
+  .anscard .a-body{font-size:13px;margin-top:5px;color:#444}
+  .anscard .a-link{display:inline-block;margin-top:7px;font-size:12px;color:var(--blue2);text-decoration:none;border-bottom:1px solid var(--tint)}
+  @media(max-width:700px){.searchbox input{width:96px}.sug{width:78vw}}
+
+  /* ============ 章节 ============ */
+  section{margin-top:52px;scroll-margin-top:56px}
+  .sec-head{margin-bottom:22px}
+  .sec-head .en{font-family:var(--en);font-size:11px;letter-spacing:4px;color:var(--blue2);font-weight:700}
+  .sec-head h2{font-size:24px;letter-spacing:3px;color:var(--blue);font-weight:700;margin-top:2px;display:flex;align-items:center;gap:10px}
+  .sec-head h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  .sec-sub{font-size:12.5px;color:var(--sub);margin-top:6px}
+
+  /* ============ 三种出发方式卡 ============ */
+  .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:880px){.modes{grid-template-columns:1fr}}
+  .mode{overflow:hidden;display:flex;flex-direction:column}
+  .mode .mh{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#0A2551,#123B7A)}
+  .mode .mh .idx{font-family:var(--en);font-size:17px;font-weight:700;color:#FFD9B0;line-height:1}
+  .mode .mh .nm{font-size:15.5px;font-weight:700;color:#fff}
+  .mode .mh .nm small{display:block;font-size:10.5px;color:var(--tint);font-weight:400;letter-spacing:1px;font-family:var(--en)}
+  .mode .mb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:9px;flex:1}
+  .row{display:flex;gap:10px;font-size:13px}
+  .row .k{flex:0 0 52px;color:var(--gb);font-size:11.5px;padding-top:2px;letter-spacing:1px}
+  .row .v{flex:1;font-weight:600;color:var(--txt)}
+  .row .v small{display:block;font-weight:400;color:var(--sub);font-size:11.5px;margin-top:1px}
+  .tag{display:inline-block;font-size:10px;font-weight:700;border-radius:2px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+  .tag.rec{background:var(--blue2);color:#fff}
+  .tag.tmp{background:var(--orange);color:#fff}
+  .routeline{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin-bottom:2px}
+  .routeline .p{flex:1;min-width:0}
+  .routeline .p .c{font-family:var(--en);font-size:9.5px;letter-spacing:1.5px;color:var(--blue2)}
+  .routeline .p .n{font-size:12.5px;font-weight:700;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .routeline .p .t{font-family:var(--en);font-size:21px;font-weight:700;color:var(--blue);line-height:1.2}
+  .routeline .p.r{text-align:right}
+  .routeline .mid{flex:0 0 64px;text-align:center;color:var(--blue2)}
+  .routeline .mid .dash{border-top:1.5px dashed var(--tint);margin:3px 0}
+  .routeline .mid .km{font-family:var(--en);font-size:10px;color:var(--sub)}
+  .addr{border:1px dashed var(--tint);border-radius:4px;padding:8px 10px;font-size:11.5px;color:var(--sub);background:var(--b08)}
+  .addr b{color:var(--blue);display:block;font-size:12px}
+  .bigtime{display:flex;align-items:baseline;gap:8px;border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
+  .bigtime .t{font-family:var(--en);font-size:24px;font-weight:700;color:var(--blue);line-height:1}
+  .bigtime .d{font-size:11px;color:var(--sub)}
+
+  .dayline{padding:20px 18px 18px}
+  .dayline .d1{font-size:23px;font-weight:700;color:var(--blue);letter-spacing:2px}
+  .dayline .d1 i{font-style:normal;font-size:12px;color:#fff;font-family:var(--cn);background:var(--orange);border-radius:2px;padding:2px 9px;vertical-align:4px;margin-left:10px;letter-spacing:2px}
+  .dayline .d2{font-size:12.5px;color:var(--sub);margin-top:5px}
+  .ct .tel{margin-top:6px;font-family:var(--en);font-size:19px;font-weight:700;color:var(--blue2);letter-spacing:1px}
+
+  /* ============ 行程切换 tabs ============ */
+  .tabs{display:flex;gap:6px;margin-bottom:14px}
+  .tabs button{flex:1;max-width:240px;border:1px solid var(--line);background:#fff;border-radius:3px;padding:10px;font-size:14px;font-weight:700;color:var(--gb);cursor:pointer;font-family:var(--cn);transition:.2s}
+  .tabs button.on{background:var(--blue2);border-color:var(--blue2);color:#fff;box-shadow:0 3px 10px rgba(0,108,182,.3)}
+  .itab{display:none}
+  .itab.on{display:block}
+  @media(max-width:560px){.tabs button{padding:8px 4px;font-size:12.5px}}
+
+  /* ============ 时刻表（替代交替时间轴） ============ */
+  .sched-wrap{padding:6px 22px}
+  table.sched{width:100%;border-collapse:collapse}
+  table.sched td{padding:13px 10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+  table.sched tr:last-child td{border-bottom:none}
+  table.sched .c1{width:96px;font-family:var(--en);font-weight:700;font-size:15px;color:var(--blue);white-space:nowrap}
+  table.sched .c1 small{display:block;font-size:11px;color:var(--sub);font-weight:400}
+  table.sched .c2{width:8px;padding-top:19px}
+  table.sched .c2 i{display:block;width:8px;height:8px;border-radius:50%;background:var(--tint)}
+  table.sched tr.k .c2 i{background:var(--orange)}
+  table.sched .c3 b{font-weight:700;color:var(--txt)}
+  table.sched .c3 em{font-style:normal;display:block;color:var(--sub);font-size:12.5px}
+  table.sched .c4{width:96px;text-align:right;white-space:nowrap;padding-top:15px}
+  table.sched .c4 span{font-size:10.5px;color:var(--blue2);background:var(--b08);border:1px solid var(--b15);border-radius:2px;padding:1px 7px}
+  @media(max-width:640px){table.sched .c4{display:none}table.sched .c1{width:76px;font-size:13.5px}}
+
+  /* ============ 接驳 3列 ============ */
+  .shuttle{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:760px){.shuttle{grid-template-columns:1fr}}
+  .sh-card{overflow:hidden;display:flex;flex-direction:column}
+  .sh-card .t{background:var(--blue);color:#fff;padding:12px 16px;display:flex;align-items:baseline;gap:8px}
+  .sh-card .t .tt{font-family:var(--en);font-size:20px;font-weight:700}
+  .sh-card .t .ts{font-size:11px;color:var(--tint)}
+  .sh-card .c{padding:14px 16px 16px}
+  .sh-card .r{font-size:14.5px;font-weight:700;color:var(--blue)}
+  .sh-card .r .ar{color:var(--orange);margin:0 5px;font-family:var(--en)}
+  .sh-card .w{font-size:12.5px;color:var(--sub);margin-top:5px}
+
+  /* ============ 须知 4列 ============ */
+  .notes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:900px){.notes{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.notes{grid-template-columns:1fr}}
+  .note{padding:16px 14px;text-align:center}
+  .note .ic{width:42px;height:42px;margin:0 auto;border-radius:8px;background:var(--b08);border:1px solid var(--b15);display:flex;align-items:center;justify-content:center;font-size:19px}
+  .note .tt{font-size:14px;font-weight:700;color:var(--blue);margin-top:9px}
+  .note .dd{font-size:12px;color:var(--sub);margin-top:3px}
+
+  /* ============ FAQ 2列 ============ */
+  .faqgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  @media(max-width:760px){.faqgrid{grid-template-columns:1fr}}
+  .faq{border:1px solid var(--line);border-radius:6px;background:#fff;overflow:hidden}
+  .faq summary{list-style:none;cursor:pointer;padding:13px 16px;font-weight:700;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--blue)}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"＋";font-size:14px;color:var(--blue2);transition:.25s;flex:0 0 auto;font-family:var(--en)}
+  .faq[open] summary::after{transform:rotate(45deg)}
+  .faq .fb{padding:11px 16px 14px;font-size:12.5px;color:#4a5560;border-top:1px dashed var(--line)}
+  .faq .fb b{color:var(--blue)}
+
+  /* ============ 联系人 ============ */
+  .ct-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:760px){.ct-row{grid-template-columns:1fr}}
+  .ct{padding:18px 14px;text-align:center}
+  .ct .av{width:44px;height:44px;margin:0 auto;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;border:2px solid var(--blue2)}
+  .ct .nm{font-size:15.5px;font-weight:700;color:var(--blue);margin-top:7px}
+  .ct .rl{font-size:12px;color:var(--sub);margin-top:2px}
+  .ct.emer{display:none}
+
+  @media print{
+    body{background:#fff}
+    nav,.searchbox,.sug,.anscard{display:none !important}
+    .hero{background:var(--blue) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .hero-in{grid-template-columns:1fr;gap:20px;padding:30px 20px}
+    .pass{box-shadow:none;border:1px solid var(--line)}
+    .seg{display:none}
+    .shuttle,.notes,.faqgrid,.ct-row,.modes{grid-template-columns:1fr 1fr}
+    .faq .fb{display:block}
+    .card,.sh-card,.note,.faq,.ct,.mode{box-shadow:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="hero-top">
+    <svg viewBox="619 1493.78 106.36 36.12"><path d="M689.92 1511.66C690.27 1511.66 690.605 1511.8 690.853 1512.05C691.1 1512.3 691.239 1512.63 691.239 1512.98V1518.41H693.149V1519.9L690.97 1519.89C690.619 1519.89 690.282 1519.75 690.035 1519.5C689.788 1519.25 689.65 1518.91 689.649 1518.56V1512.97H679.079V1511.66H689.92Z" fill="black"/>
+  <path d="M662.09 1505.35H657.46V1508.11H662.09V1509.53H657.46V1519.89H655.87V1509.53H651.239V1508.11H655.87V1505.35H651.239V1503.95H662.09V1505.35Z" fill="black"/>
+  <path d="M669.949 1518.56C669.947 1518.92 669.805 1519.25 669.557 1519.5C669.308 1519.75 668.971 1519.89 668.619 1519.89H664.35V1518.41H668.35V1503.95H669.949V1518.56Z" fill="black"/>
+  <path d="M675.05 1519.89H673.329L675.05 1513.26H676.77L675.05 1519.89Z" fill="black"/>
+  <path d="M647.1 1518.56C647.097 1518.92 646.956 1519.25 646.707 1519.5C646.458 1519.75 646.121 1519.89 645.77 1519.89H629.51V1513.07H647.1V1518.56ZM631.17 1518.4H645.43V1514.56H631.17V1518.4Z" fill="black" fill-rule="evenodd" clip-rule="evenodd"/>
+  <path d="M653.15 1519.89H651.52V1511.8H653.15V1519.89Z" fill="black"/>
+  <path d="M661.83 1519.89H660.199V1511.8H661.83V1519.89Z" fill="black"/>
+  <path d="M702.84 1505.13H714.5V1506.61H701.97L699.39 1511H705.649V1508.81H707.24V1511H713.91V1512.48H707.24V1515.77H715.36V1517.25H707.24V1519.88H705.649V1517.25H696.42V1515.77H705.649V1512.48H697.31V1511.31L700.07 1506.61H696.689V1505.13H700.939L701.729 1503.79H703.63L702.84 1505.13Z" fill="black"/>
+  <path d="M665.949 1515.95H664.35V1504.86H665.949V1515.95Z" fill="black"/>
+  <path d="M676.649 1510.98H674.939L674.029 1508.4H675.739L676.649 1510.98Z" fill="black"/>
+  <path d="M639.14 1504.86H647.6V1506.34H639.14V1509.3H647.1V1510.76H629.51V1509.3H637.47V1506.34H629V1504.86H637.47V1503.78H639.14V1504.86Z" fill="black"/>
+  <path d="M691.55 1509.59H679.47V1508.35H691.55V1509.59Z" fill="black"/>
+  <path d="M676.279 1506.35H674.56L673.659 1503.78H675.369L676.279 1506.35Z" fill="black"/>
+  <path d="M680.859 1504.94H692.279V1506.28H679.47C679.386 1506.28 679.302 1506.26 679.228 1506.22C679.153 1506.19 679.088 1506.13 679.039 1506.06C678.986 1506 678.95 1505.92 678.935 1505.84C678.919 1505.76 678.924 1505.67 678.949 1505.59L679.46 1503.78H681.189L680.859 1504.94Z" fill="black"/></svg>
+    <span class="conf">内部资料 · 请勿外传</span>
+  </div>
+  <div class="hero-in">
+    <div class="hero-l">
+      <div class="bar"></div>
+      <div class="kicker">GEELY GROUP · 2026 金秋会 · 参会明白纸</div>
+      <h1>10月4日 出发与到达<small>OCT 4 ONE-PAGE · DEPARTURE &amp; ARRIVAL</small></h1>
+      <p class="lead">报到日当天：三种出发方式（自行出发 / 杭州出发 / 杭州湾出发）、完整行程时刻与乘车须知——看这一页就够了。</p>
+      <div class="chips">
+        <span>📅 <b>10.04</b> 周日</span><span>🚌 杭州 / 杭州湾摆渡车 ＋ 自行出发</span><span>🏨 上饶富力万达嘉华酒店</span>
+      </div>
+    </div>
+
+    <!-- 当日速览（无班车切换，细节见下方三种出发方式） -->
+    <div class="pass">
+      <div class="head"><svg viewBox="619 1493.78 106.36 36.12"><path d="M689.92 1511.66C690.27 1511.66 690.605 1511.8 690.853 1512.05C691.1 1512.3 691.239 1512.63 691.239 1512.98V1518.41H693.149V1519.9L690.97 1519.89C690.619 1519.89 690.282 1519.75 690.035 1519.5C689.788 1519.25 689.65 1518.91 689.649 1518.56V1512.97H679.079V1511.66H689.92Z" fill="black"/>
+  <path d="M662.09 1505.35H657.46V1508.11H662.09V1509.53H657.46V1519.89H655.87V1509.53H651.239V1508.11H655.87V1505.35H651.239V1503.95H662.09V1505.35Z" fill="black"/>
+  <path d="M669.949 1518.56C669.947 1518.92 669.805 1519.25 669.557 1519.5C669.308 1519.75 668.971 1519.89 668.619 1519.89H664.35V1518.41H668.35V1503.95H669.949V1518.56Z" fill="black"/>
+  <path d="M675.05 1519.89H673.329L675.05 1513.26H676.77L675.05 1519.89Z" fill="black"/>
+  <path d="M647.1 1518.56C647.097 1518.92 646.956 1519.25 646.707 1519.5C646.458 1519.75 646.121 1519.89 645.77 1519.89H629.51V1513.07H647.1V1518.56ZM631.17 1518.4H645.43V1514.56H631.17V1518.4Z" fill="black" fill-rule="evenodd" clip-rule="evenodd"/>
+  <path d="M653.15 1519.89H651.52V1511.8H653.15V1519.89Z" fill="black"/>
+  <path d="M661.83 1519.89H660.199V1511.8H661.83V1519.89Z" fill="black"/>
+  <path d="M702.84 1505.13H714.5V1506.61H701.97L699.39 1511H705.649V1508.81H707.24V1511H713.91V1512.48H707.24V1515.77H715.36V1517.25H707.24V1519.88H705.649V1517.25H696.42V1515.77H705.649V1512.48H697.31V1511.31L700.07 1506.61H696.689V1505.13H700.939L701.729 1503.79H703.63L702.84 1505.13Z" fill="black"/>
+  <path d="M665.949 1515.95H664.35V1504.86H665.949V1515.95Z" fill="black"/>
+  <path d="M676.649 1510.98H674.939L674.029 1508.4H675.739L676.649 1510.98Z" fill="black"/>
+  <path d="M639.14 1504.86H647.6V1506.34H639.14V1509.3H647.1V1510.76H629.51V1509.3H637.47V1506.34H629V1504.86H637.47V1503.78H639.14V1504.86Z" fill="black"/>
+  <path d="M691.55 1509.59H679.47V1508.35H691.55V1509.59Z" fill="black"/>
+  <path d="M676.279 1506.35H674.56L673.659 1503.78H675.369L676.279 1506.35Z" fill="black"/>
+  <path d="M680.859 1504.94H692.279V1506.28H679.47C679.386 1506.28 679.302 1506.26 679.228 1506.22C679.153 1506.19 679.088 1506.13 679.039 1506.06C678.986 1506 678.95 1505.92 678.935 1505.84C678.919 1505.76 678.924 1505.67 678.949 1505.59L679.46 1503.78H681.189L680.859 1504.94Z" fill="black"/></svg><span class="t">OCT 4 · 当日速览</span></div>
+      <div class="dayline">
+        <div class="d1">10月4日 · 周日<i>报到日</i></div>
+        <div class="d2">前往上饶 · 试验场——具体出发时刻按您的出发方式，见下方 01</div>
+      </div>
+      <div class="perf"></div>
+      <div class="grid">
+        <div class="cell"><div class="k">DEPARTURE · 出发方式</div><div class="v">摆渡车 ＋ 自行前往<small>杭州湾 07:00 · 杭州 08:30（均暂定，各一辆）</small></div></div>
+        <div class="cell"><div class="k">ON BOARD · 车上供应</div><div class="v">矿泉水 · 简单零食<small>晕车药备于随车领队处</small></div></div>
+        <div class="cell"><div class="k">LUGGAGE · 行李</div><div class="v">放入行李舱即可<small>会务统一转运至酒店</small></div></div>
+        <div class="cell"><div class="k">HOTEL · 入住</div><div class="v">上饶富力万达嘉华酒店<small>信州区广信大道8号 · 距试验场20km</small></div></div>
+      </div>
+      <div class="stub"><span class="ic">🪪</span><span>全程请携带<b>身份证</b><br>请提前在<b>参会信息收集表</b>填报乘车方式，乘车群将于会前组建；最终发车时间以群内通知为准</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <div class="nav-in">
+    <div class="nav-links" id="navLinks">
+      <a href="#sec1" class="on">出发方式</a>
+      <a href="#sec2">当日行程</a>
+      <a href="#sec3">接驳晚宴</a>
+      <a href="#sec4">乘车须知</a>
+      <a href="#sec5">常见问答</a>
+      <a href="#sec6">联系人</a>
+    </div>
+    <div class="searchbox">
+      <span>🔍</span>
+      <input id="q" type="text" placeholder="提问：几点发车 / 高铁…" autocomplete="off">
+      <button class="clr" id="clr" title="清除">✕</button>
+      <div class="sug" id="sug"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="anscard" id="ans">
+    <div class="a-q"><span id="ansQ"></span><button id="ansX" title="关闭">✕</button></div>
+    <div class="a-body" id="ansA"></div>
+    <a class="a-link" id="ansL" href="#sec1">查看对应章节 ↓</a>
+  </div>
+
+  <!-- ============ 1 三种出发方式 ============ -->
+  <section id="sec1">
+    <div class="sec-head"><div class="en">DEPARTURE OPTIONS</div><h2>三种出发方式</h2><div class="sec-sub">任选其一；乘摆渡车的同事以调研表填报及乘车群通知为准，自行前往者请于12:30前抵达试验场</div></div>
+    <div class="modes">
+
+      <div class="card mode">
+        <div class="mh"><span class="idx">01</span><span class="nm">自行出发<small>SELF · 自驾/高铁/飞机</small></span></div>
+        <div class="mb">
+          <div class="row"><span class="k">高铁</span><span class="v">上饶站<span class="tag rec">推荐</span><small>无专人接站，请自行前往</small><small>打车：至酒店 12km·22min ｜ 至试验场 20km·46min</small></span></div>
+          <div class="row"><span class="k">飞机</span><span class="v">上饶三清山机场<small>民用机场 · 无专人接站，请自行前往</small><small>打车：至酒店 8.6km·15min ｜ 至试验场 19km·25min</small></span></div>
+          <div class="row"><span class="k">自驾</span><span class="v">杭州方向 <span class="num">360km·4h</span> ／ 杭州湾方向 <span class="num">460km·5.5h</span><small>车牌报备与停车安排另行通知</small></span></div>
+          <div class="addr"><b>📍 试验场导航地址</b>中交(上饶)汽车综合试验场有限公司<br>广信区上铅快速通道与吉祥大道交叉口西南200米</div>
+          <div class="bigtime"><span class="t num">12:30</span><span class="d">前抵达，可赶上简餐与下午活动</span></div>
+        </div>
+      </div>
+
+      <div class="card mode">
+        <div class="mh"><span class="idx">02</span><span class="nm">杭州出发<small>HANGZHOU HQ · 摆渡车</small></span></div>
+        <div class="mb">
+          <div class="routeline">
+            <div class="p"><div class="c">HANGZHOU HQ</div><div class="n">总部大厦</div><div class="t">08:30<span class="tag tmp">暂定</span></div></div>
+            <div class="mid"><div>🚌</div><div class="dash"></div><div class="km">360km</div></div>
+            <div class="p r"><div class="c">SHANGRAO</div><div class="n">试验场</div><div class="t">≈12:30</div></div>
+          </div>
+          <div class="row"><span class="k">集合</span><span class="v">08:15 大厦一楼正门前<small>请提前15分钟到达</small></span></div>
+          <div class="row"><span class="k">途中</span><span class="v">龙游服务区停歇1次<small>出发约2小时后 · 约15分钟</small></span></div>
+          <div class="row"><span class="k">车上</span><span class="v">水 · 零食 · 晕车药<small>行李入舱，统一转运至酒店</small></span></div>
+        </div>
+      </div>
+
+      <div class="card mode">
+        <div class="mh"><span class="idx">03</span><span class="nm">杭州湾出发<small>HANGZHOU BAY · 摆渡车</small></span></div>
+        <div class="mb">
+          <div class="routeline">
+            <div class="p"><div class="c">HANGZHOU BAY</div><div class="n">研究院二期</div><div class="t">07:00<span class="tag tmp">暂定</span></div></div>
+            <div class="mid"><div>🚌</div><div class="dash"></div><div class="km">460km</div></div>
+            <div class="p r"><div class="c">SHANGRAO</div><div class="n">试验场</div><div class="t">≈12:30</div></div>
+          </div>
+          <div class="row"><span class="k">集合</span><span class="v">06:45 二期北广场<small>请提前15分钟到达</small></span></div>
+          <div class="row"><span class="k">途中</span><span class="v">金华服务区停歇1次<small>出发约2.5小时后 · 约15分钟</small></span></div>
+          <div class="row"><span class="k">车上</span><span class="v">水 · 零食 · 晕车药<small>行李入舱，统一转运至酒店</small></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 当日行程时刻表（按出发方式切换） ============ -->
+  <section id="sec2">
+    <div class="sec-head"><div class="en">ITINERARY · OCT 4</div><h2>当日行程时刻表</h2><div class="sec-sub">选择您的出发方式，查看对应的出发与在途时刻；抵达后的安排三种方式一致</div></div>
+    <div class="tabs" id="itabs">
+      <button class="on" data-t="t1">自行出发</button>
+      <button data-t="t2">杭州出发 · 摆渡车</button>
+      <button data-t="t3">杭州湾出发 · 摆渡车</button>
+    </div>
+
+    <div class="card sched-wrap itab on" id="t1">
+      <table class="sched">
+        <tr><td class="c1">自定<small>建议上午出发</small></td><td class="c2"><i></i></td><td class="c3"><b>出发前往上饶</b><em>杭州方向 360km·4h ／ 杭州湾方向 460km·5.5h；高铁至上饶站，飞机至三清山机场（详见 01 自行出发卡）</em></td><td class="c4"><span>12:30前到</span></td></tr>
+        <tr class="k"><td class="c1">≤12:30</td><td class="c2"><i></i></td><td class="c3"><b>抵达试验场 · 简餐</b><em>导航「中交(上饶)汽车综合试验场」</em></td><td class="c4"><span>简餐</span></td></tr>
+        <tr class="k"><td class="c1">13:30<small>–18:00</small></td><td class="c2"><i></i></td><td class="c3"><b>安全培训 → 静态评审 ＋ 动态试驾</b><em>银河战舰700系列活动；分组后续通知，先培训后上车</em></td><td class="c4"><span>战舰700</span></td></tr>
+        <tr><td class="c1">14:00</td><td class="c2"><i></i></td><td class="c3"><b>不参加试驾：可乘接驳车先送酒店</b><em>到店即办入住；自驾停车与车牌报备另行通知</em></td><td class="c4"><span>20km·30min</span></td></tr>
+        <tr><td class="c1">傍晚</td><td class="c2"><i></i></td><td class="c3"><b>统一乘车前往晚宴</b><em>试驾结束后与酒店侧同事合流；地点以群内通知为准</em></td><td class="c4"><span>合流</span></td></tr>
+        <tr class="k"><td class="c1">晚宴后</td><td class="c2"><i></i></td><td class="c3"><b>返回酒店入住</b><em>上饶富力万达嘉华酒店 · 信州区广信大道8号</em></td><td class="c4"><span>入住</span></td></tr>
+      </table>
+    </div>
+
+    <div class="card sched-wrap itab" id="t2">
+      <table class="sched">
+        <tr><td class="c1">08:15</td><td class="c2"><i></i></td><td class="c3"><b>集合点名 · 总部大厦一楼正门前</b><em>请提前15分钟到达</em></td><td class="c4"><span>提前到达</span></td></tr>
+        <tr class="k"><td class="c1">08:30<small>暂定</small></td><td class="c2"><i></i></td><td class="c3"><b>摆渡车发车 · 杭州 → 上饶</b><em>准点发车、逾期不候；全程约360km·4小时</em></td><td class="c4"><span>360km</span></td></tr>
+        <tr><td class="c1">≈10:30</td><td class="c2"><i></i></td><td class="c3"><b>龙游服务区休息 · 约15分钟</b><em>出发约2小时后；下车记清车号与集合时间</em></td><td class="c4"><span>记车号</span></td></tr>
+        <tr class="k"><td class="c1">≈12:30</td><td class="c2"><i></i></td><td class="c3"><b>抵达试验场 · 简餐</b><em>行李留行李舱，随接驳车转运酒店</em></td><td class="c4"><span>简餐</span></td></tr>
+        <tr class="k"><td class="c1">13:30<small>–18:00</small></td><td class="c2"><i></i></td><td class="c3"><b>安全培训 → 静态评审 ＋ 动态试驾</b><em>银河战舰700系列活动；分组后续通知，先培训后上车</em></td><td class="c4"><span>战舰700</span></td></tr>
+        <tr><td class="c1">14:00</td><td class="c2"><i></i></td><td class="c3"><b>不参加试驾：接驳车送酒店</b><em>全员行李随车送达；到店即办入住</em></td><td class="c4"><span>20km·30min</span></td></tr>
+        <tr><td class="c1">傍晚</td><td class="c2"><i></i></td><td class="c3"><b>统一乘车前往晚宴</b><em>试驾结束后与酒店侧同事合流；地点以群内通知为准</em></td><td class="c4"><span>合流</span></td></tr>
+        <tr class="k"><td class="c1">晚宴后</td><td class="c2"><i></i></td><td class="c3"><b>返回酒店入住</b><em>上饶富力万达嘉华酒店 · 信州区广信大道8号；清点人数后发车</em></td><td class="c4"><span>入住</span></td></tr>
+      </table>
+    </div>
+
+    <div class="card sched-wrap itab" id="t3">
+      <table class="sched">
+        <tr><td class="c1">06:45</td><td class="c2"><i></i></td><td class="c3"><b>集合点名 · 研究院二期北广场</b><em>请提前15分钟到达</em></td><td class="c4"><span>提前到达</span></td></tr>
+        <tr class="k"><td class="c1">07:00<small>暂定</small></td><td class="c2"><i></i></td><td class="c3"><b>摆渡车发车 · 杭州湾 → 上饶</b><em>准点发车、逾期不候；全程约460km·5.5小时</em></td><td class="c4"><span>460km</span></td></tr>
+        <tr><td class="c1">≈09:30</td><td class="c2"><i></i></td><td class="c3"><b>金华服务区休息 · 约15分钟</b><em>出发约2.5小时后；下车记清车号与集合时间</em></td><td class="c4"><span>记车号</span></td></tr>
+        <tr class="k"><td class="c1">≈12:30</td><td class="c2"><i></i></td><td class="c3"><b>抵达试验场 · 简餐</b><em>行李留行李舱，随接驳车转运酒店</em></td><td class="c4"><span>简餐</span></td></tr>
+        <tr class="k"><td class="c1">13:30<small>–18:00</small></td><td class="c2"><i></i></td><td class="c3"><b>安全培训 → 静态评审 ＋ 动态试驾</b><em>银河战舰700系列活动；分组后续通知，先培训后上车</em></td><td class="c4"><span>战舰700</span></td></tr>
+        <tr><td class="c1">14:00</td><td class="c2"><i></i></td><td class="c3"><b>不参加试驾：接驳车送酒店</b><em>全员行李随车送达；到店即办入住</em></td><td class="c4"><span>20km·30min</span></td></tr>
+        <tr><td class="c1">傍晚</td><td class="c2"><i></i></td><td class="c3"><b>统一乘车前往晚宴</b><em>试驾结束后与酒店侧同事合流；地点以群内通知为准</em></td><td class="c4"><span>合流</span></td></tr>
+        <tr class="k"><td class="c1">晚宴后</td><td class="c2"><i></i></td><td class="c3"><b>返回酒店入住</b><em>上饶富力万达嘉华酒店 · 信州区广信大道8号；清点人数后发车</em></td><td class="c4"><span>入住</span></td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 3 接驳晚宴 ============ -->
+  <section id="sec3">
+    <div class="sec-head"><div class="en">SHUTTLE &amp; DINNER</div><h2>接驳与晚宴</h2><div class="sec-sub">当日三段接驳，全部统一乘车，请勿单独行动 · 酒店⇄试验场 20km·30min</div></div>
+    <div class="shuttle">
+      <div class="card sh-card"><div class="t"><span class="tt">14:00</span><span class="ts">试验场发车</span></div><div class="c"><div class="r">试验场<span class="ar">→</span>万达嘉华酒店</div><div class="w">不参加试驾、先行入住的同事乘坐；全员行李随车送达，到店即办入住</div></div></div>
+      <div class="card sh-card"><div class="t"><span class="tt">傍晚</span><span class="ts">试驾结束后</span></div><div class="c"><div class="r">试验场/酒店<span class="ar">→</span>晚宴地点</div><div class="w">全体参会人员统一乘车并合流；晚宴地点以乘车群通知为准</div></div></div>
+      <div class="card sh-card"><div class="t"><span class="tt">晚宴后</span><span class="ts">结束后</span></div><div class="c"><div class="r">晚宴地点<span class="ar">→</span>万达嘉华酒店</div><div class="w">清点人数后统一送回入住</div></div></div>
+    </div>
+  </section>
+
+  <!-- ============ 4 乘车须知 ============ -->
+  <section id="sec4">
+    <div class="sec-head"><div class="en">NOTICE ×8</div><h2>乘车与活动须知</h2><div class="sec-sub">八件小事，一路顺畅</div></div>
+    <div class="notes">
+      <div class="card note"><div class="ic">⏰</div><div class="tt">准点不候</div><div class="dd">提前15分钟到集合点；迟到速电领队</div></div>
+      <div class="card note"><div class="ic">👟</div><div class="tt">平底鞋＋便装</div><div class="dd">当日含试驾；日间仍热注意防晒</div></div>
+      <div class="card note"><div class="ic">💊</div><div class="tt">晕车早准备</div><div class="dd">可提前服药或向领队领取，坐前排</div></div>
+      <div class="card note"><div class="ic">🧳</div><div class="tt">行李不用搬</div><div class="dd">放入行李舱，会务统一转运至酒店</div></div>
+      <div class="card note"><div class="ic">🎒</div><div class="tt">贵重物品随身</div><div class="dd">服务区停歇与试驾期间，证件与贵重物品请随身携</div></div>
+      <div class="card note"><div class="ic">☕</div><div class="tt">服务区记车号</div><div class="dd">停歇约15分钟，留意群内集合提醒</div></div>
+      <div class="card note"><div class="ic">🦺</div><div class="tt">听从现场指挥</div><div class="dd">试驾前统一安全培训，按分组活动</div></div>
+      <div class="card note"><div class="ic">🤫</div><div class="tt">保密与拍摄</div><div class="dd">拍摄听从安排，车型信息请勿外传</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 5 常见问答 ============ -->
+  <section id="sec5">
+    <div class="sec-head"><div class="en">Q &amp; A</div><h2>常见问答</h2><div class="sec-sub">没找到答案？用右上角搜索框直接提问</div></div>
+    <div class="faqgrid">
+      <details class="faq"><summary>高铁和飞机分别到哪个站？</summary><div class="fb">高铁到<b>上饶站</b>（推荐）；飞机到<b>上饶三清山机场</b>（民用机场）。到站后均无专人接站，请自行前往。</div></details>
+      <details class="faq"><summary>上饶站 / 机场到酒店和试验场多远？</summary><div class="fb">上饶站→酒店 <b>12km·22min</b>，→试验场 <b>20km·46min</b>；机场→酒店 <b>8.6km·15min</b>，→试验场 <b>19km·25min</b>。打车/网约车均可。</div></details>
+      <details class="faq"><summary>自驾导航到哪里？停车怎么安排？</summary><div class="fb">导航「中交(上饶)汽车综合试验场有限公司」：广信区上铅快速通道与吉祥大道交叉口西南200米。车牌报备与停车安排另行通知。</div></details>
+      <details class="faq"><summary>发车时间是最终时间吗？</summary><div class="fb">杭州湾<b>暂定 07:00</b>、杭州<b>暂定 08:30</b>。出发前1–2天组建乘车企微群，最终时间与集合定位以群内通知为准。</div></details>
+      <details class="faq"><summary>中午饭怎么解决？</summary><div class="fb">约12:30抵达试验场后安排<b>简餐</b>，按实际到达情况准备；摆渡车上备有矿泉水与简单零食。</div></details>
+      <details class="faq"><summary>晚宴在哪里、几点开始？</summary><div class="fb">试驾结束后全体统一乘车前往，与酒店侧同事合流；地点与时间以乘车群通知为准。</div></details>
+      <details class="faq"><summary>我的行李要自己拿吗？</summary><div class="fb">乘摆渡车的同事<b>不需要</b>：行李放入行李舱，随14:00接驳车送达酒店，办理入住时直接领取。</div></details>
+      <details class="faq"><summary>试驾怎么分组？需要报名吗？</summary><div class="fb">以调研表填报为准，分组后续通知。当天13:30先安全培训，随后静态评审＋动态试驾至18:00。</div></details>
+      <details class="faq"><summary>酒店离试验场远吗？</summary><div class="fb">万达嘉华酒店（信州区广信大道8号）距试验场约<b>20km、车程约30分钟</b>；会期往返有接驳车。</div></details>
+      <details class="faq"><summary>迟到了、路上堵车怎么办？</summary><div class="fb">第一时间电话随车领队（发车前群内公布）或总联系人贤琛 185 6060 8568；摆渡车整体延误时，现场将调整活动顺序。</div></details>
+      <details class="faq"><summary>怎么进乘车群？</summary><div class="fb">出发前1–2天按调研表填报信息组建企微乘车群并拉您入群；临近出发仍未入群请联系总联系人。</div></details>
+      <details class="faq"><summary>可以拍照吗？</summary><div class="fb">试验场内拍摄请听从现场安排；<b>车型与会议信息请勿外传</b>。</div></details>
+    </div>
+  </section>
+
+  <!-- ============ 6 联系人 ============ -->
+  <section id="sec6">
+    <div class="sec-head"><div class="en">CONTACTS</div><h2>联系人</h2><div class="sec-sub">有任何问题，找他们就对了</div></div>
+    <div class="ct-row">
+      <div class="card ct"><div class="av">贤</div><div class="nm">贤琛 · 行程总联系人</div><div class="tel">185 6060 8568</div><div class="rl">企微同名可搜索</div></div>
+      <div class="card ct"><div class="av">领</div><div class="nm">随车领队</div><div class="tel">发车前公布</div><div class="rl">每车1名 · 于乘车企微群内公布联系方式</div></div>
+    </div>
+  </section>
+</div>
+
+<script>
+document.querySelectorAll("#itabs button").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll("#itabs button").forEach(function(x){x.classList.toggle("on",x===b)});
+    document.querySelectorAll(".itab").forEach(function(t){t.classList.toggle("on",t.id===b.dataset.t)});
+  });
+});
+var KB=[
+ {k:["发车","几点出发","什么时候走","出发时间","几点"],q:"几点发车？",a:"杭州湾摆渡车暂定 07:00（06:45 研究院二期北广场集合）；杭州摆渡车暂定 08:30（08:15 总部大厦一楼正门前集合）。准点发车、逾期不候，最终时间以乘车企微群通知为准。",to:"#sec1"},
+ {k:["集合","在哪等","哪里上车","上车点"],q:"在哪里集合上车？",a:"杭州湾摆渡车：研究院二期北广场（06:45）；杭州摆渡车：总部大厦一楼正门前（08:15）。请提前15分钟到达。",to:"#sec1"},
+ {k:["高铁","动车","火车","上饶站","车站"],q:"高铁/动车到哪个站？",a:"高铁至【上饶站】（推荐）。打车至酒店约12km·22min，至试验场约20km·46min。到站后无专人接站。",to:"#sec1"},
+ {k:["机场","飞机","航班"],q:"飞机到哪个机场？",a:"上饶三清山机场（民用机场）。打车至酒店约8.6km·15min，至试验场约19km·25min。到站后无专人接站。",to:"#sec1"},
+ {k:["自驾","开车","导航","停车","地址"],q:"自驾导航到哪里？",a:"导航「中交(上饶)汽车综合试验场有限公司」：广信区上铅快速通道与吉祥大道交叉口西南200米。杭州方向约360km·4h，杭州湾方向约460km·5.5h。车牌报备与停车另行通知。",to:"#sec1"},
+ {k:["多远","公里","距离","多少公里"],q:"各地距离多远？",a:"总部大厦→试验场约360km；研究院二期→试验场约460km；上饶站→酒店12km·22min、→试验场20km·46min；机场→酒店8.6km·15min、→试验场19km·25min；酒店⇄试验场20km·30min。",to:"#sec1"},
+ {k:["酒店","入住","住哪","住宿","万达"],q:"住哪个酒店？离试验场多远？",a:"上饶富力万达嘉华酒店（信州区广信大道8号），距试验场约20km、车程约30分钟；会期往返有接驳车。",to:"#sec3"},
+ {k:["服务区","休息","上厕所","停歇"],q:"中途停歇吗？在哪个服务区？",a:"各停歇1次、约15分钟：杭州线停龙游服务区（出发约2h后），杭州湾线停金华服务区（出发约2.5h后）。下车记清车号与集合时间。",to:"#sec2"},
+ {k:["多久","多长时间","几点到","到达","车程"],q:"车程多久？几点到？",a:"杭州线约4小时、杭州湾线约5.5小时，均预计12:30前后抵达试验场；自行前往者请确保12:30前到达。",to:"#sec2"},
+ {k:["吃","饭","午餐","中餐","餐","饿"],q:"中午吃什么？",a:"约12:30抵达试验场后安排简餐，按实际到达情况准备；摆渡车上备有矿泉水与简单零食。",to:"#sec2"},
+ {k:["晚宴","晚饭","晚上","聚餐"],q:"晚宴在哪、几点？",a:"试驾结束后全体统一乘车前往晚宴地点，与酒店侧同事合流；地点与时间以乘车群通知为准。",to:"#sec3"},
+ {k:["行李","箱子","托运"],q:"行李要自己拿吗？",a:"乘摆渡车不需要：行李放入行李舱，随14:00接驳车送达酒店，办理入住时直接领取。",to:"#sec3"},
+ {k:["试驾","分组","报名","战舰"],q:"试驾怎么分组？",a:"以调研表填报为准，分组后续通知。当天13:30先安全培训，随后静态评审＋动态试驾至18:00。",to:"#sec2"},
+ {k:["穿","着装","鞋","衣服","防晒"],q:"穿什么？",a:"当日含试驾环节，请穿平底鞋与便于活动的着装；10月上饶日间仍较热，请注意防晒。",to:"#sec4"},
+ {k:["晕车","晕","难受"],q:"晕车怎么办？",a:"车程4–5.5小时，易晕车请提前服药或向随车领队领取晕车药，尽量选择靠前座位。",to:"#sec4"},
+ {k:["身份证","证件","带什么"],q:"要带什么证件？",a:"请全程随身携带身份证。",to:"#sec4"},
+ {k:["贵重","钱包","手机","电脑","随身"],q:"贵重物品放哪？",a:"服务区停歇、试驾与晚宴期间，证件与贵重物品请随身携带；其余行李由会务统一转运至酒店。",to:"#sec4"},
+ {k:["群","入群","企微","微信","通知"],q:"怎么进乘车群？",a:"出发前1–2天按调研表填报的乘车信息组建企微乘车群并拉您入群；发车与临时变更以群内通知为准。",to:"#sec5"},
+ {k:["领队","联系","电话","找谁","负责人","贤琛"],q:"有事找谁？",a:"行程总联系人：贤琛，电话 18560608568（企微同名可搜索）；随车领队于发车前在乘车企微群公布。",to:"#sec6"},
+ {k:["迟到","堵车","晚点","赶不上"],q:"迟到或堵车怎么办？",a:"第一时间电话联系随车领队或贤琛 185 6060 8568；摆渡车整体延误时现场将调整活动顺序，请服从安排。",to:"#sec5"},
+ {k:["拍照","保密","拍摄","相机"],q:"可以拍照吗？",a:"试验场内拍摄请听从现场安排；车型与会议信息请勿外传。",to:"#sec4"}
+];
+var qEl=document.getElementById("q"),sug=document.getElementById("sug"),clr=document.getElementById("clr"),
+    ans=document.getElementById("ans"),ansQ=document.getElementById("ansQ"),ansA=document.getElementById("ansA"),ansL=document.getElementById("ansL");
+function match(q){
+  q=q.trim().toLowerCase(); if(!q)return[];
+  return KB.filter(function(e){
+    return e.k.some(function(k){k=k.toLowerCase();return k.indexOf(q)>-1||q.indexOf(k)>-1})
+      || e.q.toLowerCase().indexOf(q)>-1 || e.a.toLowerCase().indexOf(q)>-1;
+  }).slice(0,6);
+}
+function showAns(e){
+  ansQ.textContent="💡 "+e.q; ansA.textContent=e.a; ansL.setAttribute("href",e.to);
+  ans.style.display="block"; sug.style.display="none";
+  ans.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function renderSug(list,q){
+  if(!q.trim()){sug.style.display="none";return;}
+  if(!list.length){sug.innerHTML='<div class="none">没匹配到～ 试试「几点发车」「高铁」「自驾」「行李」</div>';sug.style.display="block";return;}
+  sug.innerHTML=list.map(function(e,i){return '<button data-i="'+i+'"><span class="q-ic">Q</span>'+e.q+'</button>'}).join("");
+  sug.style.display="block";
+  sug.querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click",function(){showAns(list[+b.dataset.i]);});
+  });
+}
+var lastList=[];
+qEl.addEventListener("input",function(){
+  clr.style.display=qEl.value?"block":"none";
+  lastList=match(qEl.value); renderSug(lastList,qEl.value);
+});
+qEl.addEventListener("keydown",function(e){
+  if(e.key==="Enter"&&lastList.length){showAns(lastList[0]);}
+  if(e.key==="Escape"){sug.style.display="none";}
+});
+clr.addEventListener("click",function(){qEl.value="";clr.style.display="none";sug.style.display="none";ans.style.display="none";qEl.focus();});
+document.getElementById("ansX").addEventListener("click",function(){ans.style.display="none";});
+document.addEventListener("click",function(e){ if(!e.target.closest(".searchbox")) sug.style.display="none"; });
+
+(function(){
+  var links=[].slice.call(document.querySelectorAll("#navLinks a"));
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute("href"))});
+  function onScroll(){
+    var y=window.scrollY+100,idx=0;
+    secs.forEach(function(s,i){if(s&&s.offsetTop<=y)idx=i});
+    links.forEach(function(a,i){a.classList.toggle("on",i===idx)});
+  }
+  window.addEventListener("scroll",onScroll,{passive:true});onScroll();
+})();
+</script>
+</body>
+</html>
