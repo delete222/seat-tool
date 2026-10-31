@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>集团领导茶水喜好速查</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --ink: #1c2128;
+    --sub: #7a828c;
+    --line: #e8eaee;
+    --green: #177a53;
+    --green-soft: #e9f4ef;
+    --amber: #a35a08;
+    --amber-soft: #fdf1e0;
+    --graytxt: #c0c4cc;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    background: var(--bg); color: var(--ink);
+  }
+  .hero {
+    background: linear-gradient(135deg, #0d5c3f 0%, #177a53 55%, #1f9468 100%);
+    color: #fff; padding: 26px 16px 58px; text-align: center;
+  }
+  .hero h1 { font-size: 21px; letter-spacing: 1px; }
+  .hero p { font-size: 12px; opacity: .75; margin-top: 6px; }
+  .panel { max-width: 1060px; margin: -40px auto 0; padding: 0 14px 60px; }
+  .toolbar {
+    background: #fff; border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px; margin-bottom: 14px;
+    box-shadow: 0 6px 20px rgba(13,92,63,.10);
+    position: sticky; top: 10px; z-index: 10;
+  }
+  #search {
+    width: 100%; font-size: 15px; padding: 10px 14px;
+    border: 1.5px solid var(--line); border-radius: 10px; outline: none; background: #fafbfc;
+  }
+  #search:focus { border-color: var(--green); background: #fff; }
+  .tabs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .tab {
+    font-size: 13px; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: #fff; color: var(--sub); user-select: none;
+  }
+  .tab.active { background: var(--green); border-color: var(--green); color: #fff; font-weight: 600; }
+  .legend { font-size: 11px; color: var(--sub); margin: 2px 4px 0; }
+  .legend i { color: var(--graytxt); font-style: normal; }
+  .stat { font-size: 12px; color: var(--sub); margin: 8px 2px 12px; }
+  .gtitle {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 700; color: var(--green); margin: 22px 2px 10px;
+  }
+  .gtitle::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .gtitle .gcount { font-size: 12px; font-weight: 400; color: var(--sub); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 10px; }
+  .card {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 13px 14px; display: flex; flex-direction: column; gap: 7px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.03);
+  }
+  .row1 { display: flex; align-items: center; gap: 8px; }
+  .idx { font-size: 11px; color: var(--sub); background: #f1f3f5; border-radius: 6px; padding: 1px 6px; min-width: 30px; text-align: center; }
+  .name { font-size: 16px; font-weight: 700; }
+  .alias { font-size: 12px; color: var(--sub); font-weight: 400; }
+  .tea {
+    margin-left: auto; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+    background: var(--green-soft); color: var(--green); border-radius: 999px; padding: 3px 10px;
+  }
+  .tea.none { background: #f1f3f5; color: #9aa2ab; font-weight: 400; }
+  .tea.hot { background: var(--amber-soft); color: var(--amber); }
+  .title { font-size: 12.5px; color: var(--sub); line-height: 1.55; }
+  .title .tg { color: var(--graytxt); }
+  .warn { font-size: 12px; color: var(--amber); background: var(--amber-soft); border-radius: 8px; padding: 5px 9px; line-height: 1.5; }
+  .empty { text-align: center; color: var(--sub); padding: 50px 0; font-size: 14px; display: none; }
+  mark { background: #ffe58f; border-radius: 2px; padding: 0 1px; }
+  @media print { .toolbar { position: static; } .hero { padding: 16px; } .panel { margin-top: 0; } }
+  /* ---- 手机适配 ---- */
+  @media (max-width: 640px) {
+    body { font-size: 14px; }
+    .panel { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+    .hero { padding: 20px 12px 50px; }
+    .hero h1 { font-size: 18px; }
+    .panel { padding: 0 10px 48px; margin: -34px auto 0; }
+    .toolbar { padding: 10px; border-radius: 12px; top: 6px; }
+    #search { font-size: 16px; padding: 9px 12px; } /* ≥16px 防止 iOS 聚焦自动放大 */
+    .tabs {
+      flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; margin-top: 8px; padding-bottom: 2px;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { flex: 0 0 auto; white-space: nowrap; padding: 6px 12px; font-size: 12.5px; }
+    .grid { grid-template-columns: 1fr; gap: 8px; }
+    .card { padding: 11px 12px; border-radius: 10px; }
+    .name { font-size: 15px; }
+    .tea { font-size: 12px; padding: 2px 8px; max-width: 55%; overflow: hidden; text-overflow: ellipsis; }
+    .title { font-size: 12px; }
+    .gtitle { font-size: 14px; margin: 18px 2px 8px; }
+  }
+  @media (max-width: 380px) {
+    .tea { max-width: 48%; }
+    .idx { min-width: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>集团领导名单及茶水喜好速查</h1>
+  <p>共 54 位 · 数据更新 2026-10-31</p>
+</div>
+
+<div class="panel">
+  <div class="toolbar">
+    <input id="search" type="text" placeholder="搜索姓名 / 职务 / 喜好，如：红茶、领克、范范、忌口…">
+    <div class="tabs" id="tabs">
+      <span class="tab active" data-g="all">全部</span>
+      <span class="tab" data-g="吉利汽车集团">吉利汽车集团</span>
+      <span class="tab" data-g="吉利控股集团">吉利控股集团</span>
+      <span class="tab" data-g="吉利汽车销售公司">吉利汽车销售公司</span>
+    </div>
+    <div class="legend">说明：职务中<i>灰色字体</i>部分一般不体现（与原表一致）</div>
+  </div>
+  <div class="stat" id="stat"></div>
+  <div id="list"></div>
+  <div class="empty" id="empty">没有匹配的领导</div>
+</div>
+
+<script>
+// title 分段：[文字, 是否灰色]，灰色 = 原表 FF808080 字体，一般不体现
+const DATA = [
+  {idx:1, g:"吉利汽车集团", name:"安聪慧", title:[["吉利汽车集团董事长；极氪智能科技有限公司CEO；控股集团总裁；控股集团经管会副主任",0]], tea:"红茶"},
+  {idx:2, g:"吉利汽车集团", name:"淦家阅", title:[["吉利汽车集团CEO；经管会主任",0]], tea:"红茶"},
+  {idx:3, g:"吉利汽车集团", name:"刘向阳", title:[["广域铭岛董事长（兼）；经管会成员；吉利汽车集团高级副总裁；领克汽车CEO",0]], tea:"白水"},
+  {idx:4, g:"吉利汽车集团", name:"王瑞平", title:[["吉利汽车集团高级副总裁；",0],["经管会成员；动力研究院院长（兼）",1]], tea:"茶/咖啡", extra:"下午喝热水"},
+  {idx:5, g:"吉利汽车集团", name:"林杰", title:[["吉利汽车集团高级副总裁；领克汽车销售公司总经理（兼）；销售公司党委书记；内控工作小组组长；经管会成员",0]], tea:"白开水", extra:"忌口：地上走的都不吃（鸡牛猪），水里游的、天上飞的可以吃；不吃辣；不喝茶"},
+  {idx:6, g:"吉利汽车集团", name:"杨学良", title:[["控股集团副总裁；控股集团经管会成员；吉利汽车集团高级副总裁（兼）；经管会成员",0]], tea:"红茶/绿茶"},
+  {idx:7, g:"吉利汽车集团", name:"崔载福", title:[["吉利汽车集团高级副总裁；经管会成员；组长",0]], tea:"自带咖啡或绿茶"},
+  {name:"娄源发", g:"吉利汽车集团"},
+  {idx:8, g:"吉利汽车集团", name:"潘巨林", title:[["吉利汽车集团高级副总裁；经管会成员；临海公司董事长（兼）",0]], tea:"绿茶"},
+  {idx:9, g:"吉利汽车集团", name:"王全心", title:[["吉利汽车集团副总裁；经管会成员；西安公司总经理（兼）",0]], tea:"白水为主", extra:"茶水偏向红茶"},
+  {idx:10, g:"吉利汽车集团", name:"羊奎", title:[["吉利汽车集团副总裁；经管会成员；组长",0]], tea:"红茶"},
+  {idx:11, g:"吉利汽车集团", name:"李传海", title:[["吉利汽车集团副总裁；中央研究院院长（兼）；集团供应链质量工程（SQE）中心总经理（兼）；经管会成员；组长",0]], tea:"白水"},
+  {idx:12, g:"吉利汽车集团", name:"陈政", title:[["吉利汽车集团副总裁；",0],["经管会成员；",1]], tea:"—", extra:"乳制品不耐受，若点咖啡需要美式"},
+  {name:"南圣良", g:"吉利汽车集团"},
+  {idx:13, g:"吉利汽车集团", name:"康国旺", title:[["吉利汽车集团副总裁；",0],["经管会成员；",1]], tea:"红茶/白水"},
+  {idx:14, g:"吉利汽车集团", name:"童志远", title:[["吉利汽车集团副总裁；",0],["经管会成员；长兴公司总经理（兼）",1]], tea:"绿茶/白水"},
+  {idx:15, g:"吉利汽车集团", name:"李伟平", title:[["吉利汽车集团CGO（首席政府事务官）；总经理（兼）；吉利梦想公园指挥部总指挥（兼）；经管会成员",0]], tea:"红茶"},
+  {idx:16, g:"吉利汽车集团", name:"周伟锋", title:[["吉利汽车集团CSO（首席安全官）；",0],["经管会成员；",1]], tea:"红茶/绿茶"},
+  {idx:17, g:"吉利汽车集团", name:"唐黎明", title:[["吉利汽车集团CPO（首席产品战略官）；",0],["经管会成员；执行组长；",1]], tea:"红茶"},
+  {idx:18, g:"吉利汽车集团", name:"曹振宇", title:[["吉利汽车集团副首席法务官（副CLO）；",0],["经管会成员；",1]], tea:"—"},
+  {idx:19, g:"吉利汽车集团", name:"戴永", title:[["吉利汽车集团副CFO；财务中心总经理",0]], tea:"绿茶偏多", extra:"红茶也可以"},
+  {idx:20, g:"吉利汽车集团", name:"王波", title:[["吉利汽车集团副总裁；采购公司总经理",0]], tea:"偏向红茶"},
+  {idx:21, g:"吉利汽车集团", name:"史良青", title:[["吉利汽车集团副CHO",0]], tea:"—"},
+  {idx:22, g:"吉利汽车集团", name:"张春光", title:[["吉利汽车集团副CDO",0]], tea:"—"},
+  {idx:23, g:"吉利汽车集团", name:"宋军", title:[["吉利汽车集团副总裁；国际大项目组总经理",0]], tea:"上午红茶、下午绿茶", extra:"偶尔大红袍"},
+  {idx:24, g:"吉利汽车集团", name:"沈子瑜", title:[["亿咖通CEO；",0],["经管会成员；",1]], tea:"—"},
+  {idx:25, g:"吉利汽车集团", name:"Stefan Sielaff", title:[["吉利汽车集团副总裁；",0],["经管会成员；全球造型副总裁",1]], tea:"—"},
+  {idx:26, g:"吉利控股集团", name:"李书福", title:[["控股集团董事长",0]], tea:"白水、热拿铁", extra:"注意事项：不喜欢话筒、一米栏"},
+  {idx:27, g:"吉利控股集团", name:"杨健", title:[["控股集团副董事长",0]], tea:"红茶"},
+  {idx:28, g:"吉利控股集团", name:"孙宏", title:[["控股集团副董事长",0]], tea:"红茶"},
+  {idx:29, g:"吉利控股集团", name:"李东辉", title:[["控股集团董事；控股集团经管会主任；",1],["控股集团CEO；",0],["铭泰集团董事长",1]], tea:"红茶"},
+  {idx:30, g:"吉利控股集团", name:"安聪慧", title:[["控股集团总裁；控股集团经管会副主任；",1],["极氪智能科技CEO；吉利汽车集团董事长",0]], tea:"—"},
+  {idx:31, g:"吉利控股集团", name:"黄新龙", title:[["控股集团党委书记，工会主席；控股集团副总裁（兼）",0]], tea:"—"},
+  {idx:32, g:"吉利控股集团", name:"毛勇", title:[["控股集团高级副总裁",0]], tea:"菊花茶"},
+  {idx:33, g:"吉利控股集团", name:"俞学良", title:[["控股集团高级副总裁",0]], tea:"—"},
+  {idx:34, g:"吉利控股集团", name:"王召兴", title:[["控股集团高级副总裁",0]], tea:"—"},
+  {idx:35, g:"吉利控股集团", name:"戴庆", title:[["控股集团高级副总裁兼首席运营官（COO）",0]], tea:"红茶、白茶", extra:"不喝绿茶"},
+  {idx:36, g:"吉利控股集团", name:"周厚江", title:[["控股集团高级副总裁",0]], tea:"—"},
+  {idx:37, g:"吉利控股集团", name:"魏梅", title:[["控股集团副总裁兼马来西亚公司CEO；控股集团经管会成员",0]], tea:"白水"},
+  {idx:38, g:"吉利控股集团", name:"冯擎峰", title:[["控股集团高级副总裁；路特斯集团CEO；",0],["控股集团经管会成员",1]], tea:"红茶"},
+  {idx:39, g:"吉利控股集团", name:"陈益民", title:[["控股集团高级副总裁兼总法律顾问、首席合规官（CCO）；",0],["控股集团经管会成员",1]], tea:"红茶"},
+  {idx:40, g:"吉利控股集团", name:"张权", title:[["控股集团高级副总裁兼首席财务官（CFO）；",0],["控股集团经管会成员；财务管理中心总经理（兼）",1]], tea:"—"},
+  {idx:41, g:"吉利控股集团", name:"潘雷方", title:[["控股集团高级副总裁兼首席人力资源官（CHO）；董事会秘书；",0],["李书福公益基金会理事长；控股集团经管会成员",1]], tea:"—"},
+  {idx:42, g:"吉利控股集团", name:"魏志玲", title:[["控股集团高级副总裁，",0],["控股集团经管会成员，",1],["董事局办公室北京代表处首席代表（兼）",0]], tea:"白水"},
+  {idx:43, g:"吉利控股集团", name:"杨学良", title:[["控股集团高级副总裁；控股集团经管会成员；吉利汽车集团高级副总裁（兼）；吉利汽车集团经管会成员",0]], tea:"—"},
+  {idx:44, g:"吉利控股集团", name:"沈源", title:[["控股集团高级副总裁",0]], tea:"红茶"},
+  {idx:45, g:"吉利汽车销售公司", name:"范峻毅", alias:"范范", title:[["吉利汽车销售公司总经理，",0],["几何事业部总经理",1]], tea:"—"},
+  {idx:46, g:"吉利汽车销售公司", name:"刘凡", alias:"凡同学", title:[["吉利汽车销售公司副总经理",0]], tea:"—"},
+  {idx:47, g:"吉利汽车销售公司", name:"王博", alias:"王博士", title:[["吉利汽车销售公司副总经理，",0],["中国星事业部总经理",1]], tea:"—"},
+  {idx:48, g:"吉利汽车销售公司", name:"刘旭辉", alias:"旭辉", title:[["吉利汽车销售公司副总经理，",0],["服务公司总经理",1]], tea:"—"},
+  {idx:49, g:"吉利汽车销售公司", name:"潘克昌", alias:"潘sir", title:[["吉利汽车销售公司总经理助理",0]], tea:"—"},
+  {idx:50, g:"吉利汽车销售公司", name:"陈家党", alias:"党代表", title:[["吉利汽车销售公司总经理助理",0]], tea:"—"},
+  {idx:51, g:"吉利汽车销售公司", name:"刘殿军", alias:"牛人", title:[["吉利汽车销售公司总经理助理，",0],["分销运营管理部总监",1]], tea:"—"},
+  {idx:52, g:"吉利汽车销售公司", name:"居峰", alias:"八两", title:[["吉利汽车销售公司总经理助理，",0],["用户增长部总监",1]], tea:"—"},
+  {idx:53, g:"吉利汽车销售公司", name:"关久旸", title:[["吉利汽车销售公司总经理助理",0]], tea:"—"},
+  {idx:54, g:"吉利汽车销售公司", name:"陈敏", title:[["吉利汽车销售公司副总经理",0]], tea:"—"},
+];
+
+const GROUPS = ["吉利汽车集团", "吉利控股集团", "吉利汽车销售公司"];
+const HOT = /忌口|不耐受|不喝|不吃|不辣|热水|拿铁|话筒|一米栏|自带/;
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let curG = "all";
+
+function hl(text, kw) {
+  if (!kw) return esc(text);
+  const i = text.toLowerCase().indexOf(kw.toLowerCase());
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + kw.length)) + "</mark>" + esc(text.slice(i + kw.length));
+}
+
+function titleHtml(segs, kw) {
+  if (!segs) return "";
+  return segs.map(([t, gray]) => `<span class="${gray ? "tg" : ""}">${hl(t, kw)}</span>`).join("");
+}
+
+const fullTitle = p => p.title ? p.title.map(s => s[0]).join("") : "";
+
+function match(p, kw) {
+  if (curG !== "all" && p.g !== curG) return false;
+  if (!kw) return true;
+  return [p.name, p.alias, fullTitle(p), p.tea, p.extra].filter(Boolean).join(" ").toLowerCase().includes(kw.toLowerCase());
+}
+
+function render() {
+  const kw = $("#search").value.trim();
+  const list = $("#list");
+  list.innerHTML = "";
+  let shown = 0;
+
+  GROUPS.forEach(g => {
+    const items = DATA.filter(p => p.g === g && match(p, kw));
+    const real = items.filter(p => p.idx).length;
+    if (!items.length) return;
+    shown += real;
+    const sec = document.createElement("section");
+    sec.innerHTML = `<div class="gtitle">${g}<span class="gcount">${real} 位</span></div><div class="grid"></div>`;
+    const grid = sec.querySelector(".grid");
+    items.forEach(p => {
+      const c = document.createElement("div");
+      c.className = "card";
+      let inner = `<div class="row1">`;
+      if (p.idx) inner += `<span class="idx">${p.idx}</span>`;
+      inner += `<span class="name">${hl(p.name, kw)}${p.alias ? ` <span class="alias">（${hl(p.alias, kw)}）</span>` : ""}</span>`;
+      if (p.idx) {
+        const none = p.tea === "—";
+        const hot = !none && HOT.test(p.tea + (p.extra || ""));
+        inner += `<span class="tea ${none ? "none" : hot ? "hot" : ""}">${none ? "未备注" : hl(p.tea, kw)}</span>`;
+      }
+      inner += `</div>`;
+      if (p.title) inner += `<div class="title">${titleHtml(p.title, kw)}</div>`;
+      if (p.extra) inner += `<div class="warn">⚠ ${hl(p.extra, kw)}</div>`;
+      c.innerHTML = inner;
+      grid.appendChild(c);
+    });
+    list.appendChild(sec);
+  });
+
+  $("#stat").textContent = kw ? `搜索"${kw}"：命中 ${shown} 位` : `共 ${shown} 位领导`;
+  $("#empty").style.display = shown ? "none" : "block";
+}
+
+$("#search").addEventListener("input", render);
+$("#tabs").addEventListener("click", e => {
+  const t = e.target.closest(".tab");
+  if (!t) return;
+  curG = t.dataset.g;
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === t));
+  render();
+});
+render();
+</script>
+</body>
+</html>
