@@ -1,77 +1,51 @@
 #!/bin/sh
-# Low-impact connectivity checks for Wi-Fi networks you are authorized to test.
-# No captive-portal bypass, authentication, tunneling, or subnet scanning.
-
+# UDP diagnostics: real DNS queries, then one small datagram per VPS port.
 set -u
+for tool in dig nc timeout; do
+  command -v "$tool" >/dev/null 2>&1 || {
+    echo '请先在有网时安装：apk add bind-tools netcat-openbsd busybox-extras' >&2
+    exit 1
+  }
+done
+work=$(mktemp -d) || exit 1
+trap 'rm -rf "$work"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-TIMEOUT="${TIMEOUT:-3}"
-DNS_NAME="${DNS_NAME:-example.com}"
-HTTP_URL="${HTTP_URL:-http://neverssl.com/}"
-HTTPS_URL="${HTTPS_URL:-https://example.com/}"
-
-command -v timeout >/dev/null 2>&1 || { echo "缺少 timeout。请在 iSH 执行: apk add busybox-extras" >&2; exit 1; }
-
-have() { command -v "$1" >/dev/null 2>&1; }
-line() { printf '\n== %s ==\n' "$1"; }
-
-check_tcp() {
-  host="$1" port="$2" label="$3"
-  if ! have nc; then printf '[跳过] %s：缺少 nc（apk add netcat-openbsd）\n' "$label"; return; fi
-  if timeout "$TIMEOUT" nc -z -w "$TIMEOUT" "$host" "$port" >/dev/null 2>&1; then
-    printf '[可连接] %s (%s:%s)\n' "$label" "$host" "$port"
+dns_test() {
+  label=$1
+  shift
+  printf '\n== UDP 53：%s ==\n' "$label"
+  # +ignore prevents a truncated UDP reply from causing a TCP fallback.
+  dig +notcp +ignore +time=3 +tries=1 "$@" example.com A > "$work/dns" 2>&1
+  if grep -q 'HEADER.*status:' "$work/dns"; then
+    echo '[收到 DNS 响应] 该解析器有响应；不表示任意外网 UDP 53 都放通。'
+    sed -n '/HEADER/p; /SERVER:/p; /IN[[:space:]]*A[[:space:]]/p' "$work/dns"
   else
-    printf '[不可连接/超时] %s (%s:%s)\n' "$label" "$host" "$port"
+    echo '[未收到有效 DNS 响应] 原因无法仅凭此次测试确定。'
+    tail -n 4 "$work/dns"
   fi
 }
+dns_test '系统配置的解析器'
+dns_test '223.5.5.5' @223.5.5.5
+dns_test '1.1.1.1' @1.1.1.1
 
-line '本机与默认路由'
-if have ip; then
-  ip addr 2>/dev/null | sed -n '/inet /p' || true
-  ip route 2>/dev/null | sed -n '1,4p' || true
-else
-  echo '[提示] 未找到 ip 命令（iSH 可能不暴露 iOS 网络接口信息）'
+printf '\n== VPS UDP 67 / 68：amd.23337788.xyz ==\n'
+echo '67/68 是 DHCP 端口。本测试只向 VPS 发小数据报，不发送 DHCP 请求或广播。'
+vps_ip=$(dig +notcp +ignore +time=3 +tries=1 +short A amd.23337788.xyz 2>/dev/null | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ {print; exit}')
+if [ -z "$vps_ip" ]; then
+  echo '[跳过] 无法解析 VPS IPv4 地址。'
+  exit 0
 fi
-
-line 'DNS 查询'
-if have nslookup; then
-  timeout "$TIMEOUT" nslookup "$DNS_NAME" 2>&1 | sed -n '1,12p'
-elif have drill; then
-  timeout "$TIMEOUT" drill "$DNS_NAME" 2>&1 | sed -n '1,12p'
-else
-  echo '[跳过] 请安装 bind-tools：apk add bind-tools'
-fi
-
-line 'DNS 端口 53 可达性（TCP）'
-# Connection checks only; no tunneling or traffic disguise.
-check_tcp 1.1.1.1 53 'Cloudflare TCP DNS'
-check_tcp 8.8.8.8 53 'Google TCP DNS'
-
-line 'HTTP / HTTPS 与门户提示'
-if have curl; then
-  for url in "$HTTP_URL" "$HTTPS_URL"; do
-    echo "目标: $url"
-    timeout "$((TIMEOUT + 2))" curl -sS -L --max-redirs 3 --connect-timeout "$TIMEOUT" --max-time "$((TIMEOUT + 2))" \
-      -o /dev/null -w 'HTTP=%{http_code} final=%{url_effective} remote=%{remote_ip}\n' "$url" 2>&1 || true
-  done
-else
-  echo '[跳过] 请安装 curl：apk add curl'
-fi
-
-line '少量常见 TCP 端口'
-# Fixed, small set of public service endpoints; no ranges or retries.
-check_tcp example.com 22 'SSH'
-check_tcp example.com 80 'HTTP'
-check_tcp example.com 443 'HTTPS'
-check_tcp example.com 8080 'HTTP alternate'
-check_tcp example.com 8443 'HTTPS alternate'
-check_tcp 1.1.1.1 53 'DNS TCP'
-check_tcp 1.1.1.1 853 'DNS-over-TLS'
-
-cat <<'NOTICE'
-
-说明：
-- “可连接”只表示 TCP 握手成功，不代表该服务可正常使用；“不可连接/超时”也可能是测试目标未监听该端口。
-- 这些结果无法识别认证网关的厂商，也无法证明认证前可用哪些获准服务。
-- HTTP 跳转到陌生登录页、HTTP 状态为 30x，或 HTTPS 出现证书/连接错误，可能表示门户认证或网络策略；请使用网络提供方的正常认证流程。
-- 仅在获准测试的 Wi-Fi 上运行。脚本不会枚举局域网设备、发送认证凭据或尝试绕过认证。
-NOTICE
+echo "目标 IP：$vps_ip"
+for port in 67 68; do
+  # UDP nc exit success alone NEVER proves reachability.
+  printf 'UDPTEST\n' | timeout 4 nc -u -n -w 2 "$vps_ip" "$port" > "$work/reply" 2> "$work/error"
+  if [ -s "$work/reply" ]; then
+    bytes=$(wc -c < "$work/reply" | tr -d ' ')
+    echo "UDP $port：[收到数据] $bytes 字节；不代表 DHCP 服务有效。"
+  else
+    echo "UDP $port：[无响应，无法判断] 可能未监听、不响应、或被某处过滤。"
+  fi
+done
+printf '\nUDP 无响应不能证明端口关闭或被 Wi-Fi 拦截。\n要验证 67/68 数据报是否到达 VPS，需要在 VPS 上抓包或运行受控回应服务。\n此测试不验证本地 DHCP，不测试认证绕过。\n'
