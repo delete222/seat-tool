@@ -29,7 +29,7 @@ if have ip; then
   ip addr 2>/dev/null | sed -n '/inet /p' || true
   ip route 2>/dev/null | sed -n '1,4p' || true
 else
-  echo '[提示] 未找到 ip 命令'
+  echo '[提示] 未找到 ip 命令（iSH 可能不暴露 iOS 网络接口信息）'
 fi
 
 line 'DNS 查询'
@@ -41,10 +41,10 @@ else
   echo '[跳过] 请安装 bind-tools：apk add bind-tools'
 fi
 
-line 'DNS 端口 53 可达性（标准 DNS 服务）'
+line 'DNS 端口 53 可达性（TCP）'
 # Connection checks only; no tunneling or traffic disguise.
-check_tcp 1.1.1.1 53 'TCP DNS Cloudflare'
-check_tcp 8.8.8.8 53 'TCP DNS Google'
+check_tcp 1.1.1.1 53 'Cloudflare TCP DNS'
+check_tcp 8.8.8.8 53 'Google TCP DNS'
 
 line 'HTTP / HTTPS 与门户提示'
 if have curl; then
@@ -58,15 +58,20 @@ else
 fi
 
 line '少量常见 TCP 端口'
+# Fixed, small set of public service endpoints; no ranges or retries.
+check_tcp example.com 22 'SSH'
 check_tcp example.com 80 'HTTP'
 check_tcp example.com 443 'HTTPS'
-check_tcp 1.1.1.1 853 'DNS-over-TLS（TCP）'
+check_tcp example.com 8080 'HTTP alternate'
+check_tcp example.com 8443 'HTTPS alternate'
+check_tcp 1.1.1.1 53 'DNS TCP'
+check_tcp 1.1.1.1 853 'DNS-over-TLS'
 
 cat <<'NOTICE'
 
 说明：
-- “可连接”只表示 TCP 握手成功，不代表该服务可正常使用。
-- HTTP 跳转到陌生登录页、HTTP 状态为 30x，或 HTTPS 出现证书/连接错误，可能表示存在门户认证或网络策略。
-- 结果也受目标服务器、运营商和防火墙影响；请按 Wi-Fi 提供方的正常认证流程使用网络。
-- 仅在获准测试的 Wi-Fi 上运行。脚本不会枚举局域网设备，也不会发送认证凭据。
+- “可连接”只表示 TCP 握手成功，不代表该服务可正常使用；“不可连接/超时”也可能是测试目标未监听该端口。
+- 这些结果无法识别认证网关的厂商，也无法证明认证前可用哪些获准服务。
+- HTTP 跳转到陌生登录页、HTTP 状态为 30x，或 HTTPS 出现证书/连接错误，可能表示门户认证或网络策略；请使用网络提供方的正常认证流程。
+- 仅在获准测试的 Wi-Fi 上运行。脚本不会枚举局域网设备、发送认证凭据或尝试绕过认证。
 NOTICE
